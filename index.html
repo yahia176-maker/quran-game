@@ -2061,7 +2061,15 @@ function screenFinal(){
    لتفعيلها: أنشئ مشروع Firebase مجاني وفعّل Anonymous Auth و Realtime Database
    ثم ضع إعدادات التطبيق هنا بدل null — الشرح الكامل في شاشة المساعدة.
    ===================================================================== */
-const FIREBASE_CONFIG = null; /* ← ضع هنا: {apiKey:"...", authDomain:"...", databaseURL:"...", projectId:"...", appId:"..."} */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD_iqLUjO4QMaoLtO5-59KqyvjWHoIgZrM",
+  authDomain: "quran-game-69938.firebaseapp.com",
+  databaseURL: "https://quran-game-69938-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "quran-game-69938",
+  storageBucket: "quran-game-69938.firebasestorage.app",
+  messagingSenderId: "24258230006",
+  appId: "1:24258230006:web:6006ce85855e650ac89ed7"
+};
 const FB_SDK = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-';
 let fbReady=false, fbUser=null, R=null;
 function loadScript(src){ return new Promise((ok,bad)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=bad; document.head.appendChild(s); }); }
