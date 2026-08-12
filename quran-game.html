@@ -2148,6 +2148,12 @@ function screenOnline(){
     <h3>ادخل مسابقة</h3>
     <input type="text" id="jcode" maxlength="5" placeholder="اكتب الكود (5 حروف)" style="text-align:center;font-size:1.4rem;letter-spacing:6px;direction:ltr">
     <button class="btn" id="jn">🚪 دخول</button>
+  </div>
+  <div class="card fade center">
+    <div style="font-size:3rem">📚</div>
+    <h3>سجلّ مجموعاتي</h3>
+    <p class="muted" style="font-size:.85rem">نتائج كل مسابقاتك السابقة مجمّعة بالمجموعة — تتابع منها مستوى كل طالب</p>
+    <button class="btn ghost" id="grps">📊 افتح السجل</button>
   </div>`
   :`<div class="card fade center">
     <div style="font-size:3rem">🔌</div>
@@ -2159,6 +2165,7 @@ function screenOnline(){
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); if(R) leaveRoom(); screenHome(); };
   if(!FIREBASE_CONFIG) return;
   $('#mk').onclick=async()=>{ Snd.click(); if(await fbInit()) screenOnlineSetup(); };
+  $('#grps').onclick=()=>{ Snd.click(); screenGroups(); };
   $('#jn').onclick=async()=>{ Snd.click();
     const code=($('#jcode').value||'').trim().toUpperCase();
     if(code.length<4) return toast('اكتب الكود الأول');
@@ -2181,6 +2188,8 @@ function screenOnlineSetup(){
       <button class="btn sm" data-m="turns">🔄 بالدور — كل سؤال لطالب</button>
       <button class="btn ghost sm" data-m="all">⚡ الكل معًا — نفس السؤال للجميع</button>
     </div>
+    <h3 style="margin-top:14px">اسم المجموعة <span class="muted" style="font-size:.8rem">(للمتابعة في سجلّ مجموعاتي)</span></h3>
+    <input type="text" id="ogrp" maxlength="24" placeholder="مثال: مجموعة السبت">
   </div>
   <div class="center"><button class="btn" id="go">🚀 أنشئ الغرفة</button></div>`;
   let cnt=15, mode='turns';
@@ -2196,7 +2205,7 @@ function screenOnlineSetup(){
     if(qs.length<Math.min(5,cnt)) return toast('محتوى غير كافٍ لهذا الاختيار');
     const code = Array.from({length:5},()=> 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
     const room = { host:fbUser.uid, created:Date.now(),
-      settings:{juz:j, title:entry.name, count:qs.length, mode},
+      settings:{juz:j, title:entry.name, count:qs.length, mode, grp:($('#ogrp').value||'').trim()||'عام'},
       qs, state:{phase:'lobby'},
       players:{ [fbUser.uid]:{name:P.name+' (المعلم)', emoji:P.emoji, score:0, ord:0, host:true} } };
     await roomRef(code).set(room);
@@ -2247,7 +2256,7 @@ function advanceTurn(ans){
   if(ans && ans.pts){ R.ref.child('players/'+ans.uid+'/score').set(((R.data.players[ans.uid]||{}).score||0)+ans.pts); }
   const idx = players.findIndex(p=>p.uid===st.turn);
   const nqi = st.qi+1;
-  if(nqi>=R.data.qs.length){ R.ref.child('state').update({phase:'end'}); return; }
+  if(nqi>=R.data.qs.length){ saveQuizResult(); R.ref.child('state').update({phase:'end'}); return; }
   R.ref.child('state').update({qi:nqi, turn:players[(idx+1)%players.length].uid, until:Date.now()+OTIME*1000});
 }
 function advanceAll(ansMap){
@@ -2255,8 +2264,94 @@ function advanceAll(ansMap){
   Object.entries(ansMap).forEach(([uid,a])=>{ if(a.pts) R.ref.child('players/'+uid+'/score')
     .set(((R.data.players[uid]||{}).score||0)+a.pts); });
   const nqi=st.qi+1;
-  if(nqi>=R.data.qs.length){ R.ref.child('state').update({phase:'end'}); return; }
+  if(nqi>=R.data.qs.length){ saveQuizResult(); R.ref.child('state').update({phase:'end'}); return; }
   R.ref.child('state').update({qi:nqi, until:Date.now()+OTIME*1000});
+}
+/* حفظ نتيجة المسابقة في سجلّ المعلم — النقاط تُحسب من سجل الإجابات نفسه */
+function saveQuizResult(){
+  if(!R || !R.isHost || R.saved || !fbUser) return; R.saved=true;
+  const v=R.data, per={};
+  Object.entries(v.players||{}).forEach(([uid,p])=>{ per[uid]={name:p.name, emoji:p.emoji||'🙂', h:!!p.host, score:0, c:0, w:0}; });
+  const tally=(uid,a)=>{ if(!per[uid]||!a) return; per[uid].score+=a.pts||0; a.ok?per[uid].c++:per[uid].w++; };
+  Object.values(v.ans||{}).forEach(a=>{
+    if(v.settings.mode==='all') Object.entries(a).forEach(([uid,x])=>tally(uid,x));
+    else if(a && a.uid) tally(a.uid, a);
+  });
+  firebase.database().ref('users/'+fbUser.uid+'/quizzes').push({
+    t:Date.now(), grp:v.settings.grp||'عام', title:v.settings.title||'', mode:v.settings.mode,
+    n:(v.qs||[]).length, players:Object.values(per)
+  }).catch(()=>{});
+}
+
+/* ---------- 📚 سجلّ مجموعاتي: متابعة مستوى الطلاب عبر المسابقات ---------- */
+const fmtDate = t => { const d=new Date(t); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; };
+async function screenGroups(sel){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ بجيب السجل...</p></div>';
+  if(!(await fbInit())){ screenOnline(); return; }
+  const snap = await firebase.database().ref('users/'+fbUser.uid+'/quizzes').once('value');
+  const all=[]; snap.forEach(ch=>{ const v=ch.val(); v.id=ch.key; all.push(v); });
+  all.sort((a,b)=>b.t-a.t);
+  const groups=[...new Set(all.map(x=>x.grp||'عام'))];
+  const g = sel && groups.includes(sel) ? sel : (groups[0]||null);
+  const list = all.filter(x=>(x.grp||'عام')===g);
+  /* تجميع مستوى كل طالب داخل المجموعة عبر كل المسابقات */
+  const stu={};
+  list.forEach(qz=>(qz.players||[]).forEach(p=>{ if(p.h) return;
+    const s=stu[p.name]=stu[p.name]||{emoji:p.emoji,n:0,score:0,c:0,w:0,last:0,lastScore:0};
+    s.n++; s.score+=p.score; s.c+=p.c; s.w+=p.w;
+    if(qz.t>s.last){ s.last=qz.t; s.lastScore=p.score; } }));
+  const rows=Object.entries(stu).map(([name,s])=>({name,...s,
+    avg:Math.round(s.score/s.n), acc:(s.c+s.w)?Math.round(s.c/(s.c+s.w)*100):0}))
+    .sort((a,b)=>b.avg-a.avg);
+  app.innerHTML = `
+  <div class="hdr"><h2>📚 سجلّ مجموعاتي</h2>
+    <div class="row" style="gap:6px">
+      <button class="btn ghost sm" id="bko">🌐 المسابقات</button>
+      <button class="btn ghost sm" id="hm">🏠</button>
+    </div></div>
+  ${!all.length? `<div class="card fade center">
+      <div style="font-size:3rem">📭</div>
+      <p>لسه مفيش مسابقات محفوظة.</p>
+      <p class="muted" style="font-size:.85rem">كل مسابقة بتديرها بتتسجل هنا تلقائيًا باسم مجموعتها — اعمل أول مسابقة وارجع.</p>
+    </div>`
+  : `
+  <div class="card fade" style="padding:12px">
+    <div class="row" style="justify-content:flex-start">
+      ${groups.map(x=>`<button class="btn ${x===g?'':'ghost'} sm grp" data-g="${esc(x)}">👥 ${esc(x)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="card fade">
+    <h3>مستوى الطلاب — ${esc(g)} <span class="muted" style="font-size:.8rem">(${list.length} مسابقة)</span></h3>
+    ${rows.length? `<table><tr><th>الطالب</th><th>شارك</th><th>متوسط النقاط</th><th>الدقة</th><th>آخر مسابقة</th></tr>
+      ${rows.map(r=>`<tr><td>${r.emoji||'🙂'} ${esc(r.name)}</td><td>${r.n}</td><td><b>${r.avg}</b></td>
+        <td><b style="color:${r.acc>=70?'var(--ok)':'var(--bad)'}">${r.acc}%</b></td><td>${r.lastScore}</td></tr>`).join('')}
+    </table>
+    <p class="muted" style="font-size:.8rem;margin-top:8px">💡 خلّي كل طالب يستخدم نفس الاسم كل مرة عشان المتابعة تتجمع صح.</p>`
+    : '<p class="muted center">مفيش طلاب مسجلين في مسابقات المجموعة دي</p>'}
+  </div>
+  ${list.map(qz=>`<div class="card fade">
+    <div class="hdr" style="margin-bottom:6px">
+      <b>${fmtDate(qz.t)} — ${esc(qz.title||'')}</b>
+      <div class="row" style="gap:6px">
+        <span class="pill">${qz.n} سؤال · ${qz.mode==='turns'?'بالدور':'الكل معًا'}</span>
+        <button class="btn ghost sm delq" data-id="${qz.id}">🗑️</button>
+      </div>
+    </div>
+    <table><tr><th>#</th><th>الطالب</th><th>النقاط</th><th>صح</th><th>غلط</th></tr>
+      ${(qz.players||[]).filter(p=>!p.h).sort((a,b)=>b.score-a.score).map((p,i)=>
+        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${p.emoji||'🙂'} ${esc(p.name)}</td>
+         <td><b>${p.score}</b></td><td>${p.c}</td><td>${p.w}</td></tr>`).join('')}
+    </table>
+  </div>`).join('')}`}
+  <div class="center" style="margin-top:6px"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#bko').onclick=()=>{ Snd.click(); screenOnline(); };
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
+  app.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{ Snd.click(); screenGroups(b.dataset.g); });
+  app.querySelectorAll('.delq').forEach(b=>b.onclick=async()=>{
+    if(!confirm('تمسح نتيجة المسابقة دي من السجل؟')) return;
+    await firebase.database().ref('users/'+fbUser.uid+'/quizzes/'+b.dataset.id).remove().catch(()=>{});
+    Snd.click(); screenGroups(g); });
 }
 function renderRoom(){
   const v=R.data, st=v.state;
@@ -2330,6 +2425,7 @@ function renderOnlineQ(){
 }
 function renderOnlineEnd(){
   const ps=roomPlayers().sort((a,b)=>(b.score||0)-(a.score||0));
+  const host=R.isHost;
   confetti(); Snd.win();
   app.innerHTML = `
   <div class="card fade center">
@@ -2338,10 +2434,13 @@ function renderOnlineEnd(){
     <table><tr><th>#</th><th>اللاعب</th><th>النقاط</th></tr>
       ${ps.map((p,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${p.emoji||'🙂'} ${esc(p.name)}</td><td><b>${p.score||0}</b></td></tr>`).join('')}
     </table>
+    ${host?`<p class="muted" style="font-size:.85rem">💾 النتيجة اتسجلت تلقائيًا في سجلّ مجموعاتك (${esc((R.data.settings||{}).grp||'عام')})</p>`:''}
   </div>
   <div class="center row">
-    <button class="btn" id="hm">🏠 الرئيسية</button>
+    ${host?'<button class="btn" id="grps2">📚 سجلّ مجموعاتي</button>':''}
+    <button class="btn ${host?'ghost':''}" id="hm">🏠 الرئيسية</button>
   </div>`;
+  if($('#grps2')) $('#grps2').onclick=()=>{ Snd.click(); leaveRoom(); screenGroups(); };
   $('#hm').onclick=()=>{ Snd.click(); leaveRoom(); screenHome(); };
 }
 
