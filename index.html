@@ -2228,7 +2228,7 @@ function screenTeacherPanel(t){
   <div class="card fade">
     <h3>❓ إزاي أضم طلابي؟</h3>
     <p style="font-size:.92rem">مفيش تسجيل مطلوب من الطالب: ابعت للطلاب <b>لينك اللعبة</b>، وكل واحد يكتب اسمه أول مرة يفتحها. لما تعمل مسابقة هيطلعلك <b>كود من ٥ حروف</b> — قوله ليهم، وكل واحد يدوس «ادخل مسابقة» ويكتبه. <b>أول ما الطالب يشارك في مسابقة لحلقتك، بيتسجل تلقائيًا في متابعة الحلقة دي</b> — نتايجه ودقته بتتجمع مسابقة ورا مسابقة.</p>
-    <p class="muted" style="font-size:.82rem">💡 نبّه الطلاب يكتبوا أسماءهم الحقيقية وبنفس الشكل كل مرة.</p>
+    <p class="muted" style="font-size:.82rem">💡 كل طالب متميّز بجهازه تلقائيًا — حتى لو اتنين اسمهم «محمد» مش هيختلطوا، ولو حد كتب اسم غيره مش هيدخل على حسابه. ومن شاشة المتابعة تقدر تعيد تسمية أي طالب بالقلم ✏️.</p>
   </div>
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
@@ -2278,9 +2278,10 @@ function screenOnlineSetup(t){
       settings:{juz:j, title:entry.name, count:qs.length, mode,
         grp:(($('#ogrpSel')&&$('#ogrpSel').value) || ($('#ogrp')&&$('#ogrp').value) || '').trim()||'عام'},
       qs, state:{phase:'lobby'},
-      players:{ [fbUser.uid]:{name:P.name+' (المعلم)', emoji:P.emoji, score:0, ord:0, host:true} } };
+      players:{ [fbUser.uid]:{name:P.name+' (المعلم)', emoji:P.emoji, score:0, ord:0, host:true, pid:P.id} } };
     await roomRef(code).set(room);
-    roomRef(code).onDisconnect().update({'state/phase':'end'});
+    /* ملحوظة: لا نربط نهاية الغرفة بانقطاع اتصال المعلم — قفل شاشة موبايله
+       أو تنقّله بين التطبيقات ما ينهيش المسابقة؛ الاتصال بيرجع لوحده */
     enterRoom(code, true);
   };
 }
@@ -2290,7 +2291,9 @@ async function joinRoom(code){
   const room = snap.val();
   if(room.state.phase!=='lobby') return toast('المسابقة بدأت بالفعل');
   const ord = Object.keys(room.players||{}).length;
-  await roomRef(code).child('players/'+fbUser.uid).set({name:P.name, emoji:P.emoji, score:0, ord});
+  await roomRef(code).child('players/'+fbUser.uid).set({name:P.name, emoji:P.emoji, score:0, ord, pid:P.id});
+  /* الانسحاب التلقائي عند انقطاع الاتصال — في اللوبي فقط؛ أثناء اللعب بنلغيه
+     حتى لا يختفي طالب قفلت شاشته لحظيًا (renderRoom يلغيه أول ما اللعب يبدأ) */
   roomRef(code).child('players/'+fbUser.uid).onDisconnect().remove();
   enterRoom(code, false);
 }
@@ -2304,45 +2307,35 @@ function enterRoom(code, isHost){
   R = { code, ref:roomRef(code), isHost, data:null, answered:{}, tick:null };
   R.ref.on('value', s=>{ const v=s.val(); if(!v){ leaveRoom(); toast('انتهت الغرفة'); screenOnline(); return; }
     R.data=v; renderRoom(); });
-  if(isHost) R.tick = setInterval(hostWatch, 1500);
+  /* كل الأجهزة بتراقب المهلة — فلو جهاز المعلم اتخفى أو قفل، المسابقة ما بتقفش */
+  R.tick = setInterval(watchTimeout, 1500);
 }
 const roomPlayers = () => Object.entries(R.data.players||{}).map(([uid,p])=>({uid,...p})).sort((a,b)=>a.ord-b.ord);
 function turnOrder(){ const ps=roomPlayers().filter(p=>!p.host || roomPlayers().length===1); return ps.length?ps:roomPlayers(); }
-function hostWatch(){
-  if(!R || !R.data || !R.isHost) return;
+function watchTimeout(){
+  if(!R || !R.data) return;
   const st=R.data.state;
-  if(st.phase!=='play') return;
-  const anspath = R.data.ans && R.data.ans[st.qi];
-  const mode = R.data.settings.mode;
-  const players = turnOrder();
-  if(mode==='turns'){
-    if(anspath || Date.now()>st.until){ advanceTurn(anspath); }
-  } else {
-    const got = anspath ? Object.keys(anspath).length : 0;
-    if(got>=players.length || Date.now()>st.until){ advanceAll(anspath||{}); }
-  }
+  if(st.phase==='play' && Date.now()>st.until) advanceState(st.qi);
 }
-function advanceTurn(ans){
-  const st=R.data.state, players=turnOrder();
-  if(ans && ans.pts){ R.ref.child('players/'+ans.uid+'/score').set(((R.data.players[ans.uid]||{}).score||0)+ans.pts); }
-  const idx = players.findIndex(p=>p.uid===st.turn);
-  const nqi = st.qi+1;
-  if(nqi>=R.data.qs.length){ saveQuizResult(); R.ref.child('state').update({phase:'end'}); return; }
-  R.ref.child('state').update({qi:nqi, turn:players[(idx+1)%players.length].uid, until:Date.now()+OTIME*1000});
-}
-function advanceAll(ansMap){
-  const st=R.data.state;
-  Object.entries(ansMap).forEach(([uid,a])=>{ if(a.pts) R.ref.child('players/'+uid+'/score')
-    .set(((R.data.players[uid]||{}).score||0)+a.pts); });
-  const nqi=st.qi+1;
-  if(nqi>=R.data.qs.length){ saveQuizResult(); R.ref.child('state').update({phase:'end'}); return; }
-  R.ref.child('state').update({qi:nqi, until:Date.now()+OTIME*1000});
+/* التقدّم للسؤال التالي بمعاملة ذرية — أي جهاز يقدر ينفذها ومفيش ازدواج */
+function advanceState(expectQi){
+  if(!R || !R.data) return;
+  const v=R.data, players=turnOrder(), total=(v.qs||[]).length, mode=v.settings.mode;
+  R.ref.child('state').transaction(st=>{
+    if(!st || st.phase!=='play' || st.qi!==expectQi) return;   /* حد تاني سبقنا — نلغي */
+    const nqi = st.qi+1;
+    if(nqi>=total) return {phase:'end', qi:st.qi, turn:st.turn||null, until:0};
+    const next = {phase:'play', qi:nqi, until:Date.now()+OTIME*1000, turn:st.turn||null};
+    if(mode==='turns'){ const i=players.findIndex(p=>p.uid===st.turn);
+      next.turn=players[(i+1+players.length)%players.length].uid; }
+    return next;
+  });
 }
 /* حفظ نتيجة المسابقة في سجلّ المعلم — النقاط تُحسب من سجل الإجابات نفسه */
 function saveQuizResult(){
   if(!R || !R.isHost || R.saved || !fbUser) return; R.saved=true;
   const v=R.data, per={};
-  Object.entries(v.players||{}).forEach(([uid,p])=>{ per[uid]={name:p.name, emoji:p.emoji||'🙂', h:!!p.host, score:0, c:0, w:0}; });
+  Object.entries(v.players||{}).forEach(([uid,p])=>{ per[uid]={name:p.name, emoji:p.emoji||'🙂', h:!!p.host, score:0, c:0, w:0, uid, pid:p.pid||null}; });
   const tally=(uid,a)=>{ if(!per[uid]||!a) return; per[uid].score+=a.pts||0; a.ok?per[uid].c++:per[uid].w++; };
   Object.values(v.ans||{}).forEach(a=>{
     if(v.settings.mode==='all') Object.entries(a).forEach(([uid,x])=>tally(uid,x));
@@ -2364,19 +2357,29 @@ async function screenGroups(sel){
   const all=[]; snap.forEach(ch=>{ const v=ch.val(); v.id=ch.key; all.push(v); });
   all.sort((a,b)=>b.t-a.t);
   const t = await loadTeacher();
+  const roster = (await firebase.database().ref('users/'+fbUser.uid+'/roster').once('value')).val() || {};
   const groups=[...new Set([...((t&&t.groups)||[]), ...all.map(x=>x.grp||'عام')])];
   const g = sel && groups.includes(sel) ? sel : (groups[0]||null);
   const list = all.filter(x=>(x.grp||'عام')===g);
   const hasAny = groups.length>0;
-  /* تجميع مستوى كل طالب داخل المجموعة عبر كل المسابقات */
+  /* تجميع مستوى كل طالب داخل المجموعة عبر كل المسابقات.
+     مفتاح الطالب = جهازه + ملفه الشخصي (uid+pid) وليس الاسم المكتوب —
+     فطالبان اسمهما «محمد» يظلان منفصلين، ومن يكتب اسم غيره لا يختلط به. */
+  const keyOf = p => p.uid ? (p.uid+'_'+(p.pid||'x')) : ('n_'+p.name);
+  const dispName = p => { const r=roster[keyOf(p)]; return (r&&r.nm) || p.name; };
   const stu={};
   list.forEach(qz=>(qz.players||[]).forEach(p=>{ if(p.h) return;
-    const s=stu[p.name]=stu[p.name]||{emoji:p.emoji,n:0,score:0,c:0,w:0,last:0,lastScore:0};
-    s.n++; s.score+=p.score; s.c+=p.c; s.w+=p.w;
+    const k=keyOf(p);
+    const s=stu[k]=stu[k]||{key:k, emoji:p.emoji, rawName:p.name, n:0, score:0, c:0, w:0, last:0, lastScore:0};
+    s.rawName=p.name; s.n++; s.score+=p.score; s.c+=p.c; s.w+=p.w;
     if(qz.t>s.last){ s.last=qz.t; s.lastScore=p.score; } }));
-  const rows=Object.entries(stu).map(([name,s])=>({name,...s,
+  const rows=Object.values(stu).map(s=>({...s,
+    name:(roster[s.key]&&roster[s.key].nm)||s.rawName,
     avg:Math.round(s.score/s.n), acc:(s.c+s.w)?Math.round(s.c/(s.c+s.w)*100):0}))
     .sort((a,b)=>b.avg-a.avg);
+  /* لو اسمان متطابقان لطالبين مختلفين: نلحق رمزًا قصيرًا مميزًا لحين إعادة التسمية */
+  const cnt={}; rows.forEach(r=>{ cnt[r.name]=(cnt[r.name]||0)+1; });
+  rows.forEach(r=>{ if(cnt[r.name]>1) r.name += ' ‹'+r.key.slice(0,4)+'›'; });
   app.innerHTML = `
   <div class="hdr"><h2>📚 متابعة الحلقات</h2>
     <div class="row" style="gap:6px">
@@ -2396,11 +2399,12 @@ async function screenGroups(sel){
   </div>
   <div class="card fade">
     <h3>مستوى الطلاب — ${esc(g)} <span class="muted" style="font-size:.8rem">(${list.length} مسابقة)</span></h3>
-    ${rows.length? `<table><tr><th>الطالب</th><th>شارك</th><th>متوسط النقاط</th><th>الدقة</th><th>آخر مسابقة</th></tr>
+    ${rows.length? `<table><tr><th>الطالب</th><th>شارك</th><th>متوسط النقاط</th><th>الدقة</th><th>آخر مسابقة</th><th></th></tr>
       ${rows.map(r=>`<tr><td>${r.emoji||'🙂'} ${esc(r.name)}</td><td>${r.n}</td><td><b>${r.avg}</b></td>
-        <td><b style="color:${r.acc>=70?'var(--ok)':'var(--bad)'}">${r.acc}%</b></td><td>${r.lastScore}</td></tr>`).join('')}
+        <td><b style="color:${r.acc>=70?'var(--ok)':'var(--bad)'}">${r.acc}%</b></td><td>${r.lastScore}</td>
+        <td><button class="btn ghost sm ren" data-k="${esc(r.key)}" data-n="${esc(r.rawName)}" title="إعادة تسمية">✏️</button></td></tr>`).join('')}
     </table>
-    <p class="muted" style="font-size:.8rem;margin-top:8px">💡 خلّي كل طالب يستخدم نفس الاسم كل مرة عشان المتابعة تتجمع صح.</p>`
+    <p class="muted" style="font-size:.8rem;margin-top:8px">💡 كل طالب متميّز بجهازه تلقائيًا حتى لو الأسماء متشابهة — وتقدر تعيد تسمية أي طالب بالقلم ✏️ (مثلًا «محمد أحمد» و«محمد سمير») والاسم الجديد يثبت في كل المسابقات الجاية.</p>`
     : `<p class="muted center">لسه مفيش مسابقات للحلقة دي — الطلاب بيظهروا هنا تلقائيًا أول ما يشاركوا في مسابقة ليها.</p>`}
   </div>
   ${list.map(qz=>`<div class="card fade">
@@ -2413,7 +2417,7 @@ async function screenGroups(sel){
     </div>
     <table><tr><th>#</th><th>الطالب</th><th>النقاط</th><th>صح</th><th>غلط</th></tr>
       ${(qz.players||[]).filter(p=>!p.h).sort((a,b)=>b.score-a.score).map((p,i)=>
-        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${p.emoji||'🙂'} ${esc(p.name)}</td>
+        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${p.emoji||'🙂'} ${esc(dispName(p))}</td>
          <td><b>${p.score}</b></td><td>${p.c}</td><td>${p.w}</td></tr>`).join('')}
     </table>
   </div>`).join('')}`}
@@ -2425,9 +2429,27 @@ async function screenGroups(sel){
     if(!confirm('تمسح نتيجة المسابقة دي من السجل؟')) return;
     await firebase.database().ref('users/'+fbUser.uid+'/quizzes/'+b.dataset.id).remove().catch(()=>{});
     Snd.click(); screenGroups(g); });
+  app.querySelectorAll('.ren').forEach(b=>b.onclick=async()=>{
+    const cur=(roster[b.dataset.k]&&roster[b.dataset.k].nm)||b.dataset.n;
+    const nn=prompt('اسم الطالب (زي ما تحب يظهر في المتابعة):', cur);
+    if(!nn||!nn.trim()) return;
+    await firebase.database().ref('users/'+fbUser.uid+'/roster/'+b.dataset.k).set({nm:nn.trim()}).catch(()=>{});
+    Snd.correct(); screenGroups(g); });
 }
 function renderRoom(){
   const v=R.data, st=v.state;
+  /* في وضع «الكل معًا»: أول جهاز يلاحظ اكتمال الإجابات يدفع للسؤال التالي */
+  if(st.phase==='play' && v.settings.mode==='all'){
+    const got = v.ans && v.ans[st.qi] ? Object.keys(v.ans[st.qi]).length : 0;
+    if(got >= turnOrder().length) advanceState(st.qi);
+  }
+  /* أول ما اللعب يبدأ: نلغي الانسحاب التلقائي للطالب حتى لا يسقط بانقطاع لحظي */
+  if(st.phase!=='lobby' && !R.isHost && !R.presCancelled){
+    R.presCancelled = true;
+    R.ref.child('players/'+fbUser.uid).onDisconnect().cancel().catch(()=>{});
+  }
+  /* المضيف يحفظ النتيجة في سجلّه أول ما يشوف النهاية */
+  if(st.phase==='end' && R.isHost) saveQuizResult();
   if(st.phase==='lobby') return renderLobby();
   if(st.phase==='play') return renderOnlineQ();
   return renderOnlineEnd();
@@ -2490,8 +2512,10 @@ function renderOnlineQ(){
     ok?Snd.correct():Snd.wrong();
     app.querySelectorAll('#oOpts .opt').forEach((x,i)=>{ x.disabled=true; if(i===q.ans) x.classList.add('ok'); });
     if(!ok) b.classList.add('bad');
+    /* اللاعب يسجل إجابته ويزوّد نقاطه بنفسه (معاملة ذرية)، وفي وضع الأدوار يدفع للسؤال التالي فورًا */
+    if(pts) R.ref.child('players/'+fbUser.uid+'/score').transaction(s=>(s||0)+pts);
     if(v.settings.mode==='all') R.ref.child('ans/'+st.qi+'/'+fbUser.uid).set({pick,ok,pts});
-    else R.ref.child('ans/'+st.qi).set({uid:fbUser.uid,pick,ok,pts});
+    else R.ref.child('ans/'+st.qi).set({uid:fbUser.uid,pick,ok,pts}, ()=>advanceState(st.qi));
   });
   /* عدّاد الثواني يتحدث محليًا */
   clearTimeout(R.secT); if(secs>0) R.secT=setTimeout(()=>{ if(R&&R.data&&R.data.state.phase==='play') renderOnlineQ(); },1000);
