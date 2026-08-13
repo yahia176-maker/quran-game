@@ -1156,10 +1156,10 @@ const Snd = {
 let G = {};
 function newGame(surah, players){
   const stars = loadJourneyStars(surah);
-  let unlocked = stars.findIndex(s=>s===0); if(unlocked<0) unlocked = surah.stages.length;
+  /* كل المراحل مفتوحة دائمًا — عشان اللي بيحفظ متفرقًا أو بيراجع أو بادئ من آخر المصحف */
   G = { surah, players: players.map(n=>({name:n, score:0, right:0, wrong:0})),
         turn:0, stage:0, ch:0, chal:[], stars,
-        unlocked, stageEarned:0, stageMax:0, timeLeft:QTIME, tId:null, locked:false,
+        unlocked:surah.stages.length, stageEarned:0, stageMax:0, timeLeft:QTIME, tId:null, locked:false,
         solo:null, soloStage:null, review:false, sstars:loadSurahStars(surah.id) };
 }
 /* نجوم كل سورة على حدة — في الملف الشخصي (مع توافق قديم بدون بروفايل) */
@@ -1693,21 +1693,21 @@ function screenMap(){
   <div class="card fade"><p style="margin:0">${esc(s.intro)}</p></div>
   <div class="grid stages fade">
     ${s.stages.map((st,i)=>{
-      const lk = i>G.unlocked;
       const sub = st.range ? `الآيات ${st.range[0]}–${st.range[1]}`
+                : st.slice ? `${st.slice[1]-st.slice[0]} آية`
                 : (st.surahs||[]).map(sn=>(s.info[sn]||{}).nm||sn).join(' · ');
-      return `<div class="stage ${lk?'locked':''}" data-i="${i}">
-        <span class="em">${lk?'🔒':st.emoji}</span>
+      return `<div class="stage" data-i="${i}">
+        <span class="em">${st.emoji}</span>
         <div style="font-weight:700">${esc(st.title)}</div>
         <div class="muted" style="font-size:.8rem">${esc(sub)}</div>
         <div class="st">${'★'.repeat(G.stars[i])}${'☆'.repeat(3-G.stars[i])}</div>
       </div>`;}).join('')}
   </div>
-  ${G.unlocked>=s.stages.length? `<div class="center" style="margin-top:14px"><button class="btn" id="fin">🎉 شوف النتيجة النهائية</button></div>`:''}
+  ${G.stars.length && G.stars.every(x=>x>0)? `<div class="center" style="margin-top:14px"><button class="btn" id="fin">🎉 شوف النتيجة النهائية</button></div>`
+    :`<p class="muted center" style="font-size:.82rem;margin-top:12px">💡 كل المراحل مفتوحة — ابدأ من أي مكان يناسب حفظك أو مراجعتك</p>`}
   <p class="muted center" style="font-size:.85rem;margin-top:14px">اللاعبون: ${G.players.map(p=>esc(p.name)+' ('+p.score+')').join(' · ')}</p>`;
   app.querySelectorAll('.stage').forEach(d=>d.onclick=()=>{
-    const i=+d.dataset.i; if(i>G.unlocked){ Snd.wrong(); return; }
-    Snd.click(); loadStage(i); screenStory();
+    Snd.click(); loadStage(+d.dataset.i); screenStory();
   });
   if($('#pick')) $('#pick').onclick=()=>{ Snd.click(); screenPicker(); };
   $('#players').onclick=()=>{ Snd.click(); screenPlayers(); };
@@ -2010,15 +2010,18 @@ function screenStageEnd(){
       `<tr><td>${esc(p.name)}</td><td><b>${p.score}</b></td><td class="muted">✔ ${p.right} · ✘ ${p.wrong}</td></tr>`).join('')}</table>
   </div>
   <div class="row">
-    <button class="btn" id="nx">${solo ? '📖 سورة تانية'
-        : (G.unlocked<G.surah.stages.length?'المرحلة التالية ◀':'النتيجة النهائية 🎉')}</button>
+    <button class="btn" id="nx"></button>
     <button class="btn ghost" id="rp">🔄 ${solo?'أعِد السورة':'أعِد المرحلة'}</button>
     <button class="btn ghost" id="mp">🗺️ الخريطة</button>
   </div>`;
+  const hasNext = !solo && G.stage+1 < G.surah.stages.length;
+  const allDone = !solo && G.stars.length>0 && G.stars.every(x=>x>0);
+  $('#nx').textContent = solo ? '📖 سورة تانية' : hasNext ? 'المرحلة التالية ◀' : (allDone ? 'النتيجة النهائية 🎉' : '🗺️ الخريطة');
   $('#nx').onclick=()=>{ Snd.click();
     if(solo){ screenPicker(); }
-    else if(G.unlocked<G.surah.stages.length){ loadStage(G.unlocked); screenStory(); }
-    else screenFinal(); };
+    else if(hasNext){ loadStage(G.stage+1); screenStory(); }
+    else if(allDone){ screenFinal(); }
+    else screenMap(); };
   $('#rp').onclick=()=>{ Snd.click(); solo?loadSolo(G.solo):loadStage(G.stage); screenStory(); };
   $('#mp').onclick=()=>{ Snd.click(); screenMap(); };
 }
@@ -2297,6 +2300,7 @@ function screenTeacherPanel(t){
     <h3>❓ إزاي أضم طلابي؟</h3>
     <p style="font-size:.92rem">مفيش تسجيل مطلوب من الطالب: ابعت للطلاب <b>لينك اللعبة</b>، وكل واحد يكتب اسمه أول مرة يفتحها. لما تعمل مسابقة هيطلعلك <b>كود من ٥ حروف</b> — قوله ليهم، وكل واحد يدوس «ادخل مسابقة» ويكتبه. <b>أول ما الطالب يشارك في مسابقة لحلقتك، بيتسجل تلقائيًا في متابعة الحلقة دي</b> — نتايجه ودقته بتتجمع مسابقة ورا مسابقة.</p>
     <p class="muted" style="font-size:.82rem">💡 كل طالب متميّز بجهازه تلقائيًا — حتى لو اتنين اسمهم «محمد» مش هيختلطوا، ولو حد كتب اسم غيره مش هيدخل على حسابه. ومن شاشة المتابعة تقدر تعيد تسمية أي طالب بالقلم ✏️.</p>
+    ${location.protocol.startsWith('http')?'<div class="center" style="margin-top:8px"><a class="btn ghost sm" href="guide.html" target="_blank" style="text-decoration:none">📖 دليل المعلم الكامل (يُطبع ويُشارك)</a></div>':''}
   </div>
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
