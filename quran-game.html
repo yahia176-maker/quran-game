@@ -2082,9 +2082,36 @@ async function fbInit(){
   try{
     await loadScript(FB_SDK+'app.js'); await loadScript(FB_SDK+'auth.js'); await loadScript(FB_SDK+'database.js');
     firebase.initializeApp(FIREBASE_CONFIG);
-    const cred = await firebase.auth().signInAnonymously();
-    fbUser = cred.user; fbReady = true; return true;
+    /* لو في جلسة محفوظة (معلم مسجّل بإيميل مثلًا) نستخدمها، وإلا هوية مجهولة تلقائية */
+    fbUser = await new Promise(res=>{ const un=firebase.auth().onAuthStateChanged(u=>{ un(); res(u); }, ()=>res(null)); });
+    if(!fbUser){ const cred = await firebase.auth().signInAnonymously(); fbUser = cred.user; }
+    fbReady = true; return true;
   }catch(e){ console.error('fb init', e); toast('⚠️ تعذّر الاتصال بخدمة المسابقات'); return false; }
+}
+/* رسائل أخطاء الدخول بالعربي */
+function authMsg(e){
+  const m={'auth/email-already-in-use':'الإيميل ده مستخدم بالفعل — جرّب «تسجيل الدخول» بدل الربط',
+    'auth/invalid-email':'اكتب إيميل صحيح', 'auth/weak-password':'كلمة السر لازم ٦ أحرف على الأقل',
+    'auth/wrong-password':'كلمة السر غلط', 'auth/user-not-found':'مفيش حساب بالإيميل ده',
+    'auth/too-many-requests':'محاولات كتير — استنى شوية وجرّب تاني',
+    'auth/operation-not-allowed':'الدخول بالإيميل لسه مش مفعّل في إعدادات Firebase (خطوة لصاحب اللعبة)',
+    'auth/invalid-credential':'بيانات الدخول غير صحيحة'};
+  return m[e&&e.code] || 'حصلت مشكلة: '+(e&&e.code||'غير معروفة');
+}
+/* ربط حساب المعلم بإيميل وكلمة سر — نفس الهوية، فكل بياناته بتفضل زي ما هي */
+async function linkTeacherEmail(email, pass){
+  const cred = firebase.auth.EmailAuthProvider.credential(email, pass);
+  await firebase.auth().currentUser.linkWithCredential(cred);
+  fbUser = firebase.auth().currentUser;
+}
+async function teacherLogin(email, pass){
+  await firebase.auth().signInWithEmailAndPassword(email, pass);
+  fbUser = firebase.auth().currentUser;
+}
+async function teacherLogout(){
+  await firebase.auth().signOut();
+  const cred = await firebase.auth().signInAnonymously();
+  fbUser = cred.user;
 }
 /* مزامنة الملف الشخصي سحابيًا (حساب بسيط مرتبط بالجهاز) */
 let syncT=null;
@@ -2189,15 +2216,29 @@ function screenTeacherSignup(){
   app.innerHTML = `
   <div class="hdr"><h2>🧑‍🏫 تسجيل معلم</h2><button class="btn ghost sm" id="hm">🏠</button></div>
   <div class="card fade">
-    <p>سجّل مرة واحدة بس — وهيفضل جهازك ده فاكرك دايمًا (من غير باسورد).</p>
+    <p>سجّل مرة واحدة بس — وهيفضل جهازك ده فاكرك دايمًا.</p>
     <h3>اسمك</h3>
     <input type="text" id="tname" maxlength="24" placeholder="مثال: الشيخ يحيى" value="${esc(P?P.name:'')}">
     <h3 style="margin-top:12px">اسم أول حلقة/مجموعة</h3>
     <input type="text" id="tgrp" maxlength="24" placeholder="مثال: حلقة السبت">
-    <p class="muted" style="font-size:.82rem">تقدر تضيف حلقات تانية بعدين من لوحتك.</p>
+    <p class="muted" style="font-size:.82rem">تقدر تضيف حلقات تانية بعدين من لوحتك، وتأمّن حسابك بإيميل وكلمة سر عشان يفتح من أي جهاز.</p>
   </div>
-  <div class="center"><button class="btn" id="reg">✅ سجّلني</button></div>`;
+  <div class="center"><button class="btn" id="reg">✅ سجّلني</button></div>
+  <div class="card fade center" style="margin-top:14px;padding:12px">
+    <span class="muted" style="font-size:.85rem">معلم مسجّل قبل كده على جهاز تاني؟</span>
+    <button class="btn ghost sm" id="lgBtn">🔐 تسجيل دخول بحسابي</button>
+    <div id="lgForm" hidden style="margin-top:10px">
+      <input type="email" id="lgEmail" placeholder="الإيميل" style="direction:ltr">
+      <input type="password" id="lgPass" placeholder="كلمة السر" style="direction:ltr">
+      <button class="btn sm" id="lgGo">دخول</button>
+    </div>
+  </div>`;
   $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
+  $('#lgBtn').onclick=()=>{ Snd.click(); $('#lgForm').hidden=!$('#lgForm').hidden; };
+  $('#lgGo').onclick=async()=>{ Snd.click();
+    try{ await teacherLogin(($('#lgEmail').value||'').trim(), $('#lgPass').value||'');
+      Snd.correct(); toast('✅ رجعنا لحسابك'); screenTeacher(); }
+    catch(e){ toast('⚠️ '+authMsg(e)); } };
   $('#reg').onclick=async()=>{ Snd.click();
     const name=($('#tname').value||'').trim(), g=($('#tgrp').value||'').trim();
     if(!name) return toast('اكتب اسمك الأول');
@@ -2226,6 +2267,20 @@ function screenTeacherPanel(t){
     <button class="btn" id="mk">➕ إنشاء مسابقة</button>
   </div>
   <div class="card fade">
+    <h3>🔐 حسابك</h3>
+    ${fbUser && !fbUser.isAnonymous ? `
+      <p style="font-size:.92rem">✅ حسابك مؤمّن بالإيميل: <b style="direction:ltr;display:inline-block">${esc(fbUser.email||'')}</b><br>
+      <span class="muted" style="font-size:.82rem">تقدر تفتح حلقاتك وسجلّك من أي جهاز بتسجيل الدخول بنفس الإيميل.</span></p>
+      <button class="btn ghost sm" id="lgout">🚪 تسجيل خروج من الجهاز ده</button>`
+    : `
+      <p style="font-size:.92rem">حسابك حاليًا مربوط بالجهاز ده بس. أمّنه بإيميل وكلمة سر عشان تقدر تفتحه من أي موبايل أو كمبيوتر، وما يضيعش لو اتغير جهازك.</p>
+      <div class="row" style="justify-content:flex-start">
+        <input type="email" id="lkEmail" placeholder="الإيميل" style="direction:ltr;flex:1;min-width:170px;margin:0">
+        <input type="password" id="lkPass" placeholder="كلمة سر (٦+ أحرف)" style="direction:ltr;flex:1;min-width:150px;margin:0">
+        <button class="btn sm" id="lkGo">🔐 أمّن حسابي</button>
+      </div>`}
+  </div>
+  <div class="card fade">
     <h3>❓ إزاي أضم طلابي؟</h3>
     <p style="font-size:.92rem">مفيش تسجيل مطلوب من الطالب: ابعت للطلاب <b>لينك اللعبة</b>، وكل واحد يكتب اسمه أول مرة يفتحها. لما تعمل مسابقة هيطلعلك <b>كود من ٥ حروف</b> — قوله ليهم، وكل واحد يدوس «ادخل مسابقة» ويكتبه. <b>أول ما الطالب يشارك في مسابقة لحلقتك، بيتسجل تلقائيًا في متابعة الحلقة دي</b> — نتايجه ودقته بتتجمع مسابقة ورا مسابقة.</p>
     <p class="muted" style="font-size:.82rem">💡 كل طالب متميّز بجهازه تلقائيًا — حتى لو اتنين اسمهم «محمد» مش هيختلطوا، ولو حد كتب اسم غيره مش هيدخل على حسابه. ومن شاشة المتابعة تقدر تعيد تسمية أي طالب بالقلم ✏️.</p>
@@ -2237,6 +2292,15 @@ function screenTeacherPanel(t){
     if(!groups.includes(g)) groups.push(g);
     await saveTeacher(Object.assign(t,{groups})); Snd.correct(); screenTeacherPanel(t); };
   $('#mk').onclick=()=>{ Snd.click(); screenOnlineSetup(t); };
+  if($('#lkGo')) $('#lkGo').onclick=async()=>{ Snd.click();
+    const em=($('#lkEmail').value||'').trim(), pw=$('#lkPass').value||'';
+    if(!em||!pw) return toast('اكتب الإيميل وكلمة السر');
+    try{ await linkTeacherEmail(em, pw); Snd.correct();
+      toast('🔐 اتأمّن! افتح حسابك من أي جهاز بنفس الإيميل'); screenTeacherPanel(t); }
+    catch(e){ toast('⚠️ '+authMsg(e)); } };
+  if($('#lgout')) $('#lgout').onclick=async()=>{ Snd.click();
+    if(!confirm('تسجل خروج من الجهاز ده؟ (بياناتك محفوظة في حسابك)')) return;
+    await teacherLogout(); toast('🚪 خرجت — الجهاز رجع هوية جديدة'); screenHome(); };
 }
 
 function screenOnlineSetup(t){
