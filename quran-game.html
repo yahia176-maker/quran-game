@@ -1297,12 +1297,15 @@ function screenHome(){
     <div class="stage" id="mRev"><span class="em">🔁</span>
       <div style="font-weight:700">مراجعتي ${due?`<span class="pill turn" style="padding:2px 8px;font-size:.75rem">${due}</span>`:''}</div>
       <div class="muted" style="font-size:.78rem">${due?'أخطاء مستحقة للمراجعة':'مفيش مراجعات مستحقة'}</div></div>
-    <div class="stage" id="mOnline"><span class="em">🌐</span>
-      <div style="font-weight:700">مسابقة جماعية</div>
-      <div class="muted" style="font-size:.78rem">معلم وطلاب — كل واحد من جهازه</div></div>
-    <div class="stage" id="mHelp"><span class="em">💡</span>
-      <div style="font-weight:700">المساعدة</div>
-      <div class="muted" style="font-size:.78rem">الشرح وإضافة المحتوى</div></div>
+    <div class="stage" id="mOnline"><span class="em">🙋</span>
+      <div style="font-weight:700">ادخل مسابقة</div>
+      <div class="muted" style="font-size:.78rem">عندك كود من معلمك؟ ادخل من هنا</div></div>
+    <div class="stage" id="mTeach"><span class="em">🧑‍🏫</span>
+      <div style="font-weight:700">ركن المعلم</div>
+      <div class="muted" style="font-size:.78rem">حلقاتك، مسابقاتك، ومتابعة طلابك</div></div>
+    <div class="stage" id="mHelp" style="grid-column:1/-1;padding:10px"><span style="font-size:1.4rem">💡</span>
+      <b style="margin-right:6px">المساعدة</b>
+      <span class="muted" style="font-size:.78rem">— الشرح الكامل وإضافة المحتوى</span></div>
   </div>
   <div class="card fade center" style="max-width:560px;margin:14px auto 0">
     <span class="muted" style="font-size:.85rem">مستوى الصعوبة:</span>
@@ -1317,6 +1320,7 @@ function screenHome(){
   $('#mDaily').onclick=()=>{ Snd.init(); Snd.click(); startDaily(); };
   $('#mRev').onclick=()=>{ Snd.init(); Snd.click(); startReview(); };
   $('#mOnline').onclick=()=>{ Snd.init(); Snd.click(); screenOnline(); };
+  $('#mTeach').onclick=()=>{ Snd.init(); Snd.click(); screenTeacher(); };
   $('#mHelp').onclick=()=>{ Snd.init(); Snd.click(); screenHelp(); };
 }
 
@@ -2087,7 +2091,8 @@ let syncT=null;
 function cloudSync(){
   if(!fbReady || !fbUser || !P) return;
   clearTimeout(syncT);
-  syncT = setTimeout(()=>{ firebase.database().ref('users/'+fbUser.uid).set({
+  /* نكتب في users/{uid}/profile فقط — حتى لا نمسح سجل المسابقات وبيانات المعلم المجاورة */
+  syncT = setTimeout(()=>{ firebase.database().ref('users/'+fbUser.uid+'/profile').set({
     name:P.name, emoji:P.emoji, correct:P.stats.c, wrong:P.stats.w,
     streak:P.streak||0, badges:P.badges, updated:Date.now() }).catch(()=>{}); }, 1500);
 }
@@ -2131,51 +2136,118 @@ function buildOnlineQs(entry, count){
 const OTIME = 40;   /* مهلة السؤال في المسابقة */
 const roomRef = code => firebase.database().ref('rooms/'+code);
 
-/* --- شاشات المسابقة --- */
+/* --- بيانات المعلم (اسم + حلقاته) في السحابة --- */
+async function loadTeacher(){
+  const s = await firebase.database().ref('users/'+fbUser.uid+'/teacher').once('value');
+  return s.val();
+}
+function saveTeacher(t){ return firebase.database().ref('users/'+fbUser.uid+'/teacher').set(t); }
+
+/* --- شاشة الطالب: دخول مسابقة بالكود --- */
 function screenOnline(){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2>🌐 مسابقة جماعية</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🙋 ادخل مسابقة</h2><button class="btn ghost sm" id="hm">🏠</button></div>
   ${FIREBASE_CONFIG?`
   <div class="card fade center">
-    <div style="font-size:3rem">🧑‍🏫</div>
-    <h3>أنشئ مسابقة (للمعلم/المنظم)</h3>
-    <p class="muted">تختار الجزء وعدد الأسئلة، وياخد كل طالب كود الدخول</p>
-    <button class="btn" id="mk">➕ إنشاء مسابقة</button>
+    <div style="font-size:3rem">🎟️</div>
+    <h3>اكتب الكود اللي قاله المعلم</h3>
+    <input type="text" id="jcode" maxlength="5" placeholder="مثال: AB3CD" style="text-align:center;font-size:1.6rem;letter-spacing:8px;direction:ltr">
+    <button class="btn" id="jn" style="margin-top:6px">🚪 دخول المسابقة</button>
+    <p class="muted" style="font-size:.82rem;margin-top:10px">هتدخل باسمك «${esc(P?P.name:'')}» — لو ده مش اسمك الحقيقي غيّره من «غيّر اللاعب» في الرئيسية عشان المعلم يعرفك.</p>
   </div>
-  <div class="card fade center">
-    <div style="font-size:3rem">🙋</div>
-    <h3>ادخل مسابقة</h3>
-    <input type="text" id="jcode" maxlength="5" placeholder="اكتب الكود (5 حروف)" style="text-align:center;font-size:1.4rem;letter-spacing:6px;direction:ltr">
-    <button class="btn" id="jn">🚪 دخول</button>
-  </div>
-  <div class="card fade center">
-    <div style="font-size:3rem">📚</div>
-    <h3>سجلّ مجموعاتي</h3>
-    <p class="muted" style="font-size:.85rem">نتائج كل مسابقاتك السابقة مجمّعة بالمجموعة — تتابع منها مستوى كل طالب</p>
-    <button class="btn ghost" id="grps">📊 افتح السجل</button>
+  <div class="card fade center" style="padding:12px">
+    <span class="muted" style="font-size:.85rem">أنت معلم وعايز تنشئ مسابقة؟</span>
+    <button class="btn ghost sm" id="tk">🧑‍🏫 ركن المعلم</button>
   </div>`
   :`<div class="card fade center">
     <div style="font-size:3rem">🔌</div>
     <h3>المسابقات الجماعية لسه مش مفعّلة</h3>
     <p>الميزة دي محتاجة تفعيل خدمة مجانية (Firebase) مرة واحدة من صاحب اللعبة — الخطوات كاملة في شاشة <b>المساعدة</b>.</p>
-    <p class="muted" style="font-size:.85rem">بعد التفعيل: المعلم ينشئ مسابقة وياخد كودًا، وكل طالب يدخل بالكود من جهازه، والنتيجة لحظية مجمعة.</p>
   </div>`}
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); if(R) leaveRoom(); screenHome(); };
   if(!FIREBASE_CONFIG) return;
-  $('#mk').onclick=async()=>{ Snd.click(); if(await fbInit()) screenOnlineSetup(); };
-  $('#grps').onclick=()=>{ Snd.click(); screenGroups(); };
+  $('#tk').onclick=()=>{ Snd.click(); screenTeacher(); };
   $('#jn').onclick=async()=>{ Snd.click();
     const code=($('#jcode').value||'').trim().toUpperCase();
     if(code.length<4) return toast('اكتب الكود الأول');
     if(await fbInit()) joinRoom(code); };
 }
-function screenOnlineSetup(){
+
+/* --- 🧑‍🏫 ركن المعلم: تسجيل أول مرة ثم لوحة الحلقات --- */
+async function screenTeacher(){
+  stopTimer();
+  if(!FIREBASE_CONFIG){ screenOnline(); return; }
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة واحدة...</p></div>';
+  if(!(await fbInit())){ screenHome(); return; }
+  const t = await loadTeacher();
+  if(!t || !t.name) return screenTeacherSignup();
+  screenTeacherPanel(t);
+}
+function screenTeacherSignup(){
+  app.innerHTML = `
+  <div class="hdr"><h2>🧑‍🏫 تسجيل معلم</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="card fade">
+    <p>سجّل مرة واحدة بس — وهيفضل جهازك ده فاكرك دايمًا (من غير باسورد).</p>
+    <h3>اسمك</h3>
+    <input type="text" id="tname" maxlength="24" placeholder="مثال: الشيخ يحيى" value="${esc(P?P.name:'')}">
+    <h3 style="margin-top:12px">اسم أول حلقة/مجموعة</h3>
+    <input type="text" id="tgrp" maxlength="24" placeholder="مثال: حلقة السبت">
+    <p class="muted" style="font-size:.82rem">تقدر تضيف حلقات تانية بعدين من لوحتك.</p>
+  </div>
+  <div class="center"><button class="btn" id="reg">✅ سجّلني</button></div>`;
+  $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
+  $('#reg').onclick=async()=>{ Snd.click();
+    const name=($('#tname').value||'').trim(), g=($('#tgrp').value||'').trim();
+    if(!name) return toast('اكتب اسمك الأول');
+    if(!g) return toast('اكتب اسم الحلقة');
+    await saveTeacher({name, groups:[g], created:Date.now()});
+    Snd.correct(); toast('🎉 أهلًا بيك يا '+name);
+    screenTeacher(); };
+}
+function screenTeacherPanel(t){
+  const groups = t.groups||[];
+  app.innerHTML = `
+  <div class="hdr"><h2>🧑‍🏫 ${esc(t.name)}</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="card fade">
+    <h3>حلقاتك</h3>
+    <div class="row" style="justify-content:flex-start">
+      ${groups.map(g=>`<button class="btn ghost sm gv" data-g="${esc(g)}">👥 ${esc(g)} — 📊 المتابعة</button>`).join('')}
+    </div>
+    <div class="row" style="justify-content:flex-start;margin-top:8px">
+      <input type="text" id="ngrp" maxlength="24" placeholder="اسم حلقة جديدة..." style="flex:1;min-width:150px;margin:0">
+      <button class="btn ghost sm" id="addg">➕ إضافة</button>
+    </div>
+  </div>
+  <div class="card fade center">
+    <h3>🚀 ابدأ مسابقة لحلقتك</h3>
+    <p class="muted" style="font-size:.85rem">تختار الحلقة والجزء وعدد الأسئلة — وهيطلعلك كود تقوله للطلاب</p>
+    <button class="btn" id="mk">➕ إنشاء مسابقة</button>
+  </div>
+  <div class="card fade">
+    <h3>❓ إزاي أضم طلابي؟</h3>
+    <p style="font-size:.92rem">مفيش تسجيل مطلوب من الطالب: ابعت للطلاب <b>لينك اللعبة</b>، وكل واحد يكتب اسمه أول مرة يفتحها. لما تعمل مسابقة هيطلعلك <b>كود من ٥ حروف</b> — قوله ليهم، وكل واحد يدوس «ادخل مسابقة» ويكتبه. <b>أول ما الطالب يشارك في مسابقة لحلقتك، بيتسجل تلقائيًا في متابعة الحلقة دي</b> — نتايجه ودقته بتتجمع مسابقة ورا مسابقة.</p>
+    <p class="muted" style="font-size:.82rem">💡 نبّه الطلاب يكتبوا أسماءهم الحقيقية وبنفس الشكل كل مرة.</p>
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
+  app.querySelectorAll('.gv').forEach(b=>b.onclick=()=>{ Snd.click(); screenGroups(b.dataset.g); });
+  $('#addg').onclick=async()=>{ const g=($('#ngrp').value||'').trim(); if(!g) return;
+    if(!groups.includes(g)) groups.push(g);
+    await saveTeacher(Object.assign(t,{groups})); Snd.correct(); screenTeacherPanel(t); };
+  $('#mk').onclick=()=>{ Snd.click(); screenOnlineSetup(t); };
+}
+
+function screenOnlineSetup(t){
+  const groups = (t&&t.groups)||[];
   app.innerHTML = `
   <div class="hdr"><h2>🧑‍🏫 إعداد المسابقة</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade">
-    <h3>على أي محتوى؟</h3>
+    <h3>لأي حلقة؟</h3>
+    ${groups.length?`<select id="ogrpSel" style="width:100%">${groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('')}</select>`
+      :`<input type="text" id="ogrp" maxlength="24" placeholder="مثال: حلقة السبت">`}
+    <h3 style="margin-top:14px">على أي محتوى؟</h3>
     <select id="ojuz" style="width:100%">
       ${Array.from({length:30},(_,i)=>`<option value="${30-i}">الجزء ${30-i} — ${esc(JUZ_NAMES[29-i])}${CURATED_JUZ[30-i]?' ⭐':''}</option>`).join('')}
     </select>
@@ -2188,16 +2260,14 @@ function screenOnlineSetup(){
       <button class="btn sm" data-m="turns">🔄 بالدور — كل سؤال لطالب</button>
       <button class="btn ghost sm" data-m="all">⚡ الكل معًا — نفس السؤال للجميع</button>
     </div>
-    <h3 style="margin-top:14px">اسم المجموعة <span class="muted" style="font-size:.8rem">(للمتابعة في سجلّ مجموعاتي)</span></h3>
-    <input type="text" id="ogrp" maxlength="24" placeholder="مثال: مجموعة السبت">
   </div>
-  <div class="center"><button class="btn" id="go">🚀 أنشئ الغرفة</button></div>`;
+  <div class="center"><button class="btn" id="go">🚀 أنشئ الغرفة وهات الكود</button></div>`;
   let cnt=15, mode='turns';
   app.querySelectorAll('#ocnt [data-n]').forEach(b=>b.onclick=()=>{ Snd.click(); cnt=+b.dataset.n;
     app.querySelectorAll('#ocnt .btn').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost'); });
   app.querySelectorAll('#omode [data-m]').forEach(b=>b.onclick=()=>{ Snd.click(); mode=b.dataset.m;
     app.querySelectorAll('#omode .btn').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost'); });
-  $('#bk').onclick=()=>{ Snd.click(); screenOnline(); };
+  $('#bk').onclick=()=>{ Snd.click(); screenTeacher(); };
   $('#go').onclick=async()=>{ Snd.click();
     const j=+$('#ojuz').value, entry=juzEntry(j);
     toast('⏳ بجهّز الأسئلة...');
@@ -2205,7 +2275,8 @@ function screenOnlineSetup(){
     if(qs.length<Math.min(5,cnt)) return toast('محتوى غير كافٍ لهذا الاختيار');
     const code = Array.from({length:5},()=> 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
     const room = { host:fbUser.uid, created:Date.now(),
-      settings:{juz:j, title:entry.name, count:qs.length, mode, grp:($('#ogrp').value||'').trim()||'عام'},
+      settings:{juz:j, title:entry.name, count:qs.length, mode,
+        grp:(($('#ogrpSel')&&$('#ogrpSel').value) || ($('#ogrp')&&$('#ogrp').value) || '').trim()||'عام'},
       qs, state:{phase:'lobby'},
       players:{ [fbUser.uid]:{name:P.name+' (المعلم)', emoji:P.emoji, score:0, ord:0, host:true} } };
     await roomRef(code).set(room);
@@ -2292,9 +2363,11 @@ async function screenGroups(sel){
   const snap = await firebase.database().ref('users/'+fbUser.uid+'/quizzes').once('value');
   const all=[]; snap.forEach(ch=>{ const v=ch.val(); v.id=ch.key; all.push(v); });
   all.sort((a,b)=>b.t-a.t);
-  const groups=[...new Set(all.map(x=>x.grp||'عام'))];
+  const t = await loadTeacher();
+  const groups=[...new Set([...((t&&t.groups)||[]), ...all.map(x=>x.grp||'عام')])];
   const g = sel && groups.includes(sel) ? sel : (groups[0]||null);
   const list = all.filter(x=>(x.grp||'عام')===g);
+  const hasAny = groups.length>0;
   /* تجميع مستوى كل طالب داخل المجموعة عبر كل المسابقات */
   const stu={};
   list.forEach(qz=>(qz.players||[]).forEach(p=>{ if(p.h) return;
@@ -2305,15 +2378,15 @@ async function screenGroups(sel){
     avg:Math.round(s.score/s.n), acc:(s.c+s.w)?Math.round(s.c/(s.c+s.w)*100):0}))
     .sort((a,b)=>b.avg-a.avg);
   app.innerHTML = `
-  <div class="hdr"><h2>📚 سجلّ مجموعاتي</h2>
+  <div class="hdr"><h2>📚 متابعة الحلقات</h2>
     <div class="row" style="gap:6px">
-      <button class="btn ghost sm" id="bko">🌐 المسابقات</button>
+      <button class="btn ghost sm" id="bko">🧑‍🏫 لوحتي</button>
       <button class="btn ghost sm" id="hm">🏠</button>
     </div></div>
-  ${!all.length? `<div class="card fade center">
+  ${!hasAny? `<div class="card fade center">
       <div style="font-size:3rem">📭</div>
-      <p>لسه مفيش مسابقات محفوظة.</p>
-      <p class="muted" style="font-size:.85rem">كل مسابقة بتديرها بتتسجل هنا تلقائيًا باسم مجموعتها — اعمل أول مسابقة وارجع.</p>
+      <p>لسه مفيش حلقات ولا مسابقات محفوظة.</p>
+      <p class="muted" style="font-size:.85rem">سجّل حلقتك من ركن المعلم واعمل أول مسابقة — كل النتايج هتتجمع هنا تلقائيًا.</p>
     </div>`
   : `
   <div class="card fade" style="padding:12px">
@@ -2328,7 +2401,7 @@ async function screenGroups(sel){
         <td><b style="color:${r.acc>=70?'var(--ok)':'var(--bad)'}">${r.acc}%</b></td><td>${r.lastScore}</td></tr>`).join('')}
     </table>
     <p class="muted" style="font-size:.8rem;margin-top:8px">💡 خلّي كل طالب يستخدم نفس الاسم كل مرة عشان المتابعة تتجمع صح.</p>`
-    : '<p class="muted center">مفيش طلاب مسجلين في مسابقات المجموعة دي</p>'}
+    : `<p class="muted center">لسه مفيش مسابقات للحلقة دي — الطلاب بيظهروا هنا تلقائيًا أول ما يشاركوا في مسابقة ليها.</p>`}
   </div>
   ${list.map(qz=>`<div class="card fade">
     <div class="hdr" style="margin-bottom:6px">
@@ -2345,7 +2418,7 @@ async function screenGroups(sel){
     </table>
   </div>`).join('')}`}
   <div class="center" style="margin-top:6px"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
-  $('#bko').onclick=()=>{ Snd.click(); screenOnline(); };
+  $('#bko').onclick=()=>{ Snd.click(); screenTeacher(); };
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{ Snd.click(); screenGroups(b.dataset.g); });
   app.querySelectorAll('.delq').forEach(b=>b.onclick=async()=>{
