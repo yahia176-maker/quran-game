@@ -2098,11 +2098,24 @@ function authMsg(e){
     'auth/invalid-credential':'بيانات الدخول غير صحيحة'};
   return m[e&&e.code] || 'حصلت مشكلة: '+(e&&e.code||'غير معروفة');
 }
-/* ربط حساب المعلم بإيميل وكلمة سر — نفس الهوية، فكل بياناته بتفضل زي ما هي */
+/* تأمين حساب المعلم بإيميل وكلمة سر:
+   الأول بنحاول ترقية الهوية الحالية نفسها (أنضف طريق)، ولو حماية Firebase
+   الجديدة رفضت الترقية بدون تحقق إيميل — بننشئ الحساب وننقل كل البيانات إليه */
 async function linkTeacherEmail(email, pass){
   const cred = firebase.auth.EmailAuthProvider.credential(email, pass);
-  await firebase.auth().currentUser.linkWithCredential(cred);
-  fbUser = firebase.auth().currentUser;
+  try{
+    await firebase.auth().currentUser.linkWithCredential(cred);
+    fbUser = firebase.auth().currentUser;
+    return 'linked';
+  }catch(e){
+    if(e.code!=='auth/operation-not-allowed') throw e;
+    const snap = await firebase.database().ref('users/'+fbUser.uid).once('value');
+    const data = snap.val() || {};
+    const nc = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    fbUser = nc.user;
+    if(Object.keys(data).length) await firebase.database().ref('users/'+fbUser.uid).update(data);
+    return 'migrated';
+  }
 }
 async function teacherLogin(email, pass){
   await firebase.auth().signInWithEmailAndPassword(email, pass);
