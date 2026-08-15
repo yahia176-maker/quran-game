@@ -829,6 +829,9 @@ const SURAHS = [
 }
 ];
 
+/* تنظيف أسماء السور من رموز العرض (ألف وصل وتطويل) لتظهر وتُبحث بشكل طبيعي */
+Object.keys(QURAN).forEach(k=>{ QURAN[k].nm = QURAN[k].nm.replace(/ٱ/g,'ا').replace(/ـ/g,''); });
+
 /* ============== بناء آيات الرحلات المُهيّأة من بيانات المصحف ============== */
 const ayatPlain = sn => QURAN[sn].ay.map((t,i)=>({n:i+1,t}));
 const ayatFull  = sn => QURAN[sn].ay.map((t,i)=>({n:sn*1000+i+1, s:QURAN[sn].nm, a:i+1, t}));
@@ -870,7 +873,37 @@ function juzEntry(j){
     info, ayat, stages, auto:true };
   return juzCache[j] = e;
 }
-const entryById = id => id.startsWith('juz-') && !isNaN(+id.slice(4)) ? juzEntry(+id.slice(4)) : SURAHS.find(e=>e.id===id);
+/* ====== رحلة سورة بعينها (كاملة أو مدى آيات محدد) ====== */
+/* لو السورة من الأجزاء المُهيّأة (عمّ/تبارك/قد سمع) بنستعير أسئلة الفهم والكلمات بتاعتها */
+function curatedInfoOf(sn){ for(const e of SURAHS){ if(e.info && e.info[sn]) return e.info[sn]; } return null; }
+const surCache = {};
+function surahEntry(sn, from, to){
+  const Q = QURAN[sn], N = Q.ay.length;
+  from = Math.max(1, Math.min(N, from||1));
+  to   = Math.max(from, Math.min(N, to||N));
+  const part = (from>1 || to<N);
+  const id = 'sur-'+sn+(part?'-'+from+'-'+to:'');
+  if(surCache[id]) return surCache[id];
+  const cur = curatedInfoOf(sn) || {};
+  const lo = sn*1000+from, hi = sn*1000+to;
+  const inf = { nm: Q.nm + (part?` (${from}–${to})`:''), p: Q.p,
+    ab: cur.ab || `سورة ${Q.nm} — ${Q.p}، عدد آياتها ${N}.`,
+    w: cur.w || null,
+    /* في المدى الجزئي نأخذ فقط الأسئلة التي آياتها داخل المدى */
+    q: (cur.q||[]).filter(x => part ? (x.y && x.y>=lo && x.y<=hi) : true) };
+  const info = {}; info[sn] = inf;
+  const ayat = ayatSeg(sn, from, to);
+  const e = { id, name:'سورة '+Q.nm+(part?` · الآيات ${from}–${to}`:''), number:sn, place:Q.p,
+    ayahCount: ayat.length, tagline: part?`الآيات ${from}–${to} (${ayat.length} آية)`:`${N} آية`,
+    intro: inf.ab, info, ayat, single:sn, rng:[from,to],
+    stages:[{ title:inf.nm, emoji:'📖', surahs:[sn], story:[inf.ab] }] };
+  return surCache[id]=e;
+}
+const entryById = id => {
+  if(/^juz-\d+$/.test(id)) return juzEntry(+id.slice(4));
+  if(id.indexOf('sur-')===0){ const p=id.slice(4).split('-'); return surahEntry(+p[0], +p[1]||null, +p[2]||null); }
+  return SURAHS.find(e=>e.id===id);
+};
 
 /* ===================== إعدادات عامة ===================== */
 const PTS = {mcq:10, tf:10, blank:10, order:20, match:20, choice:10, next:15};
@@ -1288,9 +1321,12 @@ function screenHome(){
     ${badges?`<p style="font-size:1.3rem;margin:2px 0">${badges}</p>`:''}
   </div>
   <div class="grid fade" style="grid-template-columns:1fr 1fr;max-width:560px;margin:0 auto">
-    <div class="stage" id="mAtlas" style="grid-column:1/-1"><span class="em">🗺️</span>
-      <div style="font-weight:800;font-size:1.15rem">خريطة المصحف</div>
-      <div class="muted" style="font-size:.82rem">الـ ٣٠ جزءًا كلها — العب أي جزء أو سورة</div></div>
+    <div class="stage" id="mAtlas"><span class="em">🗺️</span>
+      <div style="font-weight:800">خريطة المصحف</div>
+      <div class="muted" style="font-size:.78rem">الـ ٣٠ جزءًا وأرباعها</div></div>
+    <div class="stage" id="mSurahs"><span class="em">📖</span>
+      <div style="font-weight:800">اختر سورة</div>
+      <div class="muted" style="font-size:.78rem">١١٤ سورة — كاملة أو مدى آيات</div></div>
     <div class="stage" id="mDaily"><span class="em">${dailyDone?'✅':'📅'}</span>
       <div style="font-weight:700">تحدي اليوم</div>
       <div class="muted" style="font-size:.78rem">${dailyDone?'خلصته النهارده! 🔥':'٥ أسئلة تحافظ على السلسلة'}</div></div>
@@ -1317,11 +1353,102 @@ function screenHome(){
   $('#sndChk').onchange=e=>{ Snd.on=e.target.checked; if(Snd.on){Snd.init();Snd.click();} };
   app.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); setDiff(b.dataset.d); screenHome(); });
   $('#mAtlas').onclick=()=>{ Snd.init(); Snd.click(); screenAtlas(); };
+  $('#mSurahs').onclick=()=>{ Snd.init(); Snd.click(); screenSurahs(); };
   $('#mDaily').onclick=()=>{ Snd.init(); Snd.click(); startDaily(); };
   $('#mRev').onclick=()=>{ Snd.init(); Snd.click(); startReview(); };
   $('#mOnline').onclick=()=>{ Snd.init(); Snd.click(); screenOnline(); };
   $('#mTeach').onclick=()=>{ Snd.init(); Snd.click(); screenTeacher(); };
   $('#mHelp').onclick=()=>{ Snd.init(); Snd.click(); screenHelp(); };
+}
+
+/* ---------- 📖 كل السور: اختيار سورة بعينها أو مدى آيات ---------- */
+const surStars = sn => (P && P.sstars['sur-'+sn] ? (P.sstars['sur-'+sn][sn]||0) : 0);
+/* هل لعب مدى جزئي من السورة دي؟ (سجلّه منفصل عن السورة الكاملة) */
+const surPartial = sn => !!(P && Object.keys(P.sstars).some(k=>k.indexOf('sur-'+sn+'-')===0));
+function screenSurahs(){
+  stopTimer();
+  const done = Array.from({length:114},(_,i)=>i+1).filter(sn=>surStars(sn)>0).length;
+  app.innerHTML = `
+  <div class="hdr">
+    <h2>📖 اختر سورة</h2>
+    <div class="row" style="gap:6px">
+      <span class="pill">✅ ${done} / 114</span>
+      <button class="btn ghost sm" id="hm">🏠</button>
+    </div>
+  </div>
+  <div class="card fade" style="padding:12px">
+    <input type="text" id="sq" placeholder="🔎 ابحث باسم السورة أو رقمها..." style="margin:0">
+    <p class="muted" style="font-size:.82rem;margin:8px 0 0">اضغط أي سورة: تلعبها كاملة، أو تحدد <b>مدى آيات</b> بعينه (مفيد للمراجعة والحفظ المتفرق).</p>
+  </div>
+  <div class="grid surahs fade" id="sgrid">
+    ${Array.from({length:114},(_,i)=>i+1).map(sn=>{ const Q=QURAN[sn], st=surStars(sn);
+      return `<div class="stage" data-s="${sn}" data-nm="${esc(norm(Q.nm))}">
+        <div class="muted" style="font-size:.7rem">${sn}</div>
+        <div style="font-weight:700;font-size:.98rem">${esc(Q.nm)}</div>
+        <div class="muted" style="font-size:.7rem">${esc(Q.p)} · ${Q.ay.length} آية</div>
+        <div class="st">${'★'.repeat(st)}${'☆'.repeat(3-st)}${surPartial(sn)?' <span title="لعبت مدى منها" style="font-size:.7rem">🔖</span>':''}</div>
+      </div>`;}).join('')}
+  </div>
+  <p class="muted center" id="noRes" hidden>مفيش نتيجة للبحث ده</p>`;
+  $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
+  const cards=[...app.querySelectorAll('[data-s]')];
+  cards.forEach(d=>d.onclick=()=>{ Snd.click(); screenSurahOpts(+d.dataset.s); });
+  $('#sq').oninput=e=>{ const t=e.target.value.trim(), nt=norm(t); let n=0;
+    cards.forEach(d=>{ /* nt فاضي يعني البحث بالأرقام فقط */
+      const ok = !t || (nt && d.dataset.nm.includes(nt)) || (/^\d+$/.test(t) && d.dataset.s.indexOf(t)===0);
+      d.style.display = ok?'':'none'; if(ok) n++; });
+    $('#noRes').hidden = n>0; };
+}
+function screenSurahOpts(sn){
+  stopTimer();
+  const Q=QURAN[sn], N=Q.ay.length, st=surStars(sn);
+  const chips = N>12 ? [['أول ١٠',1,10],['آخر ١٠',N-9,N],['النصف الأول',1,Math.ceil(N/2)],['النصف الثاني',Math.ceil(N/2)+1,N]] : [];
+  app.innerHTML = `
+  <div class="hdr"><h2>📖 سورة ${esc(Q.nm)}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade center">
+    <p class="muted" style="margin:0">${esc(Q.p)} · ${N} آية · ترتيبها ${sn} في المصحف</p>
+    <div class="st" style="font-size:1.4rem;letter-spacing:4px;color:var(--gold)">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
+    <button class="btn" id="all">▶️ العب السورة كاملة</button>
+  </div>
+  <div class="card fade">
+    <h3>🎯 أو حدّد مدى آيات</h3>
+    <div class="row" style="justify-content:flex-start;align-items:center;gap:8px">
+      <span class="muted">من الآية</span>
+      <input type="number" id="f" min="1" max="${N}" value="1" style="width:88px;margin:0;text-align:center">
+      <span class="muted">إلى الآية</span>
+      <input type="number" id="t" min="1" max="${N}" value="${N}" style="width:88px;margin:0;text-align:center">
+    </div>
+    ${chips.length?`<div class="row" style="justify-content:flex-start;margin-top:10px">
+      ${chips.map(c=>`<button class="btn ghost sm qc" data-f="${c[1]}" data-t="${c[2]}">${c[0]}</button>`).join('')}
+    </div>`:''}
+    <p class="muted" id="rngInfo" style="font-size:.85rem;margin:10px 0 0"></p>
+    <div class="center" style="margin-top:8px"><button class="btn" id="go">▶️ العب المدى المحدد</button></div>
+  </div>
+  <div class="card fade">
+    <h3 class="center">📖 نص السورة</h3>
+    <div class="qbox" id="txt">${Q.ay.map((t,i)=>
+      `<div class="ayah" data-a="${i+1}">${esc(t)}<span class="num">${i+1}</span></div>`).join('')}</div>
+  </div>`;
+  const f=$('#f'), t=$('#t');
+  const refresh=()=>{ let a=Math.max(1,Math.min(N,+f.value||1)), b=Math.max(1,Math.min(N,+t.value||N));
+    if(b<a) b=a;
+    $('#rngInfo').textContent = `المختار: ${b-a+1} آية (من ${a} إلى ${b})`;
+    app.querySelectorAll('#txt .ayah').forEach(d=>{ const i=+d.dataset.a;
+      d.style.opacity = (i>=a&&i<=b)?'1':'.28'; });
+    return [a,b]; };
+  f.oninput=t.oninput=refresh; refresh();
+  app.querySelectorAll('.qc').forEach(b=>b.onclick=()=>{ Snd.click();
+    f.value=b.dataset.f; t.value=b.dataset.t; refresh(); });
+  $('#bk').onclick=()=>{ Snd.click(); screenSurahs(); };
+  $('#all').onclick=()=>{ Snd.click(); startSurah(sn); };
+  $('#go').onclick=()=>{ Snd.click(); const [a,b]=refresh(); startSurah(sn,a,b); };
+}
+function startSurah(sn, from, to){
+  const e = surahEntry(sn, from, to);
+  newGame(e, [P.name]);
+  loadSolo(sn);
+  if(G.chal.length < 3){ Snd.wrong(); toast('المدى ده صغير على تحديات كافية — وسّعه شوية'); return; }
+  screenStory();
 }
 
 /* ---------- خريطة المصحف: ٣٠ جزءًا بتتلون بالتقدم ---------- */
@@ -1358,12 +1485,17 @@ function screenAtlas(){
   </div>
   <div class="card fade">
     <h3 style="margin-bottom:8px">🌟 رحلات مميزة</h3>
+    <div class="stage" id="allSur" style="text-align:right;display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:10px">
+      <span style="font-size:2rem">📖</span>
+      <div><b>اختر سورة بعينها</b><br><span class="muted" style="font-size:.8rem">الـ ١١٤ سورة — كاملة أو مدى آيات تحدده بنفسك</span></div>
+    </div>
     <div class="stage" id="qamar" style="text-align:right;display:flex;align-items:center;gap:12px;padding:12px 16px">
       <span style="font-size:2rem">🌙</span>
       <div><b>رحلة سورة القمر</b><br><span class="muted" style="font-size:.8rem">٦ مراحل قصصية مكتوبة خصيصًا — المعجزة وقصص خمسة أقوام</span></div>
     </div>
   </div>`;
   $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
+  $('#allSur').onclick=()=>{ Snd.click(); screenSurahs(); };
   $('#qamar').onclick=()=>{ Snd.click(); newGame(SURAHS.find(e=>e.id==='al-qamar'), [P.name]); screenMap(); };
   app.querySelectorAll('[data-j]').forEach(d=>d.onclick=()=>{
     Snd.click(); newGame(juzEntry(+d.dataset.j), [P.name]); screenMap(); });
@@ -1746,7 +1878,7 @@ function screenStory(){
         <span class="muted" style="font-size:.85rem"> · ${esc(J.p||'')} · ${surahAyat(G.surah,x).length} آية</span><br>
         <span style="font-size:.95rem">${esc(J.ab||'')}</span></p>`;}).join('')}</div>`:'')}
   <div class="center"><button class="btn" id="go">ابدأ التحديات (${G.chal.length}) ▶</button></div>`;
-  $('#bk').onclick=()=>{Snd.click(); solo?screenPicker():screenMap();};
+  $('#bk').onclick=()=>{Snd.click(); solo ? (G.surah.single?screenSurahs():screenPicker()) : screenMap();};
   $('#go').onclick=()=>{Snd.click();screenPlay();};
 }
 
@@ -2018,12 +2150,12 @@ function screenStageEnd(){
   const allDone = !solo && G.stars.length>0 && G.stars.every(x=>x>0);
   $('#nx').textContent = solo ? '📖 سورة تانية' : hasNext ? 'المرحلة التالية ◀' : (allDone ? 'النتيجة النهائية 🎉' : '🗺️ الخريطة');
   $('#nx').onclick=()=>{ Snd.click();
-    if(solo){ screenPicker(); }
+    if(solo){ G.surah.single?screenSurahs():screenPicker(); }
     else if(hasNext){ loadStage(G.stage+1); screenStory(); }
     else if(allDone){ screenFinal(); }
     else screenMap(); };
   $('#rp').onclick=()=>{ Snd.click(); solo?loadSolo(G.solo):loadStage(G.stage); screenStory(); };
-  $('#mp').onclick=()=>{ Snd.click(); screenMap(); };
+  $('#mp').onclick=()=>{ Snd.click(); G.surah.single?screenSurahs():screenMap(); };
 }
 
 /* ===================== النهاية ===================== */
@@ -2161,18 +2293,19 @@ const ayahOfE  = (e,n) => (e.ayat.find(a=>a.n===n)||{t:''}).t;
 const ayahSrcE = (e,n) => { const r=e.ayat.find(a=>a.n===n); return r&&r.s?`سورة ${r.s} · آية ${r.a}`:''; };
 function buildOnlineQs(entry, count){
   const out=[], seen=new Set();
-  let guard=0;
-  while(out.length<count && guard++<count*6){
-    for(const st of shuffle(entry.stages)){
+  let guard=0, dry=0;
+  while(out.length<count && guard++<count*10 && dry<25){
+    const before = out.length;
+    /* رحلة سورة واحدة → مولّد السورة؛ الجزء → ربع عشوائي */
+    const pool = entry.single ? genSolo(entry, entry.single) : genStage(entry, rnd(entry.stages));
+    for(const c of pool){
       if(out.length>=count) break;
-      for(const c of genStage(entry, st)){
-        if(out.length>=count) break;
-        if(!['blank','mcq','next'].includes(c.type)) continue;
-        const key = JSON.stringify([c.type,c.ayah,c.idx,c.q,c.show]);
-        if(seen.has(key)) continue; seen.add(key);
-        out.push(serializeQ(c, entry));
-      }
+      if(!['blank','mcq','next'].includes(c.type)) continue;
+      const key = JSON.stringify([c.type,c.ayah,c.idx,c.q,c.show]);
+      if(seen.has(key)) continue; seen.add(key);
+      out.push(serializeQ(c, entry));
     }
+    dry = (out.length===before) ? dry+1 : 0;   /* المحتوى استُنفد */
   }
   return out.slice(0,count);
 }
@@ -2329,9 +2462,23 @@ function screenOnlineSetup(t){
     ${groups.length?`<select id="ogrpSel" style="width:100%">${groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('')}</select>`
       :`<input type="text" id="ogrp" maxlength="24" placeholder="مثال: حلقة السبت">`}
     <h3 style="margin-top:14px">على أي محتوى؟</h3>
+    <div class="row" id="octype" style="justify-content:flex-start;margin-bottom:8px">
+      <button class="btn sm" data-c="juz">📚 جزء كامل</button>
+      <button class="btn ghost sm" data-c="sur">📖 سورة كاملة</button>
+      <button class="btn ghost sm" data-c="rng">🎯 مدى آيات</button>
+    </div>
     <select id="ojuz" style="width:100%">
       ${Array.from({length:30},(_,i)=>`<option value="${30-i}">الجزء ${30-i} — ${esc(JUZ_NAMES[29-i])}${CURATED_JUZ[30-i]?' ⭐':''}</option>`).join('')}
     </select>
+    <div id="csur" hidden>
+      <select id="osur" style="width:100%">
+        ${Array.from({length:114},(_,i)=>i+1).map(sn=>`<option value="${sn}">${sn}. ${esc(QURAN[sn].nm)} — ${QURAN[sn].ay.length} آية</option>`).join('')}
+      </select>
+      <div id="crng" hidden class="row" style="justify-content:flex-start;align-items:center;gap:8px;margin-top:8px">
+        <span class="muted">من الآية</span><input type="number" id="of" min="1" value="1" style="width:88px;margin:0;text-align:center">
+        <span class="muted">إلى</span><input type="number" id="ot" min="1" value="1" style="width:88px;margin:0;text-align:center">
+      </div>
+    </div>
     <h3 style="margin-top:14px">عدد الأسئلة</h3>
     <div class="row" id="ocnt" style="justify-content:flex-start">
       ${[10,15,20,30].map((n,i)=>`<button class="btn ${i===1?'':'ghost'} sm" data-n="${n}">${n}</button>`).join('')}
@@ -2343,17 +2490,31 @@ function screenOnlineSetup(t){
     </div>
   </div>
   <div class="center"><button class="btn" id="go">🚀 أنشئ الغرفة وهات الكود</button></div>`;
-  let cnt=15, mode='turns';
+  let cnt=15, mode='turns', ctype='juz';
   app.querySelectorAll('#ocnt [data-n]').forEach(b=>b.onclick=()=>{ Snd.click(); cnt=+b.dataset.n;
     app.querySelectorAll('#ocnt .btn').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost'); });
   app.querySelectorAll('#omode [data-m]').forEach(b=>b.onclick=()=>{ Snd.click(); mode=b.dataset.m;
     app.querySelectorAll('#omode .btn').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost'); });
+  /* تبديل نوع المحتوى: جزء / سورة / مدى آيات */
+  const syncMax=()=>{ const N=QURAN[+$('#osur').value].ay.length;
+    $('#of').max=N; $('#ot').max=N; $('#of').value=1; $('#ot').value=N; };
+  app.querySelectorAll('#octype [data-c]').forEach(b=>b.onclick=()=>{ Snd.click(); ctype=b.dataset.c;
+    app.querySelectorAll('#octype .btn').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost');
+    $('#ojuz').hidden = ctype!=='juz';
+    $('#csur').hidden = ctype==='juz';
+    $('#crng').hidden = ctype!=='rng';
+    if(ctype!=='juz') syncMax(); });
+  $('#osur').onchange=syncMax;
   $('#bk').onclick=()=>{ Snd.click(); screenTeacher(); };
   $('#go').onclick=async()=>{ Snd.click();
-    const j=+$('#ojuz').value, entry=juzEntry(j);
+    let entry, j=0;
+    if(ctype==='juz'){ j=+$('#ojuz').value; entry=juzEntry(j); }
+    else { const sn=+$('#osur').value;
+      entry = ctype==='rng' ? surahEntry(sn, +$('#of').value, +$('#ot').value) : surahEntry(sn); }
     toast('⏳ بجهّز الأسئلة...');
     const qs=buildOnlineQs(entry, cnt);
-    if(qs.length<Math.min(5,cnt)) return toast('محتوى غير كافٍ لهذا الاختيار');
+    if(qs.length<3) return toast('⚠️ المحتوى ده صغير على أسئلة كافية — وسّع المدى');
+    if(qs.length<cnt) toast(`المحتوى كفى ${qs.length} سؤال بس`);
     const code = Array.from({length:5},()=> 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
     const room = { host:fbUser.uid, created:Date.now(),
       settings:{juz:j, title:entry.name, count:qs.length, mode,
