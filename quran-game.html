@@ -141,6 +141,11 @@ select{padding:12px 14px;border-radius:12px;border:2px solid rgba(255,255,255,.1
 code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:6px;font-size:.85em;direction:ltr;display:inline-block}
 pre{background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:14px;padding:14px;
   overflow-x:auto;direction:ltr;text-align:left;font-size:.8rem;line-height:1.6}
+.annbar{position:fixed;top:0;right:0;left:0;z-index:95;display:flex;align-items:center;gap:10px;
+  justify-content:center;background:linear-gradient(90deg,var(--gold2),var(--gold));color:#2a1d00;
+  font-weight:700;padding:9px 16px;font-size:.9rem;box-shadow:0 3px 14px rgba(0,0,0,.35)}
+.annbar button{background:transparent;font-size:1rem;color:#2a1d00;cursor:pointer;font-weight:800}
+body:has(.annbar) #app{padding-top:52px}
 .toast{position:fixed;bottom:24px;right:50%;transform:translateX(50%);z-index:100;
   background:linear-gradient(180deg,var(--gold),var(--gold2));color:#2a1d00;font-weight:700;
   padding:12px 22px;border-radius:99px;box-shadow:0 8px 30px rgba(0,0,0,.45);transition:opacity .4s;max-width:90vw}
@@ -936,7 +941,7 @@ let P = null;   // الملف الشخصي النشط
 function allProfiles(){ try{ return JSON.parse(localStorage.getItem(PKEY)||'[]'); }catch(e){ return []; } }
 function saveAll(ps){ try{ localStorage.setItem(PKEY, JSON.stringify(ps)); }catch(e){} }
 function saveP(){ if(!P) return; const ps=allProfiles(); const i=ps.findIndex(x=>x.id===P.id);
-  if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); }
+  if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); backupProfile(); }
 function newProfile(name, emoji){
   return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', diff:'normal',
     stars:{}, sstars:{}, streak:0, lastPlay:'', daily:'', mistakes:[],
@@ -955,6 +960,45 @@ function bootProfile(){
   const p = ps.find(x=>x.id===act) || ps[0];
   if(p) activateProfile(p);
 }
+/* ===== كود استعادة التقدم: نسخة سحابية من ملف الطالب تُسترجع بكود قصير ===== */
+const RCHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function makeCode(){ return Array.from({length:6},()=>RCHARS[Math.floor(RNG()*RCHARS.length)]).join(''); }
+function packProfile(p){
+  return { name:p.name, emoji:p.emoji, diff:p.diff, stars:p.stars, sstars:p.sstars,
+    streak:p.streak, lastPlay:p.lastPlay, daily:p.daily, mistakes:(p.mistakes||[]).slice(-80),
+    stats:p.stats, badges:p.badges, jdone:p.jdone||{}, revs:p.revs||0, at:Date.now() };
+}
+let backupT=null;
+function backupProfile(){
+  if(!fbReady || !P || !P.code) return;
+  clearTimeout(backupT);
+  backupT = setTimeout(()=>{ firebase.database().ref('restore/'+P.code).set(packProfile(P)).catch(()=>{}); }, 2500);
+}
+/* يمنح الملف كودًا فريدًا أول مرة يتصل فيها بالإنترنت */
+async function ensureCode(){
+  if(!fbReady || !P || P.code) return;
+  for(let i=0;i<6;i++){
+    const c = makeCode();
+    const s = await firebase.database().ref('restore/'+c).once('value').catch(()=>null);
+    if(s && s.exists()) continue;            /* الكود محجوز — نجرب غيره */
+    P.code = c; saveP(); backupProfile(); return;
+  }
+}
+async function restoreByCode(code){
+  const c = (code||'').trim().toUpperCase();
+  if(c.length!==6) throw new Error('bad');
+  const s = await firebase.database().ref('restore/'+c).once('value');
+  if(!s.exists()) throw new Error('notfound');
+  const d = s.val();
+  const p = newProfile(d.name||'لاعب', d.emoji||'🙂');
+  Object.assign(p, { code:c, diff:d.diff||'normal', stars:d.stars||{}, sstars:d.sstars||{},
+    streak:d.streak||0, lastPlay:d.lastPlay||'', daily:d.daily||'', mistakes:d.mistakes||[],
+    stats:d.stats||{c:0,w:0,per:{}}, badges:d.badges||[], jdone:d.jdone||{}, revs:d.revs||0, migrated:true });
+  const ps = allProfiles().filter(x=>x.code!==c); ps.push(p); saveAll(ps);
+  activateProfile(p);
+  return p;
+}
+
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 function touchStreak(){
   if(!P) return; const t = today();
@@ -1288,6 +1332,14 @@ function screenProfiles(){
       ${AVATARS.map((a,i)=>`<button class="btn ghost sm av ${i===0?'sel-av':''}" data-a="${a}" style="font-size:1.3rem;padding:6px 10px">${a}</button>`).join('')}
     </div>
     <div class="center" style="margin-top:10px"><button class="btn" id="mk">يلا بينا 🚀</button></div>
+  </div>
+  <div class="card fade center" style="padding:12px">
+    <span class="muted" style="font-size:.85rem">لعبت قبل كده على جهاز تاني ومعاك كود الاستعادة؟</span>
+    <button class="btn ghost sm" id="rcBtn">🎫 استعادة تقدمي</button>
+    <div id="rcForm" hidden style="margin-top:8px">
+      <input type="text" id="rcCode" maxlength="6" placeholder="ABC123" style="text-align:center;font-size:1.3rem;letter-spacing:6px;direction:ltr">
+      <button class="btn sm" id="rcGo">استرجاع</button>
+    </div>
   </div>`;
   let av = AVATARS[0];
   app.querySelectorAll('.av').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); av=b.dataset.a;
@@ -1298,6 +1350,13 @@ function screenProfiles(){
     const name=($('#npName').value||'').trim(); if(!name){ $('#npName').classList.add('shake'); setTimeout(()=>$('#npName').classList.remove('shake'),450); return; }
     const p=newProfile(name, av); const ps2=allProfiles(); ps2.push(p); saveAll(ps2);
     activateProfile(p); Snd.correct(); screenHome(); };
+  $('#rcBtn').onclick=()=>{ Snd.init(); Snd.click(); $('#rcForm').hidden=!$('#rcForm').hidden; };
+  $('#rcGo').onclick=async()=>{ Snd.init(); Snd.click();
+    const c=($('#rcCode').value||'').trim();
+    if(c.length!==6) return toast('الكود ٦ حروف/أرقام');
+    if(!(await fbInit())) return toast('محتاج إنترنت للاستعادة');
+    try{ const p=await restoreByCode(c); Snd.win(); toast('🎉 رجّعنا تقدمك يا '+p.name); screenHome(); }
+    catch(e){ Snd.wrong(); toast(e.message==='notfound'?'❌ مفيش تقدم بالكود ده':'⚠️ الكود مش مظبوط'); } };
 }
 
 /* ---------- الشاشة الرئيسية (بعد اختيار الملف) ---------- */
@@ -1319,6 +1378,9 @@ function screenHome(){
     <div class="moon"><i class="l"></i><i class="r"></i></div>
     <h1>رحلة القرآن</h1>
     ${badges?`<p style="font-size:1.3rem;margin:2px 0">${badges}</p>`:''}
+    ${P.code?`<p class="muted" style="font-size:.78rem;margin:2px 0">🎫 كود استعادة تقدمك:
+      <b style="direction:ltr;display:inline-block;letter-spacing:2px;color:var(--gold)">${esc(P.code)}</b>
+      — احتفظ بيه لو غيّرت الجهاز</p>`:''}
   </div>
   <div class="grid fade" style="grid-template-columns:1fr 1fr;max-width:560px;margin:0 auto">
     <div class="stage" id="mAtlas"><span class="em">🗺️</span>
@@ -1339,6 +1401,9 @@ function screenHome(){
     <div class="stage" id="mTeach"><span class="em">🧑‍🏫</span>
       <div style="font-weight:700">ركن المعلم</div>
       <div class="muted" style="font-size:.78rem">حلقاتك، مسابقاتك، ومتابعة طلابك</div></div>
+    ${isOwner()?`<div class="stage" id="mOwner" style="grid-column:1/-1;border-color:var(--ok)">
+      <span class="em">🛡️</span><div style="font-weight:800">لوحة المالك</div>
+      <div class="muted" style="font-size:.78rem">إحصائيات النظام · المعلمون · بحث · إعلان</div></div>`:''}
     <div class="stage" id="mHelp" style="grid-column:1/-1;padding:10px"><span style="font-size:1.4rem">💡</span>
       <b style="margin-right:6px">المساعدة</b>
       <span class="muted" style="font-size:.78rem">— الشرح الكامل وإضافة المحتوى</span></div>
@@ -1359,6 +1424,123 @@ function screenHome(){
   $('#mOnline').onclick=()=>{ Snd.init(); Snd.click(); screenOnline(); };
   $('#mTeach').onclick=()=>{ Snd.init(); Snd.click(); screenTeacher(); };
   $('#mHelp').onclick=()=>{ Snd.init(); Snd.click(); screenHelp(); };
+  if($('#mOwner')) $('#mOwner').onclick=()=>{ Snd.init(); Snd.click(); screenOwner(); };
+  ensureCode();          /* يمنح الملف كود استعادة أول ما يتصل */
+  paintAnn();
+}
+
+/* ---------- 🛡️ لوحة المالك (تظهر لإيميل المالك وحده) ---------- */
+const ago = t => { if(!t) return '—'; const d=Math.floor((Date.now()-t)/86400000);
+  return d<=0?'النهارده':d===1?'إمبارح':d<30?`من ${d} يوم`:`من ${Math.floor(d/30)} شهر`; };
+async function screenOwner(sub){
+  stopTimer();
+  app.innerHTML='<div class="card fade center"><p>⏳ بجمّع بيانات النظام...</p></div>';
+  if(!(await fbInit()) || !isOwner()){ toast('الشاشة دي لمالك اللعبة فقط'); return screenHome(); }
+  let users={}, idx={}, err='';
+  try{
+    users = (await firebase.database().ref('users').once('value')).val() || {};
+    idx   = (await firebase.database().ref('index/teachers').once('value')).val() || {};
+  }catch(e){ err = e.message||'permission'; }
+  if(err) return app.innerHTML = `
+    <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" onclick="screenHome()">🏠</button></div>
+    <div class="card fade"><h3>⚠️ القواعد لسه محتاجة تحديث</h3>
+      <p>عشان اللوحة تشتغل لازم تلصق قواعد الأمان الجديدة في Firebase مرة واحدة — الخطوات في شاشة <b>المساعدة</b> تحت عنوان «لوحة المالك».</p>
+      <p class="muted" style="font-size:.8rem">التفاصيل التقنية: ${esc(err)}</p></div>`;
+  /* تجميع */
+  const teachers=[]; let totalQz=0, totalGrp=0; const allQz=[]; const studentMap={};
+  Object.entries(users).forEach(([uid,u])=>{
+    if(!u || !u.teacher) return;
+    const qz = Object.values(u.quizzes||{});
+    totalQz += qz.length;
+    totalGrp += (u.teacher.groups||[]).length;
+    const roster = u.roster||{};
+    const studs = new Set();
+    qz.forEach(z=>{ allQz.push({...z, tName:u.teacher.name, uid});
+      (z.players||[]).forEach(p=>{ if(p.h) return;
+        const key = p.uid?(p.uid+'_'+(p.pid||'x')):('n_'+p.name);
+        const nm = (roster[key]&&roster[key].nm) || p.name;
+        studs.add(nm);
+        const S = studentMap[nm] = studentMap[nm] || {n:0,score:0,c:0,w:0,teachers:new Set(),last:0};
+        S.n++; S.score+=p.score||0; S.c+=p.c||0; S.w+=p.w||0; S.teachers.add(u.teacher.name);
+        S.last=Math.max(S.last, z.t||0); }); });
+    teachers.push({ uid, name:u.teacher.name||'—', email:(idx[uid]||{}).email||((u.profile||{}).email)||'—',
+      groups:(u.teacher.groups||[]).length, quizzes:qz.length, students:studs.size,
+      seen:Math.max((idx[uid]||{}).seen||0, (u.profile||{}).updated||0, ...qz.map(z=>z.t||0)) });
+  });
+  teachers.sort((a,b)=> b.quizzes-a.quizzes || b.students-a.students);
+  allQz.sort((a,b)=>b.t-a.t);
+  const students = Object.entries(studentMap).map(([nm,s])=>({nm,...s,
+    avg:Math.round(s.score/s.n), acc:(s.c+s.w)?Math.round(s.c/(s.c+s.w)*100):0,
+    teachers:[...s.teachers]})).sort((a,b)=>b.n-a.n);
+  const q = (sub||'').trim(), nq = norm(q);
+  /* nq فاضي = البحث بحروف لاتينية (إيميل) فنطابق الإيميل فقط */
+  const fT = q? teachers.filter(t=>(nq && norm(t.name).includes(nq)) || t.email.toLowerCase().includes(q.toLowerCase())) : teachers;
+  const fS = (q && nq)? students.filter(s=>norm(s.nm).includes(nq)) : [];
+  app.innerHTML = `
+  <div class="hdr"><h2>🛡️ لوحة المالك</h2>
+    <div class="row" style="gap:6px">
+      <button class="btn ghost sm" id="ann">📣 إعلان</button>
+      <button class="btn ghost sm" id="hm">🏠</button>
+    </div></div>
+  <div class="grid fade" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">
+    ${[['🧑‍🏫',teachers.length,'معلم'],['👦',students.length,'طالب'],['🏆',totalQz,'مسابقة'],['👥',totalGrp,'حلقة']]
+      .map(x=>`<div class="stage" style="cursor:default"><span class="em">${x[0]}</span>
+        <div style="font-weight:800;font-size:1.4rem">${x[1]}</div>
+        <div class="muted" style="font-size:.78rem">${x[2]}</div></div>`).join('')}
+  </div>
+  <div class="card fade" style="padding:12px">
+    <input type="text" id="oq" placeholder="🔎 ابحث عن معلم (اسم/إيميل) أو طالب بالاسم..." value="${esc(q)}" style="margin:0">
+  </div>
+  ${q&&fS.length?`<div class="card fade">
+    <h3>👦 نتائج الطلاب (${fS.length})</h3>
+    <table><tr><th>الطالب</th><th>مسابقات</th><th>متوسط</th><th>الدقة</th><th>عند</th><th>آخر نشاط</th></tr>
+      ${fS.map(s=>`<tr><td>${esc(s.nm)}</td><td>${s.n}</td><td><b>${s.avg}</b></td>
+        <td><b style="color:${s.acc>=70?'var(--ok)':'var(--bad)'}">${s.acc}%</b></td>
+        <td class="muted" style="font-size:.8rem">${esc(s.teachers.join('، '))}</td>
+        <td class="muted" style="font-size:.8rem">${ago(s.last)}</td></tr>`).join('')}
+    </table></div>`:''}
+  <div class="card fade">
+    <h3>🧑‍🏫 المعلمون — مرتبون بالنشاط ${q?`<span class="muted" style="font-size:.8rem">(${fT.length} نتيجة)</span>`:''}</h3>
+    ${fT.length?`<table><tr><th>#</th><th>المعلم</th><th>حلقات</th><th>مسابقات</th><th>طلاب</th><th>آخر نشاط</th></tr>
+      ${fT.map((t,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td>
+        <td>${esc(t.name)}<br><span class="muted" style="font-size:.72rem;direction:ltr;display:inline-block">${esc(t.email)}</span></td>
+        <td>${t.groups}</td><td><b>${t.quizzes}</b></td><td>${t.students}</td>
+        <td class="muted" style="font-size:.8rem">${ago(t.seen)}</td></tr>`).join('')}
+    </table>`:'<p class="muted center">مفيش نتيجة</p>'}
+  </div>
+  <div class="card fade">
+    <h3>🏆 آخر المسابقات</h3>
+    ${allQz.length?`<table><tr><th>التاريخ</th><th>المعلم</th><th>الحلقة</th><th>المحتوى</th><th>طلاب</th></tr>
+      ${allQz.slice(0,12).map(z=>`<tr><td class="muted" style="font-size:.8rem">${fmtDate(z.t)}</td>
+        <td>${esc(z.tName||'—')}</td><td>${esc(z.grp||'—')}</td>
+        <td class="muted" style="font-size:.8rem">${esc(z.title||'—')}</td>
+        <td>${(z.players||[]).filter(p=>!p.h).length}</td></tr>`).join('')}
+    </table>`:'<p class="muted center">مفيش مسابقات لسه</p>'}
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
+  $('#ann').onclick=()=>{ Snd.click(); screenAnn(); };
+  let tmr; $('#oq').oninput=e=>{ clearTimeout(tmr); const v=e.target.value;
+    tmr=setTimeout(()=>{ screenOwner(v); setTimeout(()=>{const i=$('#oq'); if(i){i.focus(); i.setSelectionRange(v.length,v.length);} },30); }, 450); };
+}
+function screenAnn(){
+  const cur = ANN||{};
+  app.innerHTML = `
+  <div class="hdr"><h2>📣 رسالة إعلان</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade">
+    <p>الرسالة دي بتظهر شريط لكل اللاعبين لحد ما يقفلوها. سيبها فاضية أو اقفلها عشان تختفي.</p>
+    <input type="text" id="atxt" maxlength="120" placeholder="مثال: مسابقة رمضان تبدأ الجمعة إن شاء الله 🌙" value="${esc(cur.txt||'')}">
+    <label class="switch" style="margin-top:8px"><input type="checkbox" id="aon" ${cur.on?'checked':''}> تفعيل الإعلان</label>
+  </div>
+  <div class="center row">
+    <button class="btn" id="save">💾 حفظ ونشر</button>
+    <button class="btn ghost" id="bk2">رجوع</button>
+  </div>`;
+  $('#bk').onclick=$('#bk2').onclick=()=>{ Snd.click(); screenOwner(); };
+  $('#save').onclick=async()=>{ Snd.click();
+    try{ await firebase.database().ref('config/ann').set({txt:($('#atxt').value||'').trim(), on:$('#aon').checked, at:Date.now()});
+      Snd.correct(); toast('📣 اتنشر'); screenOwner(); }
+    catch(e){ toast('⚠️ مش قادر أحفظ — راجع قواعد Firebase'); } };
 }
 
 /* ---------- 📖 كل السور: اختيار سورة بعينها أو مدى آيات ---------- */
@@ -1703,6 +1885,47 @@ function screenHelp(){
   </div>
 
   <div class="card fade">
+    <h2>🛡️ لوحة المالك + قواعد الأمان</h2>
+    <p>لوحة المالك بتظهر تلقائيًا في الشاشة الرئيسية لصاحب اللعبة (الإيميل المحدد في الكود) وفيها: إحصائيات النظام، ترتيب المعلمين بالنشاط، بحث عن أي طالب أو معلم، آخر المسابقات، والإعلان العام.</p>
+    <p>عشان تشتغل — وعشان بيانات كل مستخدم تتقفل على صاحبها — الصق ده في <b>Realtime Database ← Rules ← Publish</b>:</p>
+    <pre>{
+  "rules": {
+    "config": {
+      ".read": true,
+      ".write": "auth.token.email === 'yahia176@gmail.com'"
+    },
+    "rooms": {
+      "$c": { ".read": "auth != null", ".write": "auth != null" }
+    },
+    "restore": {
+      "$code": { ".read": "auth != null", ".write": "auth != null" }
+    },
+    "index": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "teachers": {
+        "$u": { ".write": "auth != null && auth.uid === $u" }
+      }
+    },
+    "users": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "$u": {
+        ".read": "auth != null && (auth.uid === $u || auth.token.email === 'yahia176@gmail.com')",
+        ".write": "auth != null && auth.uid === $u"
+      }
+    }
+  }
+}</pre>
+    <p class="muted" style="font-size:.85rem">لو غيّرت إيميل المالك، غيّره في القواعد دي وفي سطر <code>OWNER_EMAIL</code> في أول الكود.</p>
+  </div>
+
+  <div class="card fade">
+    <h2>🎫 كود استعادة تقدم الطالب</h2>
+    <p>كل لاعب بياخد كود من ٦ حروف بيظهر تحت اسمه في الشاشة الرئيسية، وتقدمه بيتحفظ نسخة في السحابة تلقائيًا.</p>
+    <p>لو غيّر الجهاز أو مسح المتصفح: من شاشة «مين اللي هيلعب؟» → <b>🎫 استعادة تقدمي</b> → يكتب الكود → يرجع كل حاجة (النجوم، السلسلة، الأوسمة، الأخطاء المستحقة).</p>
+    <p class="muted" style="font-size:.85rem">💡 نصيحة للمعلم: خلّي كل طالب يكتب كوده في أول كراسته.</p>
+  </div>
+
+  <div class="card fade">
     <h2>🗺️ خريطة المصحف والملفات الشخصية</h2>
     <p>• <b>الخريطة:</b> الـ ٣٠ جزءًا كلها متاحة. الأجزاء ⭐ (عمّ، تبارك، قد سمع) فيها أسئلة فهم وكلمات مشروحة مكتوبة يدويًا، والباقي بتحديات حفظ تلقائية على الأرباع الثمانية (كلمة ناقصة، ترتيب آيات، أكمل الآية).</p>
     <p>• <b>الملف الشخصي:</b> كل لاعب على الجهاز ليه ملف باسمه وصورته — نجومه وسلسلته وأوسمته وأخطاؤه محفوظة ليه لوحده.</p>
@@ -1716,11 +1939,7 @@ function screenHelp(){
     <p>المسابقة الجماعية (معلم + طلاب كل واحد من جهازه) محتاجة خدمة قاعدة بيانات لحظية مجانية من جوجل اسمها Firebase:</p>
     <p><b>١)</b> افتح <code>console.firebase.google.com</code> وسجّل بحساب جوجل → <b>Add project</b> → اكتب أي اسم → عطّل Google Analytics → Create.</p>
     <p><b>٢)</b> من القائمة الجانبية: <b>Build ← Authentication</b> → Get started → تبويب Sign-in method → فعّل <b>Anonymous</b>.</p>
-    <p><b>٣)</b> <b>Build ← Realtime Database</b> → Create database → اختر أقرب منطقة → ابدأ بـ <b>test mode</b>. وبعدها من تبويب Rules الصق:</p>
-    <pre>{ "rules": {
-  "rooms": { "$c": { ".read": "auth != null", ".write": "auth != null" } },
-  "users": { "$u": { ".read": "auth != null", ".write": "auth != null && auth.uid === $u" } }
-} }</pre>
+    <p><b>٣)</b> <b>Build ← Realtime Database</b> → Create database → اختر أقرب منطقة → ابدأ بـ <b>test mode</b>. وبعدها من تبويب Rules الصق القواعد المذكورة في قسم «لوحة المالك» تحت.</p>
     <p><b>٤)</b> من ⚙️ <b>Project settings</b> → تحت Your apps دوس أيقونة <b>&lt;/&gt;</b> (Web) → سمّيه أي اسم → Register → انسخ كائن <code>firebaseConfig</code>.</p>
     <p><b>٥)</b> في ملف اللعبة دوّر على <code>FIREBASE_CONFIG = null</code> واستبدل <code>null</code> بالكائن اللي نسخته. ارفع الملف — وخلاص، زرار المسابقة الجماعية هيشتغل.</p>
     <p class="muted" style="font-size:.85rem">الخطة المجانية تكفي فصولًا كاملة (١٠٠ اتصال متزامن). بيانات اللاعبين المخزنة: الاسم المستعار والنقاط فقط.</p>
@@ -2210,6 +2429,9 @@ const FIREBASE_CONFIG = {
   appId: "1:24258230006:web:6006ce85855e650ac89ed7"
 };
 const FB_SDK = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-';
+/* إيميل مالك اللعبة — لوحة المالك تظهر له وحده (والقواعد في Firebase بتحمي ده من الخادم) */
+const OWNER_EMAIL = 'yahia176@gmail.com';
+const isOwner = () => !!(fbUser && !fbUser.isAnonymous && (fbUser.email||'').toLowerCase() === OWNER_EMAIL);
 let fbReady=false, fbUser=null, R=null;
 function loadScript(src){ return new Promise((ok,bad)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=bad; document.head.appendChild(s); }); }
 async function fbInit(){
@@ -2260,6 +2482,32 @@ async function teacherLogout(){
   await firebase.auth().signOut();
   const cred = await firebase.auth().signInAnonymously();
   fbUser = cred.user;
+}
+async function teacherResetPass(email){
+  await firebase.auth().sendPasswordResetEmail(email);
+}
+
+/* ===== فهرس عام خفيف: كل معلم يكتب سطره، والمالك وحده يقرأ الفهرس كاملًا ===== */
+function indexTeacher(t, extra){
+  if(!fbReady || !fbUser || fbUser.isAnonymous) return;
+  const d = Object.assign({ name:t.name||'', email:fbUser.email||'',
+    groups:(t.groups||[]).length, seen:Date.now() }, extra||{});
+  firebase.database().ref('index/teachers/'+fbUser.uid).update(d).catch(()=>{});
+}
+/* ===== الإعلان العام ===== */
+let ANN = null;
+function watchAnnouncement(){
+  if(!fbReady) return;
+  firebase.database().ref('config/ann').on('value', s=>{ ANN = s.val(); paintAnn(); });
+}
+function paintAnn(){
+  const old = document.getElementById('annBar'); if(old) old.remove();
+  if(!ANN || !ANN.on || !ANN.txt) return;
+  if(localStorage.getItem(LS+'_annseen') === String(ANN.at)) return;
+  const d = document.createElement('div'); d.id='annBar'; d.className='annbar';
+  d.innerHTML = `<span>📣 ${esc(ANN.txt)}</span><button title="إخفاء">✕</button>`;
+  d.querySelector('button').onclick = ()=>{ localStorage.setItem(LS+'_annseen', String(ANN.at)); d.remove(); };
+  document.body.appendChild(d);
 }
 /* مزامنة الملف الشخصي سحابيًا (حساب بسيط مرتبط بالجهاز) */
 let syncT=null;
@@ -2317,7 +2565,7 @@ async function loadTeacher(){
   const s = await firebase.database().ref('users/'+fbUser.uid+'/teacher').once('value');
   return s.val();
 }
-function saveTeacher(t){ return firebase.database().ref('users/'+fbUser.uid+'/teacher').set(t); }
+function saveTeacher(t){ indexTeacher(t); return firebase.database().ref('users/'+fbUser.uid+'/teacher').set(t); }
 
 /* --- شاشة الطالب: دخول مسابقة بالكود --- */
 function screenOnline(){
@@ -2359,6 +2607,7 @@ async function screenTeacher(){
   if(!(await fbInit())){ screenHome(); return; }
   const t = await loadTeacher();
   if(!t || !t.name) return screenTeacherSignup();
+  indexTeacher(t);      /* تحديث آخر ظهور في فهرس المالك */
   screenTeacherPanel(t);
 }
 function screenTeacherSignup(){
@@ -2380,6 +2629,7 @@ function screenTeacherSignup(){
       <input type="email" id="lgEmail" placeholder="الإيميل" style="direction:ltr">
       <input type="password" id="lgPass" placeholder="كلمة السر" style="direction:ltr">
       <button class="btn sm" id="lgGo">دخول</button>
+      <div><button class="btn ghost sm" id="lgFor" style="margin-top:6px">🔑 نسيت كلمة السر</button></div>
     </div>
   </div>`;
   $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
@@ -2387,6 +2637,12 @@ function screenTeacherSignup(){
   $('#lgGo').onclick=async()=>{ Snd.click();
     try{ await teacherLogin(($('#lgEmail').value||'').trim(), $('#lgPass').value||'');
       Snd.correct(); toast('✅ رجعنا لحسابك'); screenTeacher(); }
+    catch(e){ toast('⚠️ '+authMsg(e)); } };
+  $('#lgFor').onclick=async()=>{ Snd.click();
+    const em=($('#lgEmail').value||'').trim();
+    if(!em) return toast('اكتب إيميلك الأول فوق');
+    try{ await teacherResetPass(em); Snd.correct();
+      toast('📧 بعتنا لك رابط تغيير كلمة السر على إيميلك'); }
     catch(e){ toast('⚠️ '+authMsg(e)); } };
   $('#reg').onclick=async()=>{ Snd.click();
     const name=($('#tname').value||'').trim(), g=($('#tgrp').value||'').trim();
@@ -2786,7 +3042,10 @@ function renderOnlineEnd(){
 /* ===================== بدء ===================== */
 document.addEventListener('click', ()=>Snd.init(), {once:true});
 bootProfile();
-if(FIREBASE_CONFIG) fbInit();
+if(FIREBASE_CONFIG) fbInit().then(ok=>{ if(!ok) return;
+  watchAnnouncement(); ensureCode();
+  if(isOwner() && document.getElementById('mAtlas')) screenHome();   /* نظهر لوحة المالك بعد التعرف عليه */
+});
 screenHome();
 </script>
 </body>
