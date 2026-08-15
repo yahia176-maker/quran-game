@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>رحلة القرآن — لعبة تفاعلية للأطفال</title>
 <style>
 :root{
@@ -141,6 +143,8 @@ select{padding:12px 14px;border-radius:12px;border:2px solid rgba(255,255,255,.1
 code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:6px;font-size:.85em;direction:ltr;display:inline-block}
 pre{background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:14px;padding:14px;
   overflow-x:auto;direction:ltr;text-align:left;font-size:.8rem;line-height:1.6}
+.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.seg .btn{width:100%;padding:11px 4px;font-size:.92rem}
 .annbar{position:fixed;top:0;right:0;left:0;z-index:95;display:flex;align-items:center;gap:10px;
   justify-content:center;background:linear-gradient(90deg,var(--gold2),var(--gold));color:#2a1d00;
   font-weight:700;padding:9px 16px;font-size:.9rem;box-shadow:0 3px 14px rgba(0,0,0,.35)}
@@ -2717,10 +2721,10 @@ function screenOnlineSetup(t){
     <h3>لأي حلقة؟</h3>
     ${groups.length?`<select id="ogrpSel" style="width:100%">${groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('')}</select>`
       :`<input type="text" id="ogrp" maxlength="24" placeholder="مثال: حلقة السبت">`}
-    <h3 style="margin-top:14px">على أي محتوى؟</h3>
-    <div class="row" id="octype" style="justify-content:flex-start;margin-bottom:8px">
-      <button class="btn sm" data-c="juz">📚 جزء كامل</button>
-      <button class="btn ghost sm" data-c="sur">📖 سورة كاملة</button>
+    <h3 style="margin-top:14px">على أي محتوى تكون المسابقة؟ <span class="muted" style="font-size:.8rem">— اختار النوع</span></h3>
+    <div class="seg" id="octype">
+      <button class="btn sm" data-c="juz">📚 جزء</button>
+      <button class="btn ghost sm" data-c="sur">📖 سورة</button>
       <button class="btn ghost sm" data-c="rng">🎯 مدى آيات</button>
     </div>
     <select id="ojuz" style="width:100%">
@@ -2735,6 +2739,7 @@ function screenOnlineSetup(t){
         <span class="muted">إلى</span><input type="number" id="ot" min="1" value="1" style="width:88px;margin:0;text-align:center">
       </div>
     </div>
+    <p id="csum" class="pill" style="display:block;text-align:center;margin:10px 0 0"></p>
     <h3 style="margin-top:14px">عدد الأسئلة</h3>
     <div class="row" id="ocnt" style="justify-content:flex-start">
       ${[10,15,20,30].map((n,i)=>`<button class="btn ${i===1?'':'ghost'} sm" data-n="${n}">${n}</button>`).join('')}
@@ -2754,13 +2759,22 @@ function screenOnlineSetup(t){
   /* تبديل نوع المحتوى: جزء / سورة / مدى آيات */
   const syncMax=()=>{ const N=QURAN[+$('#osur').value].ay.length;
     $('#of').max=N; $('#ot').max=N; $('#of').value=1; $('#ot').value=N; };
+  /* سطر يوضّح المختار حاليًا بشكل صريح */
+  const sum=()=>{ const s=$('#csum'); if(!s) return;
+    if(ctype==='juz'){ const j=+$('#ojuz').value; s.textContent=`✅ المختار: الجزء ${j} — ${JUZ_NAMES[j-1]}`; return; }
+    const sn=+$('#osur').value, Q=QURAN[sn];
+    s.textContent = ctype==='sur' ? `✅ المختار: سورة ${Q.nm} كاملة (${Q.ay.length} آية)`
+      : `✅ المختار: سورة ${Q.nm} — الآيات ${$('#of').value} إلى ${$('#ot').value}`; };
   app.querySelectorAll('#octype [data-c]').forEach(b=>b.onclick=()=>{ Snd.click(); ctype=b.dataset.c;
     app.querySelectorAll('#octype .btn').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost');
     $('#ojuz').hidden = ctype!=='juz';
     $('#csur').hidden = ctype==='juz';
     $('#crng').hidden = ctype!=='rng';
-    if(ctype!=='juz') syncMax(); });
-  $('#osur').onchange=syncMax;
+    if(ctype!=='juz') syncMax();
+    sum(); });
+  $('#osur').onchange=()=>{ syncMax(); sum(); };
+  $('#ojuz').onchange=sum; $('#of').oninput=sum; $('#ot').oninput=sum;
+  sum();
   $('#bk').onclick=()=>{ Snd.click(); screenTeacher(); };
   $('#go').onclick=async()=>{ Snd.click();
     let entry, j=0;
