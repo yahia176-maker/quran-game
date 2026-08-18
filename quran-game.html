@@ -171,6 +171,28 @@ code{background:var(--card);padding:2px 6px;border-radius:6px;font-size:.85em;di
 pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px;
   overflow-x:auto;direction:ltr;text-align:left;font-size:.8rem;line-height:1.6}
 /* رقائق الكلمات — لعبة «ركّب الآية» */
+/* الشخصيات المرافقة */
+:root{ --skin:#f6cfa4; --hair:#3a2a20; --c1:#4aa3ff; --c2:#ff8a3d; --fline:#33251c; }
+:root[data-theme="kids"]{ --c1:#ff5fa2; --c2:#5ec2ff; }
+.mascot .m,.mascot .eyes{display:none}
+.mascot[data-mood="idle"] .m.idle,.mascot[data-mood="idle"] .eyes.idle,
+.mascot[data-mood="happy"] .m.happy,.mascot[data-mood="happy"] .eyes.happy,
+.mascot[data-mood="sad"] .m.sad,.mascot[data-mood="sad"] .eyes.sad{display:block}
+@keyframes hop{0%,100%{transform:translateY(0)}30%{transform:translateY(-9px) rotate(-4deg)}60%{transform:translateY(-3px)}}
+.mascot[data-mood="happy"]{animation:hop .6s ease}
+@keyframes shiver{0%,100%{transform:none}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+.mascot[data-mood="sad"]{animation:shiver .5s ease}
+.charpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.charpick button{background:var(--card);border:3px solid var(--line);border-radius:20px;padding:10px 4px;cursor:pointer;transition:.15s}
+.charpick button.on{border-color:var(--gold);background:rgba(255,214,126,.14);transform:translateY(-3px)}
+.charpick b{display:block;color:var(--ink);font-size:.95rem;margin-top:4px}
+/* رسومات السور */
+.art{color:var(--gold);display:block;margin:0 auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.art.big{animation:floaty 3.4s ease-in-out infinite}
+.artrow{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.speech{position:relative;background:var(--card);border:2px solid var(--line);border-radius:16px;
+  padding:9px 14px;font-weight:700;max-width:230px;font-size:.95rem}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .chip{font-family:var(--quran);font-size:clamp(1.15rem,4.4vw,1.5rem);line-height:1.6;
   background:var(--card);border:2px solid var(--line);color:var(--ayah);
@@ -223,6 +245,10 @@ body:has(.annbar) #app{padding-top:52px}
   table,th,td{color:#000}
 }
 .confetti{position:fixed;top:-10px;width:10px;height:16px;z-index:99;pointer-events:none;animation:fall linear forwards}
+.bstar{position:fixed;left:50%;top:45%;font-size:1.7rem;z-index:99;pointer-events:none;
+  animation:burst 1.2s cubic-bezier(.15,.8,.3,1) forwards}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}
+  25%{opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1) rotate(180deg);opacity:0}}
 @keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.2}}
 @media(max-width:520px){ .pairs{grid-template-columns:1fr} .btn{padding:13px 20px} }
 </style>
@@ -966,6 +992,140 @@ const entryById = id => {
   return SURAHS.find(e=>e.id===id);
 };
 
+/* ============ 🧒 الشخصيات المرافقة: ولد وبنت ============
+   نفس الرسمة بثلاث حالات (عادي / فرحان / زعلان) — الحالة بتتغيّر بـ data-mood */
+const FACE = `
+  <g class="m idle"><path d="M26 40q6 4 12 0" stroke="var(--fline)" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>
+  <g class="m happy"><path d="M24 38q8 9 16 0z" fill="var(--fline)"/></g>
+  <g class="m sad"><path d="M26 43q6-5 12 0" stroke="var(--fline)" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>
+  <g class="eyes idle"><circle cx="26" cy="31" r="2.6" fill="var(--fline)"/><circle cx="38" cy="31" r="2.6" fill="var(--fline)"/></g>
+  <g class="eyes happy"><path d="M22 32q4-5 8 0M34 32q4-5 8 0" stroke="var(--fline)" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>
+  <g class="eyes sad"><circle cx="26" cy="32" r="2.4" fill="var(--fline)"/><circle cx="38" cy="32" r="2.4" fill="var(--fline)"/>
+    <path d="M21 26l7 3M43 26l-7 3" stroke="var(--fline)" stroke-width="2" stroke-linecap="round"/></g>`;
+const CHARS = {
+  boy: { nm:'ولد', em:'👦', svg:`
+    <path d="M32 50c-11 0-19 6-19 14h38c0-8-8-14-19-14z" fill="var(--c1)"/>
+    <path d="M27 46h10v8a5 5 0 01-10 0z" fill="var(--skin)"/>
+    <circle cx="32" cy="32" r="17" fill="var(--skin)"/>
+    <path d="M15 30a17 17 0 0134 0c0-9-7-15-17-15s-17 6-17 15z" fill="var(--hair)"/>
+    <path d="M13 30q19-12 38 0" stroke="var(--hair)" stroke-width="5" fill="none" stroke-linecap="round"/>
+    {FACE}
+    <path d="M20 60l4-8M44 60l-4-8" stroke="var(--c2)" stroke-width="4" stroke-linecap="round"/>` },
+  girl:{ nm:'بنت', em:'🧒', svg:`
+    <path d="M32 50c-12 0-20 6-20 14h40c0-8-8-14-20-14z" fill="var(--c2)"/>
+    <circle cx="32" cy="32" r="17" fill="var(--skin)"/>
+    <path d="M32 11c-12 0-20 9-20 21 0 8 3 14 7 18-3-8-2-16 1-22 4 3 9 4 12 4s8-1 12-4c3 6 4 14 1 22 4-4 7-10 7-18 0-12-8-21-20-21z" fill="var(--hair)"/>
+    <path d="M12 40q-4 12 2 22h6q-6-10-3-22zM52 40q4 12-2 22h-6q6-10 3-22z" fill="var(--hair)" opacity=".92"/>
+    {FACE}
+    <circle cx="49" cy="20" r="4" fill="var(--c1)"/><circle cx="49" cy="20" r="1.6" fill="var(--bg1)" opacity=".5"/>` }
+};
+function charSVG(k, mood, size){
+  const c = CHARS[k] || CHARS.boy;
+  return '<svg class="mascot" data-mood="'+(mood||'idle')+'" viewBox="0 0 64 70" '
+    + 'style="width:'+(size||72)+'px;height:'+Math.round((size||72)*70/64)+'px" role="img" aria-label="'+esc(c.nm)+'">'
+    + c.svg.replace('{FACE}', FACE) + '</svg>';
+}
+const myChar = () => (P && P.char) || 'boy';
+/* الفئة العمرية → الثيم المناسب */
+const AGES = [
+  {k:'small', nm:'٦ – ٩ سنوات',  em:'🧸', th:'kids'},
+  {k:'mid',   nm:'١٠ – ١٥ سنة',  em:'🌙', th:'night'},
+  {k:'big',   nm:'١٦ فما فوق',   em:'📜', th:'mushaf'}
+];
+
+/* ===================== 🎨 رسومات أبطال السور =====================
+   لكل سورة لها صورة ذهنية قوية رسمة SVG بسيطة تتلوّن مع الثيم.        */
+const ART = {
+ 105:['الفيل',`<ellipse cx="27" cy="36" rx="19" ry="14"/><circle cx="45" cy="29" r="11"/>
+   <path d="M45 39c1 7 3 13 7 15 3 1 5-2 3-5" stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+   <ellipse cx="38" cy="24" rx="7" ry="9" opacity=".55"/><circle cx="50" cy="26" r="2.2" fill="var(--bg1)"/>
+   <rect x="14" y="46" width="7" height="13" rx="3.5"/><rect x="27" y="46" width="7" height="13" rx="3.5"/>
+   <path d="M52 36l7 3" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`],
+ 106:['قريش',`<rect x="18" y="22" width="30" height="30" rx="2"/><rect x="18" y="28" width="30" height="4" fill="var(--bg1)" opacity=".65"/>
+   <rect x="29" y="40" width="8" height="12" rx="1" fill="var(--bg1)" opacity=".65"/>
+   <path d="M12 56h44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+   <circle cx="52" cy="14" r="3.5" opacity=".8"/><circle cx="14" cy="16" r="2.5" opacity=".6"/>`],
+ 108:['الكوثر',`<path d="M8 26q8-6 16 0t16 0 16 0" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+   <path d="M8 38q8-6 16 0t16 0 16 0" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" opacity=".75"/>
+   <path d="M8 50q8-6 16 0t16 0 16 0" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" opacity=".5"/>
+   <circle cx="46" cy="14" r="4" opacity=".8"/>`],
+ 111:['المسد',`<path d="M32 8c6 10-4 12 0 20 3-3 3-7 3-7 6 6 9 12 9 18a12 12 0 01-24 0c0-8 6-12 8-18 2 4 3 6 4 8 2-8-2-13 0-21z"/>
+   <path d="M20 54q12 6 24 0" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>`],
+ 112:['الإخلاص',`<path d="M32 6l7 17 18 1-14 12 5 18-16-10-16 10 5-18L7 24l18-1z"/>
+   <circle cx="32" cy="32" r="5" fill="var(--bg1)" opacity=".55"/>`],
+ 113:['الفلق',`<path d="M8 44h48" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+   <path d="M18 44a14 14 0 0128 0z"/>
+   <g stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+   <path d="M32 12v7M14 22l5 5M50 22l-5 5M6 36h6M52 36h6"/></g>`],
+ 114:['الناس',`<circle cx="18" cy="22" r="7"/><path d="M6 48c0-8 5-13 12-13s12 5 12 13z"/>
+   <circle cx="40" cy="19" r="8" opacity=".8"/><path d="M27 48c0-9 6-15 13-15s13 6 13 15z" opacity=".8"/>`],
+ 91:['الشمس',`<circle cx="32" cy="32" r="13"/>
+   <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">
+   <path d="M32 5v8M32 51v8M5 32h8M51 32h8M13 13l6 6M45 45l6 6M51 13l-6 6M19 45l-6 6"/></g>`],
+ 92:['الليل',`<path d="M42 10a22 22 0 100 44 26 26 0 010-44z"/>
+   <circle cx="16" cy="16" r="2.5" opacity=".9"/><circle cx="26" cy="9" r="2" opacity=".7"/><circle cx="12" cy="30" r="1.8" opacity=".6"/>`],
+ 93:['الضحى',`<path d="M6 46h52" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+   <circle cx="32" cy="34" r="11"/><g stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none">
+   <path d="M32 12v7M14 20l5 5M50 20l-5 5M8 34h6M50 34h6"/></g>`],
+ 95:['التين',`<circle cx="21" cy="38" r="13"/><path d="M21 25c0-6 4-9 8-10-1 5-3 8-8 10z" opacity=".7"/>
+   <circle cx="45" cy="42" r="9" opacity=".8"/><path d="M45 33c0-4 3-6 6-7-1 4-2 6-6 7z" opacity=".6"/>`],
+ 96:['العلق',`<path d="M14 50l4-11 24-24 7 7-24 24z"/><path d="M42 15l7 7 5-5a5 5 0 00-7-7z" opacity=".75"/>
+   <path d="M12 56h34" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`],
+ 97:['القدر',`<path d="M40 12a20 20 0 100 40 24 24 0 010-40z"/>
+   <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".7">
+   <path d="M14 12v10M20 18h-12M50 44v8M54 48h-8"/></g><circle cx="16" cy="40" r="2" opacity=".8"/>`],
+ 99:['الزلزلة',`<path d="M6 40h13l5-7 6 12 5-9 5 4h18" stroke="currentColor" stroke-width="4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+   <path d="M6 52h52" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+   <path d="M30 14l-4 10h8l-5 10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>`],
+ 100:['العاديات',`<path d="M46 14c-7 0-11 5-13 10L18 30c-6 2-9 7-9 13h8c0-3 2-5 5-6l6 4-4 13h8l5-13 8 2 3 11h8l-4-16c4-3 6-7 6-12 0-7-5-12-12-12z"/>
+   <circle cx="47" cy="21" r="1.8" fill="var(--bg1)"/>`],
+ 101:['القارعة',`<circle cx="42" cy="22" r="10"/>
+   <path d="M34 30L10 54M40 34L22 52M28 26L8 42" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none" opacity=".7"/>`],
+ 102:['التكاثر',`<ellipse cx="22" cy="44" rx="14" ry="5"/><ellipse cx="22" cy="36" rx="14" ry="5" opacity=".8"/>
+   <ellipse cx="22" cy="28" rx="14" ry="5" opacity=".6"/><ellipse cx="45" cy="46" rx="11" ry="4" opacity=".75"/>
+   <ellipse cx="45" cy="39" rx="11" ry="4" opacity=".5"/>`],
+ 103:['العصر',`<path d="M16 8h32M16 56h32" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+   <path d="M20 8c0 12 12 16 12 24 0-8 12-12 12-24M20 56c0-12 12-16 12-24 0 8 12 12 12 24" stroke="currentColor" stroke-width="3.5" fill="none"/>
+   <path d="M26 46q6-8 12 0z"/>`],
+ 107:['الماعون',`<path d="M10 30h44c0 12-10 20-22 20S10 42 10 30z"/>
+   <path d="M6 30h52" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+   <path d="M26 22c0-5 4-5 4-9M36 22c0-5 4-5 4-9" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>`],
+ 109:['الكافرون',`<path d="M32 8v14M32 22L14 56M32 22l18 34" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/>
+   <circle cx="32" cy="16" r="5" opacity=".8"/>`],
+ 110:['النصر',`<path d="M16 8v48" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+   <path d="M20 12h30l-7 9 7 9H20z"/><circle cx="34" cy="46" r="4" opacity=".7"/><circle cx="46" cy="48" r="4" opacity=".55"/>
+   <circle cx="26" cy="49" r="4" opacity=".6"/>`],
+ 88:['الغاشية',`<path d="M12 44c0-9 5-13 11-13 2-7 8-9 12-3 5-1 9 3 9 8v8"/>
+   <rect x="14" y="42" width="4" height="14" rx="2"/><rect x="24" y="42" width="4" height="14" rx="2"/>
+   <rect x="34" y="42" width="4" height="14" rx="2"/><rect x="42" y="42" width="4" height="14" rx="2"/>
+   <path d="M44 40V24c0-4 3-7 7-7" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/>
+   <circle cx="53" cy="15" r="5"/>`],
+ 78:['النبأ',`<path d="M4 52l16-26 10 15 8-12 22 23z"/>
+   <path d="M4 52h56" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+   <circle cx="46" cy="14" r="6" opacity=".75"/>`],
+ 54:['القمر',`<path d="M28 8a24 24 0 000 48 30 30 0 010-48z"/>
+   <path d="M36 8a24 24 0 010 48 30 30 0 000-48z" opacity=".55"/>
+   <circle cx="12" cy="14" r="2" opacity=".8"/><circle cx="54" cy="48" r="2.4" opacity=".7"/>`],
+ 89:['الفجر',`<path d="M4 48l14-18 9 11 7-9 26 16z"/><circle cx="32" cy="18" r="8"/>
+   <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".7"><path d="M32 4v5M18 10l3 4M46 10l-3 4"/></g>
+   <path d="M4 56h56" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".6"/>`],
+ 90:['البلد',`<rect x="8" y="28" width="12" height="28" rx="2"/><rect x="24" y="18" width="14" height="38" rx="2" opacity=".85"/>
+   <rect x="42" y="34" width="12" height="22" rx="2" opacity=".7"/>
+   <path d="M4 56h56" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`],
+ 81:['التكوير',`<circle cx="32" cy="34" r="12" opacity=".85"/><path d="M14 46q18 10 36 0" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+   <g stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" opacity=".6"><path d="M32 10v8M12 20l5 5M52 20l-5 5"/></g>`],
+ 82:['الانفطار',`<path d="M32 4l5 14 14 5-14 5-5 14-5-14-14-5 14-5z"/>
+   <circle cx="14" cy="48" r="4" opacity=".7"/><circle cx="50" cy="46" r="5" opacity=".6"/><circle cx="34" cy="54" r="3" opacity=".5"/>`],
+ 84:['الانشقاق',`<path d="M6 20h20l6 8 6-8h20" stroke="currentColor" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+   <path d="M10 38h16M38 38h16" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".65"/>
+   <path d="M14 52h12M38 52h12" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".45"/>`]
+};
+const artOf = sn => ART[sn] || null;
+function artSVG(sn, size){
+  const a = artOf(sn); if(!a) return '';
+  return '<svg class="art'+((size||64)>=90?' big':'')+'" viewBox="0 0 64 64" fill="currentColor" style="width:'+(size||64)+'px;height:'+(size||64)+'px" role="img" aria-label="'+esc(a[0])+'">'+a[1]+'</svg>';
+}
+
 /* ===================== إعدادات عامة ===================== */
 const PTS = {mcq:10, tf:10, blank:10, order:20, match:20, choice:10, next:15, build:20, odd:15};
 const TIME_BONUS = 5;       // أقصى نقاط إضافية للسرعة
@@ -1013,7 +1173,7 @@ function saveAll(ps){ try{ localStorage.setItem(PKEY, JSON.stringify(ps)); }catc
 function saveP(){ if(!P) return; const ps=allProfiles(); const i=ps.findIndex(x=>x.id===P.id);
   if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); backupProfile(); }
 function newProfile(name, emoji){
-  return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', diff:'normal', theme:curTheme(),
+  return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', char:'boy', age:'mid', diff:'normal', theme:curTheme(),
     stars:{}, sstars:{}, streak:0, lastPlay:'', daily:'', mistakes:[],
     stats:{c:0, w:0, per:{}}, badges:[], created:Date.now() };
 }
@@ -1034,7 +1194,7 @@ function bootProfile(){
 const RCHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function makeCode(){ return Array.from({length:6},()=>RCHARS[Math.floor(RNG()*RCHARS.length)]).join(''); }
 function packProfile(p){
-  return { name:p.name, emoji:p.emoji, diff:p.diff, theme:p.theme||'night', stars:p.stars, sstars:p.sstars,
+  return { name:p.name, emoji:p.emoji, char:p.char||'boy', age:p.age||'mid', diff:p.diff, theme:p.theme||'night', stars:p.stars, sstars:p.sstars,
     streak:p.streak, lastPlay:p.lastPlay, daily:p.daily, mistakes:(p.mistakes||[]).slice(-80),
     stats:p.stats, badges:p.badges, jdone:p.jdone||{}, revs:p.revs||0, at:Date.now() };
 }
@@ -1061,7 +1221,7 @@ async function restoreByCode(code){
   if(!s.exists()) throw new Error('notfound');
   const d = s.val();
   const p = newProfile(d.name||'لاعب', d.emoji||'🙂');
-  Object.assign(p, { code:c, diff:d.diff||'normal', theme:d.theme||'night', stars:d.stars||{}, sstars:d.sstars||{},
+  Object.assign(p, { code:c, char:d.char||'boy', age:d.age||'mid', diff:d.diff||'normal', theme:d.theme||'night', stars:d.stars||{}, sstars:d.sstars||{},
     streak:d.streak||0, lastPlay:d.lastPlay||'', daily:d.daily||'', mistakes:d.mistakes||[],
     stats:d.stats||{c:0,w:0,per:{}}, badges:d.badges||[], jdone:d.jdone||{}, revs:d.revs||0, migrated:true });
   const ps = allProfiles().filter(x=>x.code!==c); ps.push(p); saveAll(ps);
@@ -1334,10 +1494,16 @@ const Snd = {
     o.connect(g); g.connect(this.ctx.destination); o.start(t0); o.stop(t0+dur+.05);
   },
   click(){ this.tone(660,0,.06,'triangle',.07); },
-  correct(){ [523.25,659.25,783.99].forEach((f,i)=>this.tone(f,i*.08,.22,'sine',.13)); },
-  wrong(){ this.tone(196,0,.16,'sawtooth',.09); this.tone(147,.14,.28,'sawtooth',.09); },
-  star(){ [880,1174.7].forEach((f,i)=>this.tone(f,i*.07,.18,'triangle',.1)); },
+  correct(){ const kid = (typeof P!=='undefined'&&P&&P.theme==='kids');
+    const n = kid?[523.25,659.25,783.99,1046.5]:[523.25,659.25,783.99];
+    n.forEach((f,i)=>this.tone(f,i*.075,.22,kid?'triangle':'sine',.13)); },
+  wrong(){ this.tone(233,0,.14,'triangle',.09); this.tone(175,.13,.24,'triangle',.09); },
+  star(){ [880,1174.7,1318.5].forEach((f,i)=>this.tone(f,i*.06,.18,'triangle',.1)); },
   win(){ [523.25,587.33,659.25,783.99,1046.5].forEach((f,i)=>this.tone(f,i*.11,.35,'sine',.13)); },
+  /* لحن احتفال أطول عند إنهاء سورة أو مرحلة بثلاث نجوم */
+  fanfare(){ const m=[523.25,659.25,783.99,1046.5,783.99,1046.5,1318.5];
+    m.forEach((f,i)=>{ this.tone(f,i*.13,.4,'triangle',.12); this.tone(f/2,i*.13,.4,'sine',.06); });
+    [0,.26,.52].forEach(t=>this.tone(1568,t+.9,.5,'sine',.08)); },
   tick(){ this.tone(1200,0,.03,'square',.03); }
 };
 
@@ -1400,12 +1566,24 @@ function loadSolo(sn){
     h += `<div class="star" style="right:${(Math.random()*100).toFixed(2)}%;top:${(Math.random()*100).toFixed(2)}%;width:${s}px;height:${s}px;animation-delay:${(Math.random()*3).toFixed(2)}s"></div>`; }
   box.innerHTML=h; })();
 
-function confetti(){
-  const cols=['#ffd67e','#3ddc97','#7db6ff','#ff9ecb','#fff'];
-  for(let i=0;i<70;i++){ const d=document.createElement('div'); d.className='confetti';
+function confetti(big){
+  const cols=['#ffd67e','#3ddc97','#7db6ff','#ff9ecb','#ffffff','#ffb03a'];
+  const N = big?130:70;
+  for(let i=0;i<N;i++){ const d=document.createElement('div'); d.className='confetti';
     d.style.right=Math.random()*100+'%'; d.style.background=cols[i%cols.length];
+    if(i%4===0){ d.style.borderRadius='50%'; d.style.width='12px'; d.style.height='12px'; }
     d.style.animationDuration=(2+Math.random()*2)+'s'; d.style.animationDelay=(Math.random()*.6)+'s';
-    document.body.appendChild(d); setTimeout(()=>d.remove(),5000); }
+    document.body.appendChild(d); setTimeout(()=>d.remove(),5200); }
+  if(big) burstStars();
+}
+/* نجوم بتنفجر من نص الشاشة */
+function burstStars(){
+  for(let i=0;i<16;i++){ const s=document.createElement('div'); s.className='bstar'; s.textContent='⭐';
+    const ang=(i/16)*Math.PI*2, dist=140+Math.random()*120;
+    s.style.setProperty('--dx', Math.cos(ang)*dist+'px');
+    s.style.setProperty('--dy', Math.sin(ang)*dist+'px');
+    s.style.animationDelay=(Math.random()*.25)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),1600); }
 }
 
 /* ===================== التخزين المحلي ===================== */
@@ -1419,6 +1597,8 @@ function saveBoard(sid, rows){
 
 /* ---------- اختيار/إنشاء الملف الشخصي ---------- */
 const AVATARS = ['🙂','😃','🧕','👳','🐱','🐦','🦁','🌟','🌙','🚀','⚽','🎨'];
+const ENCOURAGE = ['أحسنت! 🌟','ما شاء الله!','ممتاز يا بطل!','تمام كده! 👏','برافو عليك!','جميل جدًا!'];
+const CONSOLE_ = ['ولا يهمك، جرّب تاني 💪','قريب أوي!','مرة تانية وهتظبط','ركّز شوية وهتعرف','معلش، الغلط بيعلّم'];
 function screenProfiles(){
   stopTimer();
   const ps = allProfiles();
@@ -1432,7 +1612,7 @@ function screenProfiles(){
     <h3>مين اللي هيلعب النهارده؟ 👋</h3>
     ${ps.length? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
       ${ps.map(p=>`<div class="stage" data-p="${p.id}">
-        <span class="em">${p.emoji}</span><div style="font-weight:700">${esc(p.name)}</div>
+        ${p.char?charSVG(p.char,'idle',62):`<span class="em">${p.emoji}</span>`}<div style="font-weight:700">${esc(p.name)}</div>
         <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${p.stats.c}</div>
       </div>`).join('')}
     </div>`:'<p class="muted center">أول مرة تلعب؟ اعمل ملفك الشخصي وابدأ 🌟</p>'}
@@ -1440,10 +1620,16 @@ function screenProfiles(){
   <div class="card fade">
     <h3>➕ ملف جديد</h3>
     <input type="text" id="npName" maxlength="14" placeholder="اكتب اسمك...">
-    <div class="row" id="avRow" style="justify-content:flex-start;gap:6px">
-      ${AVATARS.map((a,i)=>`<button class="btn ghost sm av ${i===0?'sel-av':''}" data-a="${a}" style="font-size:1.3rem;padding:6px 10px">${a}</button>`).join('')}
+    <h3 style="margin-top:14px;font-size:1rem">اختار شكلك</h3>
+    <div class="charpick" id="chRow">
+      ${Object.entries(CHARS).map(([k,c],i)=>`<button data-c="${k}" class="${i===0?'on':''}">
+        ${charSVG(k,'happy',78)}<b>${c.nm}</b></button>`).join('')}
     </div>
-    <div class="center" style="margin-top:10px"><button class="btn" id="mk">يلا بينا 🚀</button></div>
+    <h3 style="margin-top:14px;font-size:1rem">عمرك كام؟ <span class="muted" style="font-size:.8rem">— عشان نختارلك الشكل المناسب</span></h3>
+    <div class="seg" id="agRow">
+      ${AGES.map((a,i)=>`<button class="btn ${i===1?'':'ghost'} sm" data-ag="${a.k}">${a.em} ${a.nm}</button>`).join('')}
+    </div>
+    <div class="center" style="margin-top:6px"><button class="btn" id="mk">يلا بينا 🚀</button></div>
   </div>
   <div class="card fade center" style="padding:12px">
     <span class="muted" style="font-size:.85rem">لعبت قبل كده على جهاز تاني ومعاك كود الاستعادة؟</span>
@@ -1453,15 +1639,20 @@ function screenProfiles(){
       <button class="btn sm" id="rcGo">استرجاع</button>
     </div>
   </div>`;
-  let av = AVATARS[0];
-  app.querySelectorAll('.av').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); av=b.dataset.a;
-    app.querySelectorAll('.av').forEach(x=>x.style.borderColor=''); b.style.borderColor='var(--gold)'; });
+  let ch='boy', ageK='mid';
+  app.querySelectorAll('#chRow button').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); ch=b.dataset.c;
+    app.querySelectorAll('#chRow button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+  app.querySelectorAll('#agRow button').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); ageK=b.dataset.ag;
+    app.querySelectorAll('#agRow button').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost');
+    applyTheme((AGES.find(a=>a.k===ageK)||{}).th || 'night'); });
   app.querySelectorAll('[data-p]').forEach(d=>d.onclick=()=>{ Snd.init(); Snd.click();
     activateProfile(allProfiles().find(x=>x.id===d.dataset.p)); screenHome(); });
   $('#mk').onclick=()=>{ Snd.init();
     const name=($('#npName').value||'').trim(); if(!name){ $('#npName').classList.add('shake'); setTimeout(()=>$('#npName').classList.remove('shake'),450); return; }
-    const p=newProfile(name, av); const ps2=allProfiles(); ps2.push(p); saveAll(ps2);
-    activateProfile(p); Snd.correct(); screenHome(); };
+    const th=(AGES.find(a=>a.k===ageK)||{}).th || 'night';
+    const p=newProfile(name, CHARS[ch].em); p.char=ch; p.age=ageK; p.theme=th;
+    const ps2=allProfiles(); ps2.push(p); saveAll(ps2);
+    activateProfile(p); Snd.win(); screenHome(); };
   $('#rcBtn').onclick=()=>{ Snd.init(); Snd.click(); $('#rcForm').hidden=!$('#rcForm').hidden; };
   $('#rcGo').onclick=async()=>{ Snd.init(); Snd.click();
     const c=($('#rcCode').value||'').trim();
@@ -1487,7 +1678,9 @@ function screenHome(){
     </div>
   </div>
   <div class="center fade">
-    <div class="moon"><i class="l"></i><i class="r"></i></div>
+    ${P.char?`<div class="artrow" style="margin-bottom:-4px">${charSVG(P.char,'happy',92)}
+      <span class="speech">أهلًا ${esc(P.name)}! جاهز نحفظ النهارده؟</span></div>`
+      :`<div class="moon"><i class="l"></i><i class="r"></i></div>`}
     <h1>رحلة القرآن</h1>
     ${badges?`<p style="font-size:1.3rem;margin:2px 0">${badges}</p>`:''}
     ${P.code?`<p class="muted" style="font-size:.78rem;margin:2px 0">🎫 كود استعادة تقدمك:
@@ -1682,8 +1875,9 @@ function screenSurahs(){
   </div>
   <div class="grid surahs fade" id="sgrid">
     ${Array.from({length:114},(_,i)=>i+1).map(sn=>{ const Q=QURAN[sn], st=surStars(sn);
+      const a=artOf(sn);
       return `<div class="stage" data-s="${sn}" data-nm="${esc(norm(Q.nm))}">
-        <div class="muted" style="font-size:.7rem">${sn}</div>
+        ${a?artSVG(sn,40):`<div style="height:40px;line-height:40px;font-size:1.1rem;opacity:.55">${sn}</div>`}
         <div style="font-weight:700;font-size:.98rem">${esc(Q.nm)}</div>
         <div class="muted" style="font-size:.7rem">${esc(Q.p)} · ${Q.ay.length} آية</div>
         <div class="st">${'★'.repeat(st)}${'☆'.repeat(3-st)}${surPartial(sn)?' <span title="لعبت مدى منها" style="font-size:.7rem">🔖</span>':''}</div>
@@ -1706,6 +1900,8 @@ function screenSurahOpts(sn){
   app.innerHTML = `
   <div class="hdr"><h2>📖 سورة ${esc(Q.nm)}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade center">
+    ${artOf(sn)?`<div style="margin:6px 0 2px">${artSVG(sn,96)}</div>
+      <p class="muted" style="margin:0;font-size:.8rem">${esc(artOf(sn)[0])}</p>`:''}
     <p class="muted" style="margin:0">${esc(Q.p)} · ${N} آية · ترتيبها ${sn} في المصحف</p>
     <div class="st" style="font-size:1.4rem;letter-spacing:4px;color:var(--gold)">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
     <button class="btn" id="all">▶️ العب السورة كاملة</button>
@@ -2193,7 +2389,7 @@ function screenStory(){
   <div class="hdr"><span class="pill">${st.emoji} ${solo?esc(st.title):'المرحلة '+(G.stage+1)}</span>
     <button class="btn ghost sm" id="bk">${solo?'📖 سورة تانية':'🗺️ الخريطة'}</button></div>
   <div class="card fade center">
-    <div style="font-size:3.4rem">${st.emoji}</div>
+    ${solo&&artOf(sn)?`<div>${artSVG(sn,104)}</div>`:`<div style="font-size:3.4rem">${st.emoji}</div>`}
     <h2 style="color:var(--gold)">${esc(st.title)}</h2>
     <p class="muted">${solo ? `${esc(I.p||'')} · ${surahAyat(G.surah,sn).length} آية · ترتيبها ${sn}`
         : (st.range?`الآيات ${st.range[0]} – ${st.range[1]}`
@@ -2487,6 +2683,9 @@ function finish(ok, c, base, note){
   const last = G.ch >= G.chal.length-1;
   $('#after').innerHTML = `
     <div class="fb ${ok?'ok':'bad'} pop">
+      ${P&&P.char?`<div class="artrow" style="justify-content:flex-start;margin-bottom:6px">
+        ${charSVG(P.char, ok?'happy':'sad', 58)}
+        <span class="speech">${esc(ok?rnd(ENCOURAGE):rnd(CONSOLE_))}</span></div>`:''}
       <b>${ok?'✅ إجابة صحيحة!':'❌ مش مظبوط'}</b>
       ${ok?` <span class="muted">(+${base}${bonus?` نقطة، +${bonus} سرعة`:' نقطة'})</span>`:''}
       ${note?`<div class="muted" style="font-size:.9rem">${esc(note)}</div>`:''}
@@ -2515,13 +2714,16 @@ function screenStageEnd(){
   else { G.stars[G.stage]=Math.max(G.stars[G.stage], stars);
          if(G.stage>=G.unlocked) G.unlocked=G.stage+1;
          saveJourneyStars(); }
-  if(stars>=2) confetti();
-  Snd.win();
+  if(stars>=2) confetti(stars===3);
+  stars===3 ? Snd.fanfare() : Snd.win();
   const msg = stars===3?'ممتاز! أداء بطل حقيقي 🌟' : stars===2?'كويس جدًا! كمان شوية وتوصل للتلاتة ⭐' :
               stars===1?'بداية كويسة — جرّب تاني وهتتحسّن 💪' : 'ماتزعلش، راجع الآيات وحاول تاني 🤍';
   app.innerHTML = `
   <div class="card fade center">
-    <div style="font-size:3.2rem">${st.emoji}</div>
+    <div class="artrow">
+      ${P&&P.char?charSVG(P.char, stars>=2?'happy':'idle', 84):''}
+      ${solo&&artOf(G.solo)?artSVG(G.solo,84):`<div style="font-size:3.2rem">${st.emoji}</div>`}
+    </div>
     <h2>خلّصت ${solo?'':'مرحلة '}«${esc(st.title)}»</h2>
     <div style="font-size:2.6rem;color:var(--gold);letter-spacing:8px">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
     <p><b>${G.stageEarned}</b> نقطة من ${G.stageMax}</p>
@@ -2551,7 +2753,7 @@ function screenStageEnd(){
 
 /* ===================== النهاية ===================== */
 function screenFinal(){
-  stopTimer(); confetti(); Snd.win();
+  stopTimer(); confetti(true); Snd.fanfare();
   const totStars=G.stars.reduce((a,b)=>a+b,0), maxStars=G.surah.stages.length*3;
   const rank=G.players.slice().sort((a,b)=>b.score-a.score);
   const badge = totStars>=maxStars*0.9 ? {t:'مُدَّكِر ذهبي',e:'🏆'} :
