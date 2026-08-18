@@ -8,26 +8,53 @@
 <title>رحلة القرآن — لعبة تفاعلية للأطفال</title>
 <style>
 :root{
+  /* 🌙 الثيم الليلي — الافتراضي (١٠–١٥ سنة) */
   --bg1:#070b1f; --bg2:#141a3d; --bg3:#251a45;
   --gold:#ffd67e; --gold2:#f5b942; --ink:#f3f0ff;
   --muted:#a6a3c9; --ok:#3ddc97; --bad:#ff6b81;
   --card:rgba(255,255,255,.07); --line:rgba(255,214,126,.28);
+  --btnink:#2a1d00; --btnsh:#a97a17; --ayah:#ffeec2;
+  --glow:rgba(255,214,126,.55); --skyA:#3a2a6b; --skyB:#14325c;
+  --rad:20px; --scale:1;
   --ui:'Tajawal','Segoe UI','Noto Kufi Arabic','Cairo',system-ui,sans-serif;
   --quran:'Amiri Quran','Amiri','Scheherazade New','Traditional Arabic','Noto Naskh Arabic',serif;
+}
+/* 🌈 ثيم الأطفال — ألوان نهارية مبهجة وأزرار أكبر (٦–١٠ سنوات) */
+:root[data-theme="kids"]{
+  --bg1:#fff8ec; --bg2:#ffeedd; --bg3:#e8f6ff;
+  --gold:#ff8a3d; --gold2:#ffb03a; --ink:#2b2140;
+  --muted:#584a6e; --ok:#0f8b52; --bad:#c93a4a;
+  --card:rgba(255,255,255,.82); --line:rgba(255,138,61,.35);
+  --btnink:#fff; --btnsh:#d9631f; --ayah:#1f3a5f;
+  --glow:rgba(255,176,58,.55); --skyA:#ffd9a8; --skyB:#bfe8ff;
+  --rad:26px; --scale:1.08;
+}
+/* 📜 الثيم المصحفي — هادئ وكلاسيكي (الكبار والمعلمين) */
+:root[data-theme="mushaf"]{
+  --bg1:#f7f2e4; --bg2:#efe7d2; --bg3:#e6ddc4;
+  --gold:#8a6a12; --gold2:#a8862a; --ink:#241f16;
+  --muted:#4f4736; --ok:#0b5b4c; --bad:#8e2a21;
+  --card:rgba(255,255,255,.78); --line:rgba(138,106,18,.32);
+  --btnink:#fffdf5; --btnsh:#6a5210; --ayah:#1c3b2e;
+  --glow:rgba(138,106,18,.35); --skyA:#e7dcbe; --skyB:#dfe9d8;
+  --rad:12px; --scale:1;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;min-height:100%}
 body{
   font-family:var(--ui); color:var(--ink); background:var(--bg1);
   background-image:
-    radial-gradient(1200px 700px at 80% -10%, #3a2a6b 0%, transparent 60%),
-    radial-gradient(900px 600px at 10% 110%, #14325c 0%, transparent 55%),
+    radial-gradient(1200px 700px at 80% -10%, var(--skyA) 0%, transparent 60%),
+    radial-gradient(900px 600px at 10% 110%, var(--skyB) 0%, transparent 55%),
     linear-gradient(170deg, var(--bg1), var(--bg2) 55%, var(--bg3));
   background-attachment:fixed;
-  min-height:100vh; overflow-x:hidden;
+  min-height:100vh; overflow-x:hidden; font-size:calc(1rem*var(--scale));
 }
+/* النجوم تلمع ليلًا فقط؛ في الثيمات النهارية تتحول لفقاعات ملوّنة خفيفة */
+:root[data-theme="kids"] .star{background:var(--gold);opacity:.35}
+:root[data-theme="mushaf"] #stars{display:none}
 #stars{position:fixed;inset:0;pointer-events:none;z-index:0}
-.star{position:absolute;background:#fff;border-radius:50%;opacity:.7;animation:tw 3s infinite ease-in-out}
+.star{position:absolute;background:currentColor;color:#fff;border-radius:50%;opacity:.7;animation:tw 3s infinite ease-in-out}
 @keyframes tw{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:.95;transform:scale(1.15)}}
 #app{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:16px 14px 60px}
 
@@ -37,7 +64,7 @@ h2{font-size:clamp(1.25rem,4.5vw,1.7rem)}
 p{line-height:1.9;margin:.4em 0}
 .muted{color:var(--muted)}
 .center{text-align:center}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:18px;
   backdrop-filter:blur(8px);box-shadow:0 12px 40px rgba(0,0,0,.35);margin-bottom:14px}
 .fade{animation:fade .35s ease both}
 @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -48,17 +75,17 @@ p{line-height:1.9;margin:.4em 0}
 
 button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  background:linear-gradient(180deg,var(--gold),var(--gold2));color:#2a1d00;
+  background:linear-gradient(180deg,var(--gold),var(--gold2));color:var(--btnink);
   font-weight:700;padding:14px 26px;border-radius:16px;
-  box-shadow:0 6px 0 #a97a17, 0 12px 24px rgba(0,0,0,.35);transition:.12s}
-.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #a97a17}
+  box-shadow:0 6px 0 var(--btnsh), 0 12px 24px rgba(0,0,0,.28);transition:.12s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--btnsh)}
 .btn.ghost{background:transparent;color:var(--gold);border:2px solid var(--line);box-shadow:none;font-weight:600}
 .btn.ghost:active{transform:translateY(2px)}
-.btn.sm{padding:9px 16px;font-size:.9rem;border-radius:12px;box-shadow:0 4px 0 #a97a17}
+.btn.sm{padding:9px 16px;font-size:.9rem;border-radius:12px;box-shadow:0 4px 0 var(--btnsh)}
 .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 
-.opt{display:block;width:100%;text-align:right;background:rgba(255,255,255,.06);
-  border:2px solid rgba(255,255,255,.14);border-radius:16px;padding:15px 18px;margin-bottom:10px;
+.opt{display:block;width:100%;text-align:right;background:var(--card);
+  border:2px solid var(--line);border-radius:16px;padding:15px 18px;margin-bottom:10px;
   font-size:1.05rem;line-height:1.7;transition:.15s}
 .opt:hover:not(:disabled){border-color:var(--gold);background:rgba(255,214,126,.12)}
 .opt:disabled{cursor:default}
@@ -67,7 +94,7 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .opt .tag{float:left;font-weight:800}
 
 .ayah{font-family:var(--quran);font-size:clamp(1.4rem,5.2vw,2rem);line-height:2.5;
-  color:#ffeec2;text-align:center;padding:6px 4px}
+  color:var(--ayah);text-align:center;padding:6px 4px}
 .ayah .num{display:inline-block;font-family:var(--ui);font-size:.75rem;color:var(--gold);
   border:1px solid var(--line);border-radius:50%;width:26px;height:26px;line-height:24px;
   text-align:center;margin:0 6px;vertical-align:middle}
@@ -103,16 +130,16 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .stage .st{color:var(--gold);letter-spacing:2px;font-size:1.05rem}
 
 .pairs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.pair{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);border-radius:14px;
+.pair{background:var(--card);border:2px solid var(--line);border-radius:14px;
   padding:13px 10px;text-align:center;font-size:.98rem;line-height:1.6;transition:.15s}
-.pair.q{font-family:var(--quran);font-size:1.35rem;color:#ffeec2}
+.pair.q{font-family:var(--quran);font-size:1.35rem;color:var(--ayah)}
 .pair.sel{border-color:var(--gold);background:rgba(255,214,126,.16)}
 .pair.done{border-color:var(--ok);background:rgba(61,220,151,.16);opacity:.65;cursor:default}
 .pair.err{border-color:var(--bad)}
 
 .slots{min-height:60px;border:2px dashed var(--line);border-radius:16px;padding:10px;margin-bottom:12px}
 .slot{background:rgba(255,214,126,.14);border:1px solid var(--line);border-radius:12px;
-  padding:8px 12px;margin:5px 0;font-family:var(--quran);font-size:1.2rem;color:#ffeec2;
+  padding:8px 12px;margin:5px 0;font-family:var(--quran);font-size:1.2rem;color:var(--ayah);
   display:flex;justify-content:space-between;align-items:center;gap:8px}
 .slot .rm{font-family:var(--ui);font-size:.8rem;color:var(--bad);cursor:pointer;font-weight:700}
 
@@ -123,8 +150,8 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 
 .moon{width:120px;height:120px;margin:6px auto 14px;position:relative}
 .moon i{position:absolute;top:0;width:60px;height:120px;background:
-  radial-gradient(circle at 40% 35%, #fff8e2, #ffd67e 60%, #d9a13c);
-  box-shadow:0 0 45px rgba(255,214,126,.55)}
+  radial-gradient(circle at 40% 35%, #fff8e2, var(--gold) 60%, var(--gold2));
+  box-shadow:0 0 45px var(--glow)}
 .moon i.l{right:0;border-radius:120px 0 0 120px;animation:sl 4s infinite ease-in-out}
 .moon i.r{left:0;border-radius:0 120px 120px 0;animation:sr 4s infinite ease-in-out}
 @keyframes sl{0%,45%,100%{transform:translateX(0) rotate(0)}70%{transform:translateX(22px) rotate(9deg)}}
@@ -133,26 +160,51 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:right;font-size:.95rem}
 th{color:var(--gold);font-size:.85rem}
-input[type=text]{width:100%;padding:12px 14px;border-radius:12px;border:2px solid rgba(255,255,255,.16);
-  background:rgba(0,0,0,.25);color:#fff;font-family:inherit;font-size:1rem;margin-bottom:8px}
-input[type=text]:focus{outline:none;border-color:var(--gold)}
-select{padding:12px 14px;border-radius:12px;border:2px solid rgba(255,255,255,.16);
-  background:#141a3d;color:#fff;font-family:inherit;font-size:1rem}
+input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--line);
+  background:var(--card);color:var(--ink);font-family:inherit;font-size:1rem;margin-bottom:8px}
+input:focus{outline:none;border-color:var(--gold)}
+select{padding:12px 14px;border-radius:12px;border:2px solid var(--line);
+  background:var(--bg2);color:var(--ink);font-family:inherit;font-size:1rem}
 .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;
   background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.9rem}
-code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:6px;font-size:.85em;direction:ltr;display:inline-block}
-pre{background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:14px;padding:14px;
+code{background:var(--card);padding:2px 6px;border-radius:6px;font-size:.85em;direction:ltr;display:inline-block}
+pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px;
   overflow-x:auto;direction:ltr;text-align:left;font-size:.8rem;line-height:1.6}
+/* رقائق الكلمات — لعبة «ركّب الآية» */
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{font-family:var(--quran);font-size:clamp(1.15rem,4.4vw,1.5rem);line-height:1.6;
+  background:var(--card);border:2px solid var(--line);color:var(--ayah);
+  border-radius:14px;padding:8px 14px;cursor:pointer;transition:.12s}
+.chip:hover{border-color:var(--gold);transform:translateY(-2px)}
+.chip:active{transform:scale(.94)}
+.chip.in{background:rgba(255,214,126,.14)}
+.chip.ok{border-color:var(--ok);background:rgba(61,220,151,.18)}
+.chip.bad{border-color:var(--bad);background:rgba(255,107,129,.18)}
+/* اختيار كلمة داخل الآية — لعبة «الكلمة الدخيلة» */
+.wordpick .w{cursor:pointer;border-radius:10px;padding:5px 9px;margin:2px 0;transition:.12s;
+  display:inline-block;min-width:44px;text-align:center;border-bottom:2px dashed transparent}
+:root[data-theme="kids"] .wordpick .w{padding:8px 12px;min-width:52px}
+.wordpick .w:hover{background:rgba(255,214,126,.16);border-bottom-color:var(--gold)}
+.wordpick .w.ok{background:rgba(61,220,151,.25);border-bottom-color:var(--ok)}
+.wordpick .w.bad{background:rgba(255,107,129,.25);border-bottom-color:var(--bad)}
+/* الثيم المبهج: أزرار وبطاقات أكبر وأكثر استدارة */
+:root[data-theme="kids"] .btn{border-radius:18px;font-weight:800}
+:root[data-theme="kids"] .opt{border-radius:18px;padding:17px 18px;font-weight:600}
+:root[data-theme="kids"] .stage{border-width:3px}
+:root[data-theme="kids"] .stage .em{font-size:2.7rem}
+:root[data-theme="kids"] .chip{border-width:3px}
+@keyframes bounceIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+:root[data-theme="kids"] .pop{animation:bounceIn .4s cubic-bezier(.2,1.5,.4,1) both}
 .seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
 .seg .btn{width:100%;padding:11px 4px;font-size:.92rem}
 .annbar{position:fixed;top:0;right:0;left:0;z-index:95;display:flex;align-items:center;gap:10px;
   justify-content:center;background:linear-gradient(90deg,var(--gold2),var(--gold));color:#2a1d00;
-  font-weight:700;padding:9px 16px;font-size:.9rem;box-shadow:0 3px 14px rgba(0,0,0,.35)}
-.annbar button{background:transparent;font-size:1rem;color:#2a1d00;cursor:pointer;font-weight:800}
+  font-weight:700;padding:9px 16px;font-size:.9rem;box-shadow:0 3px 14px rgba(0,0,0,.25);color:var(--btnink)}
+.annbar button{background:transparent;font-size:1rem;color:var(--btnink);cursor:pointer;font-weight:800}
 body:has(.annbar) #app{padding-top:52px}
 .toast{position:fixed;bottom:24px;right:50%;transform:translateX(50%);z-index:100;
-  background:linear-gradient(180deg,var(--gold),var(--gold2));color:#2a1d00;font-weight:700;
-  padding:12px 22px;border-radius:99px;box-shadow:0 8px 30px rgba(0,0,0,.45);transition:opacity .4s;max-width:90vw}
+  background:linear-gradient(180deg,var(--gold),var(--gold2));color:var(--btnink);font-weight:700;
+  padding:12px 22px;border-radius:99px;box-shadow:0 8px 30px rgba(0,0,0,.35);transition:opacity .4s;max-width:90vw;color:var(--btnink)}
 .jbar{height:5px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-top:6px}
 .jbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:99px}
 .jz-part{border-color:rgba(255,214,126,.55)}
@@ -915,7 +967,7 @@ const entryById = id => {
 };
 
 /* ===================== إعدادات عامة ===================== */
-const PTS = {mcq:10, tf:10, blank:10, order:20, match:20, choice:10, next:15};
+const PTS = {mcq:10, tf:10, blank:10, order:20, match:20, choice:10, next:15, build:20, odd:15};
 const TIME_BONUS = 5;       // أقصى نقاط إضافية للسرعة
 const LS = 'quran_game_v1';
 /* مستويات الصعوبة: المؤقت، عدد البدائل في الكلمة الناقصة، مضاعف النقاط */
@@ -923,6 +975,20 @@ const DIFFS = { easy:{nm:'سهل', em:'🌱', t:50, dis:2, mult:1},
                 normal:{nm:'عادي', em:'⚖️', t:35, dis:3, mult:1},
                 hard:{nm:'صعب', em:'🔥', t:22, dis:4, mult:1.5} };
 let DIFF = DIFFS.normal;
+/* ===== الثيمات: مظهر لكل فئة عمرية ===== */
+const THEMES = {
+  night : {nm:'ليلي',   em:'🌙', d:'نجوم وذهب — للأعمار ١٠–١٥'},
+  kids  : {nm:'أطفال',  em:'🌈', d:'ألوان نهارية مبهجة وأزرار أكبر — ٦–١٠'},
+  mushaf: {nm:'مصحفي',  em:'📜', d:'هادئ وكلاسيكي — للكبار والمعلمين'}
+};
+function applyTheme(k){
+  const t = THEMES[k] ? k : 'night';
+  if(t==='night') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+  try{ localStorage.setItem(LS+'_theme', t); }catch(e){}
+  if(P && P.theme!==t){ P.theme=t; saveP(); }
+}
+const curTheme = () => (P && P.theme) || localStorage.getItem(LS+'_theme') || 'night';
 let QTIME = DIFF.t;
 function setDiff(k){ DIFF = DIFFS[k]||DIFFS.normal; QTIME = DIFF.t; if(P){ P.diff=k; saveP(); } }
 
@@ -947,12 +1013,12 @@ function saveAll(ps){ try{ localStorage.setItem(PKEY, JSON.stringify(ps)); }catc
 function saveP(){ if(!P) return; const ps=allProfiles(); const i=ps.findIndex(x=>x.id===P.id);
   if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); backupProfile(); }
 function newProfile(name, emoji){
-  return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', diff:'normal',
+  return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', diff:'normal', theme:curTheme(),
     stars:{}, sstars:{}, streak:0, lastPlay:'', daily:'', mistakes:[],
     stats:{c:0, w:0, per:{}}, badges:[], created:Date.now() };
 }
 function activateProfile(p){
-  P = p; localStorage.setItem(PACT, p.id); setDiff(p.diff||'normal');
+  P = p; localStorage.setItem(PACT, p.id); setDiff(p.diff||'normal'); applyTheme(p.theme||curTheme());
   /* استيراد تقدم النسخ القديمة (قبل نظام البروفايلات) مرة واحدة */
   if(!p.migrated){ p.migrated = true;
     SURAHS.forEach(e=>{ try{ const old = JSON.parse(localStorage.getItem(LS+'_sur_'+e.id)||'null');
@@ -968,7 +1034,7 @@ function bootProfile(){
 const RCHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function makeCode(){ return Array.from({length:6},()=>RCHARS[Math.floor(RNG()*RCHARS.length)]).join(''); }
 function packProfile(p){
-  return { name:p.name, emoji:p.emoji, diff:p.diff, stars:p.stars, sstars:p.sstars,
+  return { name:p.name, emoji:p.emoji, diff:p.diff, theme:p.theme||'night', stars:p.stars, sstars:p.sstars,
     streak:p.streak, lastPlay:p.lastPlay, daily:p.daily, mistakes:(p.mistakes||[]).slice(-80),
     stats:p.stats, badges:p.badges, jdone:p.jdone||{}, revs:p.revs||0, at:Date.now() };
 }
@@ -995,7 +1061,7 @@ async function restoreByCode(code){
   if(!s.exists()) throw new Error('notfound');
   const d = s.val();
   const p = newProfile(d.name||'لاعب', d.emoji||'🙂');
-  Object.assign(p, { code:c, diff:d.diff||'normal', stars:d.stars||{}, sstars:d.sstars||{},
+  Object.assign(p, { code:c, diff:d.diff||'normal', theme:d.theme||'night', stars:d.stars||{}, sstars:d.sstars||{},
     streak:d.streak||0, lastPlay:d.lastPlay||'', daily:d.daily||'', mistakes:d.mistakes||[],
     stats:d.stats||{c:0,w:0,per:{}}, badges:d.badges||[], jdone:d.jdone||{}, revs:d.revs||0, migrated:true });
   const ps = allProfiles().filter(x=>x.code!==c); ps.push(p); saveAll(ps);
@@ -1049,7 +1115,7 @@ function logMistake(c){
 }
 function packChal(c){
   const o = {type:c.type};
-  ['q','options','answer','ayah','idx','ayat','pairs','explain','show','noSrc','next'].forEach(k=>{ if(c[k]!==undefined) o[k]=c[k]; });
+  ['q','options','answer','ayah','idx','ayat','pairs','explain','show','noSrc','next','words','alt'].forEach(k=>{ if(c[k]!==undefined) o[k]=c[k]; });
   return o;
 }
 const dueReviews = () => P ? (P.mistakes||[]).filter(m=>m.due<=Date.now()) : [];
@@ -1120,6 +1186,34 @@ function autoOrder(list){
   }
   return null;
 }
+/* 🧩 «ركّب الآية»: كلمات الآية متبعثرة والطفل يرصّها بالترتيب — تفاعلي ومناسب للصغار */
+function autoBuild(entry, list){
+  const cand = list.filter(a=>{ const t=a.t.split(' ').filter(x=>!isMark(x)); return t.length>=3 && t.length<=8; });
+  if(!cand.length) return null;
+  for(let i=0;i<10;i++){
+    const a = rnd(cand);
+    const tk = a.t.split(' ').filter(x=>!isMark(x));
+    if(new Set(tk.map(norm)).size !== tk.length) continue;   /* كلمة مكررة = ترتيب غير قابل للتمييز */
+    return {type:'build', ayah:a.n, words:tk, explain:'رصّ الكلمات زي ما هي في المصحف بالظبط.'};
+  }
+  return null;
+}
+/* 🔎 «الكلمة الدخيلة»: كلمة واحدة في الآية اتبدّلت — الطفل يكتشفها */
+function autoOdd(entry, list){
+  const cand = list.filter(a=>a.t.split(' ').filter(x=>!isMark(x)).length>=4);
+  if(!cand.length) return null;
+  const pool = poolWords(entry.ayat);
+  for(let t=0;t<12;t++){
+    const a = rnd(cand), tk = a.t.split(' ');
+    const idxs = tk.map((x,i)=>i).filter(i=>!isMark(tk[i]) && norm(tk[i]).length>=3);
+    if(!idxs.length) continue;
+    const idx = rnd(idxs), here = new Set(tk.map(norm));
+    const alt = shuffle(pool).find(w=>!here.has(norm(w)) && norm(w).length>=3);
+    if(!alt) continue;
+    return {type:'odd', ayah:a.n, idx, alt, explain:'الكلمة الصحيحة في المصحف مختلفة — راجع الآية فوق.'};
+  }
+  return null;
+}
 /* «أكمل الآية»: نعرض آية والمطلوب اختيار الآية التالية لها — تدريب على المتشابهات */
 function autoNext(entry, list){
   const byS = {};
@@ -1160,6 +1254,10 @@ function genStage(entry, stage){
       block.push({type:'mcq', q:`﴿${I.nm}﴾ ${x.q}`, options:x.o.slice(), answer:x.a, explain:x.e, ayah:x.y}); }
     const b = autoBlank(entry, list); if(b) block.push(b);
     const o = autoOrder(list);        if(o) block.push(o);
+    /* لعبة تفاعلية إضافية: ركّب الآية أو اكتشف الكلمة الدخيلة */
+    const play = RNG()<.5 ? (autoBuild(entry,list)||autoOdd(entry,list))
+                          : (autoOdd(entry,list)||autoBuild(entry,list));
+    if(play) block.push(play);
     /* ترتيب عشوائي داخل كل سورة حتى لا يقع نفس نوع التحدي على نفس اللاعب كل مرة */
     out.push(...shuffle(block));
     if(I.w) I.w.forEach(p => bank.push([exactWord(entry, sn, p[0]), p[1]]));
@@ -1189,6 +1287,11 @@ function genSlice(entry, stage){
     const x = autoNext(entry, list); if(!x) break;
     if(seenN.has(x.show)) continue; seenN.add(x.show); out.push(x);
   }
+  const seenP = new Set();
+  for(let t=0; t<18 && seenP.size<3; t++){
+    const x = (t%2===0 ? autoBuild(entry,list) : autoOdd(entry,list)); if(!x) continue;
+    const k = x.type+':'+x.ayah+':'+(x.idx||''); if(seenP.has(k)) continue; seenP.add(k); out.push(x);
+  }
   return shuffle(out);
 }
 /* تحديات سورة واحدة بمفردها (وضع «اختر سورة») */
@@ -1209,6 +1312,11 @@ function genSolo(entry, sn){
   for(let i=0; i+4<=mix.length && i<8; i+=4)
     out.push({type:'match', pairs:mix.slice(i,i+4), explain:`كلمات من سورة ${I.nm||''} بمعانيها.`});
   if(list.length>=4){ const x = autoNext(entry, list); if(x) out.push(x); }
+  const seenP=new Set();
+  for(let t=0; t<14 && seenP.size<2; t++){
+    const x = (t%2===0 ? autoBuild(entry,list) : autoOdd(entry,list)); if(!x) continue;
+    const k = x.type+':'+x.ayah+':'+(x.idx||''); if(seenP.has(k)) continue; seenP.add(k); out.push(x);
+  }
   return shuffle(out);
 }
 
@@ -1413,14 +1521,20 @@ function screenHome(){
       <span class="muted" style="font-size:.78rem">— الشرح الكامل وإضافة المحتوى</span></div>
   </div>
   <div class="card fade center" style="max-width:560px;margin:14px auto 0">
-    <span class="muted" style="font-size:.85rem">مستوى الصعوبة:</span>
-    <div class="row" style="margin-top:6px">
+    <span class="muted" style="font-size:.85rem">🎨 شكل اللعبة:</span>
+    <div class="seg" style="margin-top:6px">
+      ${Object.entries(THEMES).map(([k,t])=>`<button class="btn ${curTheme()===k?'':'ghost'} sm" data-th="${k}">${t.em} ${t.nm}</button>`).join('')}
+    </div>
+    <p class="muted" style="font-size:.78rem;margin:0 0 10px">${esc(THEMES[curTheme()].d)}</p>
+    <span class="muted" style="font-size:.85rem">⚖️ مستوى الصعوبة:</span>
+    <div class="seg" style="margin-top:6px">
       ${Object.entries(DIFFS).map(([k,d])=>`<button class="btn ${P.diff===k?'':'ghost'} sm" data-d="${k}">${d.em} ${d.nm}</button>`).join('')}
     </div>
   </div>`;
   $('#sw').onclick=()=>{ Snd.click(); screenProfiles(); };
   $('#sndChk').onchange=e=>{ Snd.on=e.target.checked; if(Snd.on){Snd.init();Snd.click();} };
   app.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); setDiff(b.dataset.d); screenHome(); });
+  app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); applyTheme(b.dataset.th); screenHome(); });
   $('#mAtlas').onclick=()=>{ Snd.init(); Snd.click(); screenAtlas(); };
   $('#mSurahs').onclick=()=>{ Snd.init(); Snd.click(); screenSurahs(); };
   $('#mDaily').onclick=()=>{ Snd.init(); Snd.click(); startDaily(); };
@@ -2146,7 +2260,7 @@ function screenPlay(){
   <div id="after"></div>`;
 
   const box=$('#cbox');
-  ({mcq:renderMCQ, tf:renderTF, blank:renderBlank, order:renderOrder, match:renderMatch, choice:renderChoice, next:renderNext}[c.type])(box, c);
+  ({mcq:renderMCQ, tf:renderTF, blank:renderBlank, order:renderOrder, match:renderMatch, choice:renderChoice, next:renderNext, build:renderBuild, odd:renderOdd}[c.type])(box, c);
   startTimer();
 }
 
@@ -2176,6 +2290,60 @@ function renderMCQ(box,c){
     w.querySelectorAll('.opt').forEach((x,i)=>{ if(list[i].ok) x.classList.add('ok'); });
     if(!o.ok){ b.classList.add('bad'); b.classList.add('shake'); }
     finish(o.ok, c, PTS.mcq);
+  });
+}
+
+/* --- 🧩 ركّب الآية: رصّ الكلمات بالترتيب --- */
+function renderBuild(box,c){
+  const right = c.words, src = ayahSrc(G.surah, c.ayah);
+  let picked=[];
+  box.innerHTML = `<h3>🧩 رصّ الكلمات وكوّن الآية</h3>
+    <div class="slots" id="slots"></div>
+    <div class="chips" id="pool"></div>
+    ${src?`<div class="src">${esc(src)}</div>`:''}`;
+  const pool=$('#pool'), slots=$('#slots');
+  pool.innerHTML = shuffle(right.map((w,i)=>({w,i}))).map(o=>
+    `<button class="chip" data-i="${o.i}">${esc(o.w)}</button>`).join('');
+  const draw=()=>{
+    slots.innerHTML = picked.length
+      ? picked.map((i,k)=>`<button class="chip in" data-k="${k}">${esc(right[i])}</button>`).join('')
+      : '<span class="muted" style="font-size:.9rem">اضغط الكلمات بالترتيب الصحيح…</span>';
+    slots.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ if(G.locked) return;
+      Snd.click(); picked.splice(+b.dataset.k,1); draw(); });
+    pool.querySelectorAll('.chip').forEach(b=>b.style.display = picked.includes(+b.dataset.i)?'none':'');
+    if(picked.length===right.length) check();
+  };
+  const check=()=>{
+    G.locked=true; stopTimer();
+    const ok = picked.every((v,i)=>v===i);
+    slots.querySelectorAll('.chip').forEach((b,i)=>b.classList.add(picked[i]===i?'ok':'bad'));
+    if(!ok){ slots.classList.add('shake');
+      slots.insertAdjacentHTML('beforeend',
+        `<div class="ayah" style="margin-top:10px">${esc(right.join(' '))}</div>`); }
+    finish(ok, c, PTS.build);
+  };
+  pool.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ if(G.locked) return;
+    Snd.click(); picked.push(+b.dataset.i); draw(); });
+  draw();
+}
+
+/* --- 🔎 الكلمة الدخيلة: اضغط الكلمة الغلط --- */
+function renderOdd(box,c){
+  const tk = tokens(G.surah, c.ayah).slice();
+  const correct = tk[c.idx];
+  tk[c.idx] = c.alt;
+  const src = ayahSrc(G.surah, c.ayah);
+  box.innerHTML = `<h3>🔎 في كلمة واحدة اتغيّرت — اضغط عليها</h3>
+    <div class="ayah wordpick" id="wp">${tk.map((w,i)=>
+      isMark(w)?`<span>${esc(w)}</span>`:`<span class="w" data-i="${i}">${esc(w)}</span>`).join(' ')}</div>
+    ${src?`<div class="src">${esc(src)}</div>`:''}`;
+  $('#wp').querySelectorAll('.w').forEach(s=>s.onclick=()=>{
+    if(G.locked) return; G.locked=true; stopTimer();
+    const ok = +s.dataset.i === c.idx;
+    const t = $('#wp').querySelector(`[data-i="${c.idx}"]`);
+    if(t){ t.classList.add('ok'); t.textContent = correct; }
+    if(!ok){ s.classList.add('bad'); s.classList.add('shake'); }
+    finish(ok, c, PTS.odd);
   });
 }
 
@@ -2312,7 +2480,7 @@ function finish(ok, c, base, note){
     const sn = Math.floor((c.ayah||c.show||0)/1000) || (G.solo||0);
     if(ok){ P.stats.c++; if(sn){ (P.stats.per[sn]=P.stats.per[sn]||{c:0,w:0}).c++; } }
     else  { P.stats.w++; if(sn){ (P.stats.per[sn]=P.stats.per[sn]||{c:0,w:0}).w++; }
-            if(['blank','mcq','next','order'].includes(c.type)) logMistake(c); }
+            if(['blank','mcq','next','order','build','odd'].includes(c.type)) logMistake(c); }
     saveP(); awardBadges();
   }
 
@@ -3055,6 +3223,7 @@ function renderOnlineEnd(){
 
 /* ===================== بدء ===================== */
 document.addEventListener('click', ()=>Snd.init(), {once:true});
+applyTheme(localStorage.getItem(LS+'_theme')||'night');
 bootProfile();
 if(FIREBASE_CONFIG) fbInit().then(ok=>{ if(!ok) return;
   watchAnnouncement(); ensureCode();
