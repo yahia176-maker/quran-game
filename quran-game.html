@@ -1027,6 +1027,9 @@ function charSVG(k, mood, size){
 }
 const myChar = () => (P && P.char) || 'boy';
 /* الفئة العمرية → الثيم المناسب */
+const ROLEK = 'quran_game_v1_role';
+const myRole = () => (P && P.role) || localStorage.getItem(ROLEK) || '';
+function setRole(r){ if(P){ P.role=r; saveP(); } try{ localStorage.setItem(ROLEK,r); }catch(e){} }
 const AGES = [
   {k:'small', nm:'٦ – ٩ سنوات',  em:'🧸', th:'kids'},
   {k:'mid',   nm:'١٠ – ١٥ سنة',  em:'🌙', th:'night'},
@@ -1180,6 +1183,7 @@ function newProfile(name, emoji){
 function activateProfile(p){
   P = p; localStorage.setItem(PACT, p.id); setDiff(p.diff||'normal'); applyTheme(p.theme||curTheme());
   /* استيراد تقدم النسخ القديمة (قبل نظام البروفايلات) مرة واحدة */
+  setTimeout(()=>{ tryPendingHal(); }, 400);
   if(!p.migrated){ p.migrated = true;
     SURAHS.forEach(e=>{ try{ const old = JSON.parse(localStorage.getItem(LS+'_sur_'+e.id)||'null');
       if(old && !p.sstars[e.id]) p.sstars[e.id] = old; }catch(x){} });
@@ -1666,78 +1670,530 @@ function screenProfiles(){
 function screenHome(){
   stopTimer();
   if(!P) return screenProfiles();
-  const due = dueReviews().length;
-  const dailyDone = P.daily===today();
-  const badges = P.badges.map(id=>{ const b=BADGES.find(x=>x.id===id); return b?b.em:''; }).join(' ');
+  if(!myRole()) return screenRole();
+  paintAnn(); ensureCode();
+  return myRole()==='teacher' ? screenTeacherHome() : screenStudentHome();
+}
+
+/* ---------- 🚪 الباب: طالب أم معلم ---------- */
+function screenRole(){
+  stopTimer();
+  app.innerHTML = `
+  <div class="center fade" style="margin-top:8px">
+    ${P.char?charSVG(P.char,'happy',96):''}
+    <h1 style="margin:.2em 0">أهلًا ${esc(P.name)}</h1>
+    <p class="muted" style="margin-top:-4px">إنت مين؟</p>
+  </div>
+  <div class="grid fade doors">
+    <div class="door" id="rStudent"><span class="em">👦</span>
+      <b>طالب</b><span>أحفظ وألعب وأدخل حلقتي</span></div>
+    <div class="door" id="rTeacher"><span class="em">🧑‍🏫</span>
+      <b>معلم</b><span>أدير حلقاتي وأتابع طلابي</span></div>
+  </div>
+  <p class="muted center" style="font-size:.8rem">تقدر تغيّرها في أي وقت من ⚙️</p>`;
+  $('#rStudent').onclick=()=>{ Snd.init(); Snd.win(); setRole('student'); screenHome(); };
+  $('#rTeacher').onclick=()=>{ Snd.init(); Snd.win(); setRole('teacher'); screenHome(); };
+}
+
+/* ---------- 👦 بيت الطالب: زرار كبير + ٣ اختيارات ---------- */
+function screenStudentHome(){
+  const sn = nextTarget(), lv = myLevel(), due = dueReviews().length;
+  const started = totalStars() > 0;
+  const live = (P.halaqas||[]).filter(x=>x.live);
   app.innerHTML = `
   <div class="hdr fade">
-    <span class="pill">${P.emoji} <b>${esc(P.name)}</b> · 🔥 ${P.streak||0}</span>
-    <div class="row" style="gap:6px">
-      <button class="btn ghost sm" id="sw">↔️ غيّر اللاعب</button>
-      <label class="switch"><input type="checkbox" id="sndChk" ${Snd.on?'checked':''}> 🔊</label>
+    <span class="pill">${lv.cur.e} <b>${esc(P.name)}</b> · 🔥 ${P.streak||0}</span>
+    <button class="btn ghost sm" id="cog">⚙️</button>
+  </div>
+  ${live.length?`<div class="card fade live" id="liveBox">
+    <b>⚡ مسابقة شغالة دلوقتي في ${esc(live[0].name)}</b>
+    <button class="btn sm" id="joinLive">ادخل حالًا</button></div>`:''}
+  <div class="center fade" style="margin:2px 0 10px">
+    <div class="artrow">${P.char?charSVG(P.char,'happy',88):''}
+      <span class="speech">${esc(started?'يلا نكمّل حفظ سورة '+QURAN[sn].nm:'يلا نبدأ رحلتك من سورة الناس!')}</span></div>
+  </div>
+  <div class="hero fade" id="goPlay">
+    <div class="heroArt">${artOf(sn)?artSVG(sn,86):'<span style="font-size:3.2rem">📖</span>'}</div>
+    <div class="heroTxt">
+      <span class="muted">${started?'أكمِل حفظك':'ابدأ رحلتك'}</span>
+      <b>سورة ${esc(QURAN[sn].nm)}</b>
+      ${due?`<span class="pill turn" style="font-size:.72rem;padding:3px 10px">+${due} مراجعة</span>`
+           :`<span class="muted" style="font-size:.78rem">${QURAN[sn].ay.length} آية</span>`}
     </div>
+    <span class="heroGo">▶️</span>
   </div>
-  <div class="center fade">
-    ${P.char?`<div class="artrow" style="margin-bottom:-4px">${charSVG(P.char,'happy',92)}
-      <span class="speech">أهلًا ${esc(P.name)}! جاهز نحفظ النهارده؟</span></div>`
-      :`<div class="moon"><i class="l"></i><i class="r"></i></div>`}
-    <h1>رحلة القرآن</h1>
-    ${badges?`<p style="font-size:1.3rem;margin:2px 0">${badges}</p>`:''}
-    ${P.code?`<p class="muted" style="font-size:.78rem;margin:2px 0">🎫 كود استعادة تقدمك:
-      <b style="direction:ltr;display:inline-block;letter-spacing:2px;color:var(--gold)">${esc(P.code)}</b>
-      — احتفظ بيه لو غيّرت الجهاز</p>`:''}
+  <div class="grid fade three">
+    <div class="stage" id="mPick"><span class="em">📚</span><b>اختر سورة</b>
+      <div class="muted" style="font-size:.74rem">أو جزء أو مدى آيات</div></div>
+    <div class="stage" id="mHal"><span class="em">🏫</span><b>حلقتي</b>
+      <div class="muted" style="font-size:.74rem">${(P.halaqas||[]).length?(P.halaqas||[]).length+' حلقة':'انضم بالكود'}</div></div>
+    <div class="stage" id="mProg"><span class="em">📊</span><b>تقدّمي</b>
+      <div class="muted" style="font-size:.74rem">${lv.t} نجمة · ${lv.cur.n}</div></div>
+  </div>`;
+  $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
+  $('#goPlay').onclick=()=>{ Snd.init(); Snd.click(); startSmart(); };
+  $('#mPick').onclick=()=>{ Snd.init(); Snd.click(); screenPickHub(); };
+  $('#mHal').onclick=()=>{ Snd.init(); Snd.click(); screenMyHalaqas(); };
+  $('#mProg').onclick=()=>{ Snd.init(); Snd.click(); screenProgress(); };
+  if($('#joinLive')) $('#joinLive').onclick=async()=>{ Snd.click();
+    if(await fbInit()) joinRoom(live[0].live); };
+}
+
+/* ---------- 📚 مركز الاختيار ---------- */
+function screenPickHub(){
+  stopTimer();
+  app.innerHTML = `
+  <div class="hdr"><h2>📚 اختر اللي تحبه</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="grid fade three">
+    <div class="stage" id="pS"><span class="em">📖</span><b>سورة</b>
+      <div class="muted" style="font-size:.74rem">١١٤ سورة — كاملة أو مدى</div></div>
+    <div class="stage" id="pJ"><span class="em">🗺️</span><b>جزء</b>
+      <div class="muted" style="font-size:.74rem">الـ ٣٠ جزءًا وأرباعها</div></div>
+    <div class="stage" id="pP"><span class="em">🏝️</span><b>طريق الحفظ</b>
+      <div class="muted" style="font-size:.74rem">جزء عمّ سورة سورة</div></div>
+  </div>`;
+  $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
+  $('#pS').onclick=()=>{ Snd.click(); screenSurahs(); };
+  $('#pJ').onclick=()=>{ Snd.click(); screenAtlas(); };
+  $('#pP').onclick=()=>{ Snd.click(); screenPath(); };
+}
+
+/* ---------- 📊 تقدّمي ---------- */
+function screenProgress(){
+  stopTimer();
+  const lv = myLevel(), due = dueReviews().length;
+  const done = PATH.filter(sn=>surStars(sn)>0);
+  const weak = Object.entries((P.stats||{}).per||{})
+    .map(([sn,s])=>({sn:+sn, ...s, acc:(s.c+s.w)?Math.round(s.c/(s.c+s.w)*100):null}))
+    .filter(x=>x.acc!=null && x.acc<70 && QURAN[x.sn]).sort((a,b)=>a.acc-b.acc).slice(0,6);
+  const badges = (P.badges||[]).map(id=>BADGES.find(x=>x.id===id)).filter(Boolean);
+  app.innerHTML = `
+  <div class="hdr"><h2>📊 تقدّمي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="card fade center">
+    <div style="font-size:3rem">${lv.cur.e}</div>
+    <h2 style="color:var(--gold);margin:0">${lv.cur.n}</h2>
+    <div class="bar" style="max-width:280px;margin:10px auto"><i style="width:${lv.pct}%"></i></div>
+    ${lv.nxt?`<p class="muted" style="margin:0">${lv.nxt.min-lv.t} نجمة كمان → ${lv.nxt.e} ${lv.nxt.n}</p>`
+            :`<p class="muted" style="margin:0">وصلت لأعلى مستوى 👑</p>`}
   </div>
-  <div class="grid fade" style="grid-template-columns:1fr 1fr;max-width:560px;margin:0 auto">
-    <div class="stage" id="mAtlas"><span class="em">🗺️</span>
-      <div style="font-weight:800">خريطة المصحف</div>
-      <div class="muted" style="font-size:.78rem">الـ ٣٠ جزءًا وأرباعها</div></div>
-    <div class="stage" id="mSurahs"><span class="em">📖</span>
-      <div style="font-weight:800">اختر سورة</div>
-      <div class="muted" style="font-size:.78rem">١١٤ سورة — كاملة أو مدى آيات</div></div>
-    <div class="stage" id="mDaily"><span class="em">${dailyDone?'✅':'📅'}</span>
-      <div style="font-weight:700">تحدي اليوم</div>
-      <div class="muted" style="font-size:.78rem">${dailyDone?'خلصته النهارده! 🔥':'٥ أسئلة تحافظ على السلسلة'}</div></div>
-    <div class="stage" id="mRev"><span class="em">🔁</span>
-      <div style="font-weight:700">مراجعتي ${due?`<span class="pill turn" style="padding:2px 8px;font-size:.75rem">${due}</span>`:''}</div>
-      <div class="muted" style="font-size:.78rem">${due?'أخطاء مستحقة للمراجعة':'مفيش مراجعات مستحقة'}</div></div>
-    <div class="stage" id="mOnline"><span class="em">🙋</span>
-      <div style="font-weight:700">ادخل مسابقة</div>
-      <div class="muted" style="font-size:.78rem">عندك كود من معلمك؟ ادخل من هنا</div></div>
-    <div class="stage" id="mTeach"><span class="em">🧑‍🏫</span>
-      <div style="font-weight:700">ركن المعلم</div>
-      <div class="muted" style="font-size:.78rem">حلقاتك، مسابقاتك، ومتابعة طلابك</div></div>
-    ${isOwner()?`<div class="stage" id="mOwner" style="grid-column:1/-1;border-color:var(--ok)">
-      <span class="em">🛡️</span><div style="font-weight:800">لوحة المالك</div>
-      <div class="muted" style="font-size:.78rem">إحصائيات النظام · المعلمون · بحث · إعلان</div></div>`:''}
-    <div class="stage" id="mHelp" style="grid-column:1/-1;padding:10px"><span style="font-size:1.4rem">💡</span>
-      <b style="margin-right:6px">المساعدة</b>
-      <span class="muted" style="font-size:.78rem">— الشرح الكامل وإضافة المحتوى</span></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(100px,1fr))">
+    ${[['⭐',lv.t,'نجمة'],['📖',done.length,'سورة'],['🔥',P.streak||0,'يوم متواصل'],['✔️',(P.stats||{}).c||0,'إجابة صح']]
+      .map(x=>`<div class="stage" style="cursor:default"><span class="em">${x[0]}</span>
+        <div style="font-weight:800;font-size:1.3rem">${x[1]}</div>
+        <div class="muted" style="font-size:.75rem">${x[2]}</div></div>`).join('')}
   </div>
-  <div class="card fade center" style="max-width:560px;margin:14px auto 0">
-    <span class="muted" style="font-size:.85rem">🎨 شكل اللعبة:</span>
+  ${weak.length?`<div class="card fade">
+    <h3>💪 محتاجة تركيز</h3>
+    <p>${weak.map(w=>`<span class="pill">${esc(QURAN[w.sn].nm)} ${w.acc}%</span>`).join(' ')}</p>
+    <p class="muted" style="font-size:.82rem">اللعبة بتركّز عليها تلقائيًا في جلساتك ${due?`— عندك ${due} سؤال مستحق`:''}</p>
+  </div>`:''}
+  ${badges.length?`<div class="card fade"><h3>🏅 أوسمتك (${badges.length})</h3>
+    <p>${badges.map(b=>`<span class="pill">${b.em} ${esc(b.t)}</span>`).join(' ')}</p></div>`:''}
+  <div class="card fade">
+    <h3>📗 سورك</h3>
+    ${done.length?`<div class="grid surahs">${done.map(sn=>{const st=surStars(sn);
+      return `<div class="stage" style="cursor:default;padding:8px 4px">
+        ${artOf(sn)?artSVG(sn,34):`<div style="height:34px;line-height:34px;opacity:.5">${sn}</div>`}
+        <div style="font-size:.85rem;font-weight:700">${esc(QURAN[sn].nm)}</div>
+        <div class="st" style="font-size:.8rem">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div></div>`}).join('')}</div>`
+      :'<p class="muted center">لسه ما بدأتش — اضغط «أكمِل حفظك» في الرئيسية 🚀</p>'}
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
+}
+
+/* ---------- ⚙️ الإعدادات (كل الأدوات المتقدمة هنا) ---------- */
+function screenSettings(){
+  stopTimer();
+  app.innerHTML = `
+  <div class="hdr"><h2>⚙️ الإعدادات</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="card fade center">
+    <span class="muted" style="font-size:.85rem">🎨 شكل اللعبة</span>
     <div class="seg" style="margin-top:6px">
       ${Object.entries(THEMES).map(([k,t])=>`<button class="btn ${curTheme()===k?'':'ghost'} sm" data-th="${k}">${t.em} ${t.nm}</button>`).join('')}
     </div>
-    <p class="muted" style="font-size:.78rem;margin:0 0 10px">${esc(THEMES[curTheme()].d)}</p>
-    <span class="muted" style="font-size:.85rem">⚖️ مستوى الصعوبة:</span>
+    <p class="muted" style="font-size:.78rem;margin:4px 0 12px">${esc(THEMES[curTheme()].d)}</p>
+    <span class="muted" style="font-size:.85rem">⚖️ مستوى الصعوبة</span>
     <div class="seg" style="margin-top:6px">
       ${Object.entries(DIFFS).map(([k,d])=>`<button class="btn ${P.diff===k?'':'ghost'} sm" data-d="${k}">${d.em} ${d.nm}</button>`).join('')}
     </div>
-  </div>`;
-  $('#sw').onclick=()=>{ Snd.click(); screenProfiles(); };
+    <label class="switch" style="margin-top:12px"><input type="checkbox" id="sndChk" ${Snd.on?'checked':''}> 🔊 المؤثرات الصوتية</label>
+  </div>
+  <div class="card fade">
+    <h3>👤 حسابك</h3>
+    <p class="muted" style="font-size:.85rem">إنت داخل كـ <b>${myRole()==='teacher'?'🧑‍🏫 معلم':'👦 طالب'}</b></p>
+    <div class="row" style="justify-content:flex-start">
+      <button class="btn ghost sm" id="swRole">↔️ بدّل بين طالب ومعلم</button>
+      <button class="btn ghost sm" id="swUser">👥 غيّر اللاعب</button>
+    </div>
+    ${P.code?`<p class="muted" style="font-size:.8rem;margin-top:10px">🎫 كود استعادة تقدمك:
+      <b style="direction:ltr;display:inline-block;letter-spacing:2px;color:var(--gold)">${esc(P.code)}</b></p>`:''}
+  </div>
+  <div class="card fade">
+    <h3>💡 مساعدة</h3>
+    <div class="row" style="justify-content:flex-start">
+      <button class="btn ghost sm" id="hlp">📘 الشرح الكامل</button>
+      ${isOwner()?`<button class="btn ghost sm" id="own" style="border-color:var(--ok)">🛡️ لوحة المالك</button>`:''}
+    </div>
+  </div>
+  <div class="center"><button class="btn" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   $('#sndChk').onchange=e=>{ Snd.on=e.target.checked; if(Snd.on){Snd.init();Snd.click();} };
-  app.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); setDiff(b.dataset.d); screenHome(); });
-  app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); applyTheme(b.dataset.th); screenHome(); });
-  $('#mAtlas').onclick=()=>{ Snd.init(); Snd.click(); screenAtlas(); };
-  $('#mSurahs').onclick=()=>{ Snd.init(); Snd.click(); screenSurahs(); };
-  $('#mDaily').onclick=()=>{ Snd.init(); Snd.click(); startDaily(); };
-  $('#mRev').onclick=()=>{ Snd.init(); Snd.click(); startReview(); };
-  $('#mOnline').onclick=()=>{ Snd.init(); Snd.click(); screenOnline(); };
-  $('#mTeach').onclick=()=>{ Snd.init(); Snd.click(); screenTeacher(); };
-  $('#mHelp').onclick=()=>{ Snd.init(); Snd.click(); screenHelp(); };
-  if($('#mOwner')) $('#mOwner').onclick=()=>{ Snd.init(); Snd.click(); screenOwner(); };
-  ensureCode();          /* يمنح الملف كود استعادة أول ما يتصل */
-  paintAnn();
+  app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); applyTheme(b.dataset.th); screenSettings(); });
+  app.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); setDiff(b.dataset.d); screenSettings(); });
+  $('#swRole').onclick=()=>{ Snd.click(); setRole(myRole()==='teacher'?'student':'teacher'); screenHome(); };
+  $('#swUser').onclick=()=>{ Snd.click(); screenProfiles(); };
+  $('#hlp').onclick=()=>{ Snd.click(); screenHelp(); };
+  if($('#own')) $('#own').onclick=()=>{ Snd.click(); screenOwner(); };
+}
+
+/* ============ 🧭 مسار الحفظ الافتراضي (جزء عمّ من الناس للنبأ) ============ */
+const PATH = [114,113,112,111,110,109,108,107,106,105,104,103,102,101,100,99,98,97,96,95,94,93,92,91,90,89,88,87,86,85,84,83,82,81,80,79,78];
+function nextTarget(){
+  for(const sn of PATH){ if(surStars(sn) < 3) return sn; }
+  return 114;   /* أتمّ جزء عمّ — يرجع يراجع من الأول */
+}
+const masteredSurahs = () => PATH.filter(sn => surStars(sn) >= 2);
+
+/* ============ ⭐ المستويات ============ */
+const LEVELS = [
+  {n:'مبتدئ',       e:'🌱', min:0},
+  {n:'نجم صاعد',    e:'⭐', min:10},
+  {n:'حافظ صغير',   e:'📗', min:30},
+  {n:'حافظ',        e:'🏅', min:60},
+  {n:'حافظ متقن',   e:'🏆', min:100},
+  {n:'نجم القرآن',  e:'👑', min:180}
+];
+function totalStars(){
+  if(!P) return 0;
+  let s = 0;
+  Object.values(P.sstars||{}).forEach(o=>Object.values(o||{}).forEach(v=>s+=v||0));
+  Object.values(P.stars||{}).forEach(a=>(a||[]).forEach(v=>s+=v||0));
+  return s;
+}
+function myLevel(){
+  const t = totalStars(); let cur = LEVELS[0], nxt = null;
+  LEVELS.forEach((l,i)=>{ if(t>=l.min){ cur=l; nxt=LEVELS[i+1]||null; } });
+  return {t, cur, nxt, pct: nxt ? Math.round((t-cur.min)/(nxt.min-cur.min)*100) : 100};
+}
+
+/* ============ 🧠 الجلسة الذكية ============
+   زرار واحد يبني حصة متوازنة: أخطاء الطفل أولًا، ثم موضعه الحالي، ثم مراجعة. */
+function smartSession(){
+  const chal = [], seen = new Set();
+  const push = (c, eid, m) => {
+    const k = JSON.stringify([c.type, c.ayah, c.idx, c.q, c.show, (c.ayat||[]).join()]);
+    if(seen.has(k)) return; seen.add(k);
+    c.eid = eid; if(m) c._m = m; chal.push(c);
+  };
+  /* ١) أخطاؤه المستحقة — الأولوية القصوى */
+  shuffle(dueReviews()).slice(0,4).forEach(m => push(Object.assign({}, m.c), m.eid, m));
+  /* ٢) موضعه الحالي في المسار */
+  const sn = nextTarget(), e = surahEntry(sn);
+  genSolo(e, sn).forEach(c => { if(chal.filter(x=>!x._m).length < 8) push(c, e.id); });
+  /* ٣) مراجعة سورة أتقنها قبل كده */
+  const done = masteredSurahs().filter(x => x !== sn);
+  if(done.length){ const r = rnd(done), er = surahEntry(r);
+    genSolo(er, r).slice(0,2).forEach(c => push(c, er.id)); }
+  return { sn, chal: shuffle(chal) };
+}
+function startSmart(){
+  const s = smartSession();
+  if(!s.chal.length) return toast('حصل خطأ في تجهيز الجلسة');
+  const e = surahEntry(s.sn);
+  G = { surah:e, players:[{name:P.name, score:0, right:0, wrong:0}],
+        turn:0, stage:-1, ch:0, chal:s.chal, stars:[], unlocked:0, stageEarned:0,
+        stageMax:s.chal.reduce((a,c)=>a+(PTS[c.type]||10)+TIME_BONUS,0), timeLeft:QTIME, tId:null,
+        locked:false, solo:null, review:false, mode:'smart', sstars:{},
+        smartSn:s.sn,
+        soloStage:{title:'جلستك — سورة '+QURAN[s.sn].nm, emoji:'🧠', solo:true, story:[]} };
+  screenPlay();
+}
+function screenSmartEnd(){
+  stopTimer();
+  const p = G.players[0], pct = Math.round(p.right/Math.max(1,G.chal.length)*100);
+  /* نمنح نجوم السورة الهدف حسب دقة أسئلتها — عشان المحطة والمستوى يتقدّموا */
+  const sn = G.smartSn;
+  if(sn){
+    const eid = 'sur-'+sn;
+    const mine = G.chal.filter(c => c.eid===eid && !c._m);
+    if(mine.length){
+      const good = mine.filter(c => c._ok).length;
+      const acc = good/mine.length;
+      const st = acc>=.85?3 : acc>=.6?2 : acc>=.35?1 : 0;
+      if(st){ P.sstars[eid] = P.sstars[eid]||{};
+        P.sstars[eid][sn] = Math.max(P.sstars[eid][sn]||0, st); }
+    }
+  }
+  P.daily = today(); touchStreak(); saveP(); awardBadges();
+  if(pct>=80) confetti(pct===100); Snd.win();
+  const lv = myLevel();
+  app.innerHTML = `
+  <div class="card fade center">
+    <div class="artrow">${P.char?charSVG(P.char, pct>=60?'happy':'idle', 90):''}
+      <span class="speech">${esc(pct>=80?'شغل ممتاز يا بطل!':pct>=50?'كويس! كمّل كده':'مفيش مشكلة، بكرة أحسن')}</span></div>
+    <h2>خلّصت جلستك 🎉</h2>
+    <p><b>${p.right}</b> من ${G.chal.length} صح · 🏅 ${p.score} نقطة</p>
+    <div style="font-size:1.6rem;color:var(--gold)">🔥 ${P.streak} ${P.streak===1?'يوم':'أيام'} متواصلة</div>
+  </div>
+  <div class="card fade">
+    <div class="lvrow"><span style="font-size:1.6rem">${lv.cur.e}</span>
+      <div style="flex:1">
+        <b>${lv.cur.n}</b> <span class="muted" style="font-size:.8rem">${lv.t} نجمة</span>
+        <div class="bar" style="margin:6px 0 0"><i style="width:${lv.pct}%"></i></div>
+        ${lv.nxt?`<span class="muted" style="font-size:.75rem">${lv.nxt.min-lv.t} نجمة كمان توصلك لـ ${lv.nxt.e} ${lv.nxt.n}</span>`:''}
+      </div></div>
+  </div>
+  <div class="center row">
+    <button class="btn" id="again">🧠 جلسة تانية</button>
+    <button class="btn ghost" id="hm">🏠 الرئيسية</button>
+  </div>`;
+  $('#again').onclick=()=>{ Snd.click(); startSmart(); };
+  $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
+}
+
+/* ================= 🏫 نظام الحلقات: رابط دائم + عضوية + واجب ================= */
+const weekKey = () => { const d=new Date(); const t=new Date(d.getFullYear(),0,1);
+  return d.getFullYear()+'w'+Math.ceil(((d-t)/86400000 + t.getDay()+1)/7); };
+const halRef = hid => firebase.database().ref('halaqas/'+hid);
+const memRef = hid => firebase.database().ref('members/'+hid);
+function newHid(){ return Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(RNG()*32)]).join(''); }
+const halLink = hid => location.origin + location.pathname + '?h=' + hid;
+
+/* --- الطالب: الانضمام والاشتراكات --- */
+async function joinHalaqa(hid){
+  hid = (hid||'').trim().toUpperCase(); if(hid.length<4) throw new Error('bad');
+  if(!(await fbInit())) throw new Error('net');
+  const s = await halRef(hid).once('value');
+  if(!s.exists()) throw new Error('notfound');
+  const v = s.val();
+  await memRef(hid).child(fbUser.uid).update({ name:P.name, char:P.char||'boy', pid:P.id, joined:Date.now(), last:Date.now() });
+  P.halaqas = (P.halaqas||[]).filter(x=>x.hid!==hid);
+  P.halaqas.push({ hid, name:v.name, tname:v.tname||'' });
+  saveP();
+  watchHalaqas();
+  return v;
+}
+/* يراقب الحلقات: مسابقة شغالة أو واجب جديد */
+let halWatch = [];
+/* ينضم لرابط الحلقة أول ما يتوفر ملف شخصي واتصال — يشتغل مهما كان ترتيب الخطوات */
+async function tryPendingHal(){
+  if(!PENDING_HAL || !P || !fbReady) return false;
+  const code = PENDING_HAL; PENDING_HAL = null;
+  try{
+    const v = await joinHalaqa(code);
+    if(!myRole()) setRole('student');
+    Snd.win(); toast('🎉 انضممت لحلقة ' + v.name);
+    watchHalaqas(); screenHome(); return true;
+  }catch(e){ toast(e.message==='notfound'?'❌ رابط الحلقة مش موجود':'⚠️ محتاج إنترنت للانضمام'); return false; }
+}
+function watchHalaqas(){
+  if(!fbReady || !P) return;
+  halWatch.forEach(r=>{ try{ r.off(); }catch(e){} }); halWatch = [];
+  (P.halaqas||[]).forEach(x=>{
+    const r = halRef(x.hid); halWatch.push(r);
+    r.on('value', s=>{ const v=s.val(); if(!v) return;
+      const rec = (P.halaqas||[]).find(y=>y.hid===x.hid); if(!rec) return;
+      const wasLive = rec.live;
+      rec.name = v.name; rec.tname = v.tname||''; rec.live = (v.live&&v.live.code)||null; rec.hw = v.hw||null;
+      if(rec.live && !wasLive && myRole()!=='teacher'){ Snd.star(); toast('⚡ مسابقة بدأت في '+rec.name); }
+      if(document.getElementById('goPlay') || document.getElementById('halList')) screenHome();
+    });
+  });
+}
+/* نقاط الأسبوع داخل الحلقة */
+function addWeeklyPoints(pts){
+  if(!fbReady || !P || !pts) return;
+  (P.halaqas||[]).forEach(x=>{
+    const ref = memRef(x.hid).child(fbUser.uid);
+    ref.child('wk').transaction(w=>{
+      const k = weekKey();
+      return (!w || w.k!==k) ? {k, p:pts} : {k, p:(w.p||0)+pts};
+    }).catch(()=>{});
+    ref.update({ last:Date.now(), name:P.name, char:P.char||'boy' }).catch(()=>{});
+  });
+}
+
+/* --- شاشة «حلقتي» للطالب --- */
+async function screenMyHalaqas(){
+  stopTimer();
+  const list = P.halaqas||[];
+  app.innerHTML = `
+  <div class="hdr"><h2>🏫 حلقتي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div id="halList">${list.length? list.map(x=>`
+    <div class="card fade ${x.live?'live':''}">
+      <div class="hdr" style="margin:0">
+        <div><b style="font-size:1.05rem">${esc(x.name)}</b>
+          ${x.tname?`<div class="muted" style="font-size:.78rem">${esc(x.tname)}</div>`:''}</div>
+        ${x.live?`<button class="btn sm jl" data-c="${esc(x.live)}">⚡ ادخل المسابقة</button>`:''}
+      </div>
+      ${x.hw&&x.hw.t?`<div class="hw"><b>📋 واجب: ${esc(x.hw.t)}</b>
+        ${(x.hw.items||[]).length?`<div style="margin-top:6px">${(x.hw.items||[]).map(it=>{
+          const st=surStars(it); return `<span class="pill" style="font-size:.78rem">${esc((QURAN[it]||{}).nm||it)} ${st?'✅':'⬜'}</span>`;}).join(' ')}</div>
+          <div class="bar" style="margin-top:8px"><i style="width:${Math.round((x.hw.items||[]).filter(i=>surStars(i)>0).length/Math.max(1,(x.hw.items||[]).length)*100)}%"></i></div>`:''}
+      </div>`:''}
+      <div class="row" style="justify-content:flex-start;margin-top:8px">
+        <button class="btn ghost sm lb" data-h="${esc(x.hid)}">🏆 ترتيب الأسبوع</button>
+        <button class="btn ghost sm lv" data-h="${esc(x.hid)}">🚪 خروج من الحلقة</button>
+      </div>
+    </div>`).join('')
+    : `<div class="card fade center"><div style="font-size:3rem">🏫</div>
+        <p>لسه مش في أي حلقة.</p>
+        <p class="muted" style="font-size:.85rem">اطلب من معلمك <b>رابط الحلقة</b> — تفتحه مرة واحدة وتلاقيها هنا للأبد. أو اكتب كودها:</p></div>`}
+  </div>
+  <div class="card fade center">
+    <h3>➕ انضم لحلقة</h3>
+    <input type="text" id="hcode" maxlength="5" placeholder="كود الحلقة" style="text-align:center;font-size:1.4rem;letter-spacing:6px;direction:ltr">
+    <button class="btn" id="hgo">انضم</button>
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
+  $('#hgo').onclick=async()=>{ Snd.click();
+    try{ const v=await joinHalaqa($('#hcode').value); Snd.win(); toast('🎉 انضممت لـ '+v.name); screenMyHalaqas(); }
+    catch(e){ Snd.wrong(); toast(e.message==='notfound'?'❌ مفيش حلقة بالكود ده':'⚠️ محتاج إنترنت'); } };
+  app.querySelectorAll('.jl').forEach(b=>b.onclick=async()=>{ Snd.click(); if(await fbInit()) joinRoom(b.dataset.c); });
+  app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{ if(!confirm('تخرج من الحلقة دي؟')) return;
+    P.halaqas=(P.halaqas||[]).filter(x=>x.hid!==b.dataset.h); saveP(); watchHalaqas(); screenMyHalaqas(); });
+  app.querySelectorAll('.lb').forEach(b=>b.onclick=()=>{ Snd.click(); screenLeaderboard(b.dataset.h); });
+}
+
+/* --- 🏆 ترتيب الحلقة الأسبوعي --- */
+async function screenLeaderboard(hid){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ بجيب الترتيب...</p></div>';
+  if(!(await fbInit())) return screenHome();
+  const hs = await halRef(hid).once('value');
+  const ms = await memRef(hid).once('value');
+  const hv = hs.val()||{}, mv = ms.val()||{};
+  const k = weekKey();
+  const rows = Object.entries(mv).map(([uid,m])=>({uid, name:m.name||'—', char:m.char||'boy',
+    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0})).sort((a,b)=>b.pts-a.pts);
+  const mine = fbUser? rows.findIndex(r=>r.uid===fbUser.uid) : -1;
+  app.innerHTML = `
+  <div class="hdr"><h2>🏆 ترتيب الأسبوع</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade center"><b>${esc(hv.name||'')}</b>
+    <p class="muted" style="font-size:.82rem;margin:2px 0">الترتيب بيتصفّر كل أسبوع — كل نقطة بتكسبها في اللعب بتتحسبلك</p></div>
+  <div class="card fade">
+    ${rows.length?`<table><tr><th>#</th><th>الطالب</th><th>نقاط الأسبوع</th></tr>
+      ${rows.map((r,i)=>`<tr class="${mine===i?'turnGlow':''}"><td>${['🥇','🥈','🥉'][i]||(i+1)}</td>
+        <td>${esc(r.name)}${mine===i?' <span class="muted">(إنت)</span>':''}</td><td><b>${r.pts}</b></td></tr>`).join('')}
+      </table>`:'<p class="muted center">لسه مفيش نشاط الأسبوع ده — كن أول واحد! 🚀</p>'}
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick=$('#bk2').onclick=()=>{ Snd.click(); myRole()==='teacher'?screenHalaqa(hid):screenMyHalaqas(); };
+}
+
+/* ---------- 🧑‍🏫 بيت المعلم ---------- */
+async function screenTeacherHome(){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
+  if(!(await fbInit())) return;
+  const t = await loadTeacher();
+  if(!t || !t.name) return screenTeacherSignup();
+  indexTeacher(t);
+  const hids = t.hal || [];
+  let totalStu = 0; const info = [];
+  for(const hid of hids){
+    const [hs, ms] = await Promise.all([halRef(hid).once('value'), memRef(hid).once('value')]);
+    const cnt = ms.exists()? Object.keys(ms.val()).length : 0;
+    totalStu += cnt; info.push({hid, ...(hs.val()||{}), count:cnt});
+  }
+  const qz = Object.keys((await firebase.database().ref('users/'+fbUser.uid+'/quizzes').once('value')).val()||{}).length;
+  app.innerHTML = `
+  <div class="hdr fade">
+    <span class="pill">🧑‍🏫 <b>${esc(t.name)}</b></span>
+    <button class="btn ghost sm" id="cog">⚙️</button>
+  </div>
+  <div class="grid fade" style="grid-template-columns:repeat(3,1fr);max-width:520px;margin:0 auto 12px">
+    ${[['🏫',hids.length,'حلقة'],['👦',totalStu,'طالب'],['🏆',qz,'مسابقة']].map(x=>
+      `<div class="stage" style="cursor:default;padding:12px 4px"><span class="em">${x[0]}</span>
+        <div style="font-weight:800;font-size:1.5rem">${x[1]}</div>
+        <div class="muted" style="font-size:.75rem">${x[2]}</div></div>`).join('')}
+  </div>
+  <div class="card fade">
+    <h3>🏫 حلقاتي</h3>
+    ${info.length? info.map(x=>`<div class="halrow hcard" data-h="${esc(x.hid)}">
+        <div><b>${esc(x.name)}</b><div class="muted" style="font-size:.78rem">${x.count} طالب${x.live&&x.live.code?' · ⚡ مسابقة شغالة':''}</div></div>
+        <span>‹</span></div>`).join('')
+      : '<p class="muted center">لسه مفيش حلقات — اعمل أول حلقة وابعت رابطها لطلابك</p>'}
+    <div class="row" style="justify-content:flex-start;margin-top:10px">
+      <input type="text" id="nh" maxlength="24" placeholder="اسم حلقة جديدة..." style="flex:1;min-width:150px;margin:0">
+      <button class="btn sm" id="addh">➕ إنشاء</button>
+    </div>
+  </div>
+  <div class="grid fade" style="grid-template-columns:1fr 1fr;max-width:520px;margin:0 auto">
+    <div class="stage" id="tRep"><span class="em">📊</span><b>التقارير</b>
+      <div class="muted" style="font-size:.74rem">متابعة مستوى الطلاب</div></div>
+    <div class="stage" id="tPlay"><span class="em">📖</span><b>ألعب أنا</b>
+      <div class="muted" style="font-size:.74rem">جرّب اللعبة كطالب</div></div>
+  </div>`;
+  $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
+  $('#tRep').onclick=()=>{ Snd.click(); screenGroups(); };
+  $('#tPlay').onclick=()=>{ Snd.click(); screenPickHub(); };
+  app.querySelectorAll('.hcard').forEach(b=>b.onclick=()=>{ Snd.click(); screenHalaqa(b.dataset.h); });
+  $('#addh').onclick=async()=>{ const nm=($('#nh').value||'').trim(); if(!nm) return toast('اكتب اسم الحلقة');
+    Snd.click(); const hid=newHid();
+    await halRef(hid).set({ t:fbUser.uid, tname:t.name, name:nm, created:Date.now() });
+    t.hal=(t.hal||[]).concat(hid); t.groups=(t.groups||[]).concat(nm); await saveTeacher(t);
+    Snd.win(); toast('🎉 اتعملت — ابعت رابطها لطلابك'); screenHalaqa(hid); };
+}
+
+/* ---------- 🏫 صفحة الحلقة (للمعلم) ---------- */
+async function screenHalaqa(hid){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
+  if(!(await fbInit())) return;
+  const [hs, ms] = await Promise.all([halRef(hid).once('value'), memRef(hid).once('value')]);
+  const v = hs.val()||{}, mv = ms.val()||{};
+  const k = weekKey();
+  const studs = Object.entries(mv).map(([uid,m])=>({uid, name:m.name||'—',
+    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0})).sort((a,b)=>b.pts-a.pts);
+  app.innerHTML = `
+  <div class="hdr"><h2>🏫 ${esc(v.name||'')}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade center">
+    <p class="muted" style="margin:0 0 6px">رابط الحلقة — ابعته لطلابك مرة واحدة بس</p>
+    <div class="linkbox" id="lk">${esc(halLink(hid))}</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sm" id="cp">📋 انسخ الرابط</button>
+      <button class="btn ghost sm" id="wa">💬 واتساب</button>
+    </div>
+    <p class="muted" style="font-size:.8rem;margin-top:8px">أو كود الحلقة: <b class="codebox" style="font-size:1.2rem;letter-spacing:4px;padding:4px 12px">${esc(hid)}</b></p>
+  </div>
+  <div class="card fade">
+    <h3>📋 واجب الأسبوع</h3>
+    <input type="text" id="hwT" maxlength="40" placeholder="مثال: حفظ سورتي الفيل وقريش" value="${esc((v.hw||{}).t||'')}">
+    <p class="muted" style="font-size:.82rem;margin:8px 0 4px">اختر السور المطلوبة (اضغط عليها):</p>
+    <div class="grid surahs" id="hwPick" style="max-height:200px;overflow-y:auto">
+      ${PATH.map(sn=>`<div class="stage hws ${((v.hw||{}).items||[]).includes(sn)?'on':''}" data-sn="${sn}" style="padding:8px 4px">
+        <div style="font-size:.85rem;font-weight:700">${esc(QURAN[sn].nm)}</div></div>`).join('')}
+    </div>
+    <div class="center" style="margin-top:8px"><button class="btn sm" id="hwSave">💾 حفظ الواجب</button></div>
+  </div>
+  <div class="card fade">
+    <div class="hdr" style="margin:0"><h3 style="margin:0">👦 الطلاب (${studs.length})</h3>
+      <button class="btn ghost sm" id="lb">🏆 ترتيب الأسبوع</button></div>
+    ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>آخر نشاط</th></tr>
+      ${studs.map(s=>`<tr><td>${esc(s.name)}</td><td><b>${s.pts}</b></td>
+        <td class="muted" style="font-size:.8rem">${ago(s.last)}</td></tr>`).join('')}</table>`
+      :'<p class="muted center">لسه محدش انضم — ابعت الرابط فوق</p>'}
+  </div>
+  <div class="center row">
+    <button class="btn" id="quiz">🚀 ابدأ مسابقة للحلقة</button>
+    <button class="btn ghost" id="bk2">رجوع</button>
+  </div>`;
+  $('#bk').onclick=$('#bk2').onclick=()=>{ Snd.click(); screenHome(); };
+  $('#lb').onclick=()=>{ Snd.click(); screenLeaderboard(hid); };
+  $('#cp').onclick=()=>{ navigator.clipboard?.writeText(halLink(hid)); Snd.correct(); toast('📋 اتنسخ!'); };
+  $('#wa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent('انضم لحلقة '+(v.name||'')+' في لعبة رحلة القرآن:\n'+halLink(hid)),'_blank'); };
+  let items = ((v.hw||{}).items||[]).slice();
+  app.querySelectorAll('.hws').forEach(b=>b.onclick=()=>{ const sn=+b.dataset.sn;
+    if(items.includes(sn)){ items=items.filter(x=>x!==sn); b.classList.remove('on'); }
+    else { items.push(sn); b.classList.add('on'); } Snd.click(); });
+  $('#hwSave').onclick=async()=>{ Snd.click();
+    await halRef(hid).child('hw').set({ t:($('#hwT').value||'').trim(), items, at:Date.now() });
+    Snd.win(); toast('📋 الواجب اتبعت للطلاب'); };
+  $('#quiz').onclick=async()=>{ Snd.click();
+    const t=await loadTeacher(); screenOnlineSetup(t, hid, v.name); };
 }
 
 /* ---------- 🛡️ لوحة المالك (تظهر لإيميل المالك وحده) ---------- */
@@ -1852,6 +2308,39 @@ function screenAnn(){
     try{ await firebase.database().ref('config/ann').set({txt:($('#atxt').value||'').trim(), on:$('#aon').checked, at:Date.now()});
       Snd.correct(); toast('📣 اتنشر'); screenOwner(); }
     catch(e){ toast('⚠️ مش قادر أحفظ — راجع قواعد Firebase'); } };
+}
+
+/* ---------- 🏝️ طريق الحفظ: جزء عمّ سورة سورة ---------- */
+function screenPath(){
+  stopTimer();
+  const target = nextTarget();
+  const doneCount = PATH.filter(sn=>surStars(sn)>0).length;
+  const lv = myLevel();
+  app.innerHTML = `
+  <div class="hdr"><h2>🏝️ طريق الحفظ</h2>
+    <div class="row" style="gap:6px"><span class="pill">${lv.cur.e} ${doneCount}/${PATH.length}</span>
+    <button class="btn ghost sm" id="hm">🏠</button></div></div>
+  <div class="card fade center" style="padding:12px">
+    <p class="muted" style="margin:0;font-size:.85rem">امشِ في الطريق سورة سورة من الناس للنبأ — أو انطّ لأي محطة تحبها</p>
+    <div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(doneCount/PATH.length*100)}%"></i></div>
+  </div>
+  <div class="pathwrap fade">
+    ${PATH.map((sn,i)=>{ const st=surStars(sn), done=st>0, now=sn===target;
+      return `<div class="pnode ${done?'done':''} ${now?'now':''}" data-s="${sn}">
+        ${i<PATH.length-1?'<span class="pline"></span>':''}
+        <div class="pdot">${done&&st>=3?'<span style="font-size:1.6rem">✅</span>'
+          : artOf(sn)?artSVG(sn,34):`<b style="font-size:1.1rem">${i+1}</b>`}</div>
+        <div style="flex:1">
+          <b style="font-size:1.05rem">${esc(QURAN[sn].nm)}</b>
+          <div class="muted" style="font-size:.75rem">${QURAN[sn].ay.length} آية ${now?'· 👈 محطتك دلوقتي':''}</div>
+          <div class="st" style="font-size:.85rem;letter-spacing:2px">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
+        </div>
+      </div>`;}).join('')}
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
+  app.querySelectorAll('[data-s]').forEach(d=>d.onclick=()=>{ Snd.click(); screenSurahOpts(+d.dataset.s); });
+  const cur = app.querySelector('.pnode.now'); if(cur) setTimeout(()=>cur.scrollIntoView({block:'center',behavior:'smooth'}), 150);
 }
 
 /* ---------- 📖 كل السور: اختيار سورة بعينها أو مدى آيات ---------- */
@@ -2204,22 +2693,20 @@ function screenHelp(){
     <p>عشان تشتغل — وعشان بيانات كل مستخدم تتقفل على صاحبها — الصق ده في <b>Realtime Database ← Rules ← Publish</b>:</p>
     <pre>{
   "rules": {
-    "config": {
-      ".read": true,
-      ".write": "auth.token.email === 'yahia176@gmail.com'"
+    "config":  { ".read": true,
+                 ".write": "auth.token.email === 'yahia176@gmail.com'" },
+    "rooms":   { "$c": { ".read": "auth != null", ".write": "auth != null" } },
+    "restore": { "$code": { ".read": "auth != null", ".write": "auth != null" } },
+    "halaqas": {
+      "$h": { ".read": "auth != null",
+              ".write": "auth != null && (!data.exists() || data.child('t').val() === auth.uid)" }
     },
-    "rooms": {
-      "$c": { ".read": "auth != null", ".write": "auth != null" }
+    "members": {
+      "$h": { ".read": "auth != null",
+              "$u": { ".write": "auth != null && (auth.uid === $u || root.child('halaqas').child($h).child('t').val() === auth.uid)" } }
     },
-    "restore": {
-      "$code": { ".read": "auth != null", ".write": "auth != null" }
-    },
-    "index": {
-      ".read": "auth.token.email === 'yahia176@gmail.com'",
-      "teachers": {
-        "$u": { ".write": "auth != null && auth.uid === $u" }
-      }
-    },
+    "index": { ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "teachers": { "$u": { ".write": "auth != null && auth.uid === $u" } } },
     "users": {
       ".read": "auth.token.email === 'yahia176@gmail.com'",
       "$u": {
@@ -2433,7 +2920,8 @@ function startTimer(){
 /* ===================== شاشة اللعب ===================== */
 function screenPlay(){
   const st=curStage(), c=G.chal[G.ch];
-  if(!c){ if(G.mode==='daily') return screenDailyEnd();
+  if(!c){ if(G.mode==='smart')  return screenSmartEnd();
+          if(G.mode==='daily')  return screenDailyEnd();
           if(G.mode==='review') return screenReviewEnd();
           return screenStageEnd(); }
   if(c.eid) G.surah = entryById(c.eid);   /* في المراجعة/التحدي اليومي كل سؤال له مصدره */
@@ -2664,10 +3152,12 @@ function renderChoice(box,c){
 
 /* ===================== إنهاء التحدي ===================== */
 function finish(ok, c, base, note){
+  c._ok = ok;
   const p=G.players[G.turn%G.players.length];
   let pts=0, bonus=0;
   if(ok){ bonus = Math.max(0, Math.round(G.timeLeft/QTIME*TIME_BONUS));
-    pts = Math.round((base+bonus)*DIFF.mult); p.score+=pts; p.right++; Snd.correct(); }
+    pts = Math.round((base+bonus)*DIFF.mult); p.score+=pts; p.right++; Snd.correct();
+    if(G.players.length===1) addWeeklyPoints(pts); }
   else { p.wrong++; Snd.wrong(); }
   G.stageEarned += pts;
   /* تسجيل في الملف الشخصي: الإحصائيات + الأخطاء للمراجعة المتباعدة */
@@ -2812,7 +3302,7 @@ async function fbInit(){
   if(fbReady) return true; if(!FIREBASE_CONFIG) return false;
   try{
     await loadScript(FB_SDK+'app.js'); await loadScript(FB_SDK+'auth.js'); await loadScript(FB_SDK+'database.js');
-    firebase.initializeApp(FIREBASE_CONFIG);
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     /* لو في جلسة محفوظة (معلم مسجّل بإيميل مثلًا) نستخدمها، وإلا هوية مجهولة تلقائية */
     fbUser = await new Promise(res=>{ const un=firebase.auth().onAuthStateChanged(u=>{ un(); res(u); }, ()=>res(null)); });
     if(!fbUser){ const cred = await firebase.auth().signInAnonymously(); fbUser = cred.user; }
@@ -2981,8 +3471,8 @@ async function screenTeacher(){
   if(!(await fbInit())){ screenHome(); return; }
   const t = await loadTeacher();
   if(!t || !t.name) return screenTeacherSignup();
-  indexTeacher(t);      /* تحديث آخر ظهور في فهرس المالك */
-  screenTeacherPanel(t);
+  indexTeacher(t);
+  screenTeacherHome();   /* اللوحة الجديدة المبسّطة */
 }
 function screenTeacherSignup(){
   app.innerHTML = `
@@ -3083,8 +3573,8 @@ function screenTeacherPanel(t){
     await teacherLogout(); toast('🚪 خرجت — الجهاز رجع هوية جديدة'); screenHome(); };
 }
 
-function screenOnlineSetup(t){
-  const groups = (t&&t.groups)||[];
+function screenOnlineSetup(t, hid, hname){
+  const groups = hname ? [hname] : ((t&&t.groups)||[]);
   app.innerHTML = `
   <div class="hdr"><h2>🧑‍🏫 إعداد المسابقة</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade">
@@ -3145,7 +3635,7 @@ function screenOnlineSetup(t){
   $('#osur').onchange=()=>{ syncMax(); sum(); };
   $('#ojuz').onchange=sum; $('#of').oninput=sum; $('#ot').oninput=sum;
   sum();
-  $('#bk').onclick=()=>{ Snd.click(); screenTeacher(); };
+  $('#bk').onclick=()=>{ Snd.click(); hid?screenHalaqa(hid):screenHome(); };
   $('#go').onclick=async()=>{ Snd.click();
     let entry, j=0;
     if(ctype==='juz'){ j=+$('#ojuz').value; entry=juzEntry(j); }
@@ -3162,9 +3652,14 @@ function screenOnlineSetup(t){
       qs, state:{phase:'lobby'},
       players:{ [fbUser.uid]:{name:P.name+' (المعلم)', emoji:P.emoji, score:0, ord:0, host:true, pid:P.id} } };
     await roomRef(code).set(room);
+    /* المسابقة تظهر تلقائيًا لطلاب الحلقة — بدون أكواد */
+    if(hid){ try{
+      await halRef(hid).child('live').set({code, at:Date.now()});
+      halRef(hid).child('live').onDisconnect().remove();
+    }catch(e){ console.warn('live flag', e); } }
     /* ملحوظة: لا نربط نهاية الغرفة بانقطاع اتصال المعلم — قفل شاشة موبايله
        أو تنقّله بين التطبيقات ما ينهيش المسابقة؛ الاتصال بيرجع لوحده */
-    enterRoom(code, true);
+    enterRoom(code, true); if(hid) R.hid = hid;
   };
 }
 async function joinRoom(code){
@@ -3304,7 +3799,7 @@ async function screenGroups(sel){
     </table>
   </div>`).join('')}`}
   <div class="center" style="margin-top:6px"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
-  $('#bko').onclick=()=>{ Snd.click(); screenTeacher(); };
+  $('#bko').onclick=()=>{ Snd.click(); screenHome(); };
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{ Snd.click(); screenGroups(b.dataset.g); });
   app.querySelectorAll('.delq').forEach(b=>b.onclick=async()=>{
@@ -3331,7 +3826,8 @@ function renderRoom(){
     R.ref.child('players/'+fbUser.uid).onDisconnect().cancel().catch(()=>{});
   }
   /* المضيف يحفظ النتيجة في سجلّه أول ما يشوف النهاية */
-  if(st.phase==='end' && R.isHost) saveQuizResult();
+  if(st.phase==='end' && R.isHost){ saveQuizResult();
+    if(R.hid){ halRef(R.hid).child('live').remove().catch(()=>{}); R.hid=null; } }
   if(st.phase==='lobby') return renderLobby();
   if(st.phase==='play') return renderOnlineQ();
   return renderOnlineEnd();
@@ -3395,7 +3891,8 @@ function renderOnlineQ(){
     app.querySelectorAll('#oOpts .opt').forEach((x,i)=>{ x.disabled=true; if(i===q.ans) x.classList.add('ok'); });
     if(!ok) b.classList.add('bad');
     /* اللاعب يسجل إجابته ويزوّد نقاطه بنفسه (معاملة ذرية)، وفي وضع الأدوار يدفع للسؤال التالي فورًا */
-    if(pts) R.ref.child('players/'+fbUser.uid+'/score').transaction(s=>(s||0)+pts);
+    if(pts){ R.ref.child('players/'+fbUser.uid+'/score').transaction(s=>(s||0)+pts);
+      addWeeklyPoints(pts); }
     if(v.settings.mode==='all') R.ref.child('ans/'+st.qi+'/'+fbUser.uid).set({pick,ok,pts});
     else R.ref.child('ans/'+st.qi).set({uid:fbUser.uid,pick,ok,pts}, ()=>advanceState(st.qi));
   });
@@ -3427,9 +3924,14 @@ function renderOnlineEnd(){
 document.addEventListener('click', ()=>Snd.init(), {once:true});
 applyTheme(localStorage.getItem(LS+'_theme')||'night');
 bootProfile();
-if(FIREBASE_CONFIG) fbInit().then(ok=>{ if(!ok) return;
+/* رابط الحلقة: ?h=CODE — الطالب يفتحه مرة واحدة وتتسجل عنده للأبد */
+let PENDING_HAL = (new URLSearchParams(location.search)).get('h');
+if(PENDING_HAL) history.replaceState({},'',location.pathname);
+if(FIREBASE_CONFIG) fbInit().then(async ok=>{ if(!ok) return;
   watchAnnouncement(); ensureCode();
-  if(isOwner() && document.getElementById('mAtlas')) screenHome();   /* نظهر لوحة المالك بعد التعرف عليه */
+  await tryPendingHal();
+  watchHalaqas();
+  screenHome();   /* نعيد الرسم بعد التعرف على الحساب والحلقات */
 });
 screenHome();
 </script>
