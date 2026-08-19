@@ -1,0 +1,62 @@
+{
+  "rules": {
+    "config": {
+      ".read": true,
+      ".write": "auth.token.email === 'yahia176@gmail.com'",
+      "ann": { "txt": { ".validate": "newData.isString() && newData.val().length <= 500" } }
+    },
+    "rooms": {
+      "$c": {
+        ".read": "auth != null",
+        ".write": "auth != null && $c.length === 5",
+        "players": {
+          "$u": {
+            "name":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+            "emoji": { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "char":  { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" }
+          }
+        }
+      }
+    },
+    "restore": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && $code.length === 6 && (!data.exists() || data.child('o').val() === auth.uid) && newData.child('o').val() === auth.uid",
+        "name": { ".validate": "newData.isString() && newData.val().length <= 40" }
+      }
+    },
+    "halaqas": {
+      "$h": {
+        ".read": "auth != null",
+        ".write": "auth != null && $h.length === 5 && ((!data.exists() && auth.token.email != null && newData.child('t').val() === auth.uid) || (data.exists() && data.child('t').val() === auth.uid))",
+        "name":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "tname": { ".validate": "newData.isString() && newData.val().length <= 40" }
+      }
+    },
+    "members": {
+      "$h": {
+        ".read": "auth != null",
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || root.child('halaqas').child($h).child('t').val() === auth.uid)",
+          "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "char": { ".validate": "newData.isString() && newData.val().length <= 16" },
+          "wk": {
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)" }
+          }
+        }
+      }
+    },
+    "index": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "teachers": { "$u": { ".write": "auth != null && auth.uid === $u" } }
+    },
+    "users": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "$u": {
+        ".read": "auth != null && (auth.uid === $u || auth.token.email === 'yahia176@gmail.com')",
+        ".write": "auth != null && auth.uid === $u"
+      }
+    }
+  }
+}

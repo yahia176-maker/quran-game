@@ -1206,7 +1206,11 @@ let backupT=null;
 function backupProfile(){
   if(!fbReady || !P || !P.code) return;
   clearTimeout(backupT);
-  backupT = setTimeout(()=>{ firebase.database().ref('restore/'+P.code).set(packProfile(P)).catch(()=>{}); }, 2500);
+  backupT = setTimeout(()=>{ firebase.database().ref('restore/'+P.code).set(Object.assign(packProfile(P),{o:fbUser.uid}))
+    .catch(async err=>{ /* الكود مملوك لجهاز قديم (قواعد الحماية) → نمنحه كودًا جديدًا */
+      if(String(err&&err.code||err).indexOf('PERMISSION_DENIED')<0) return;
+      P.code=null; saveP(); await ensureCode();
+      if(P.code) toast('🔑 كود استعادة جديد لجهازك: '+P.code); }); }, 2500);
 }
 /* يمنح الملف كودًا فريدًا أول مرة يتصل فيها بالإنترنت */
 async function ensureCode(){
@@ -1616,7 +1620,7 @@ function screenProfiles(){
     <h3>مين اللي هيلعب النهارده؟ 👋</h3>
     ${ps.length? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
       ${ps.map(p=>`<div class="stage" data-p="${p.id}">
-        ${p.char?charSVG(p.char,'idle',62):`<span class="em">${p.emoji}</span>`}<div style="font-weight:700">${esc(p.name)}</div>
+        ${p.char?charSVG(p.char,'idle',62):`<span class="em">${esc(p.emoji)}</span>`}<div style="font-weight:700">${esc(p.name)}</div>
         <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${p.stats.c}</div>
       </div>`).join('')}
     </div>`:'<p class="muted center">أول مرة تلعب؟ اعمل ملفك الشخصي وابدأ 🌟</p>'}
@@ -1828,6 +1832,15 @@ function screenSettings(){
     </div>
     ${P.code?`<p class="muted" style="font-size:.8rem;margin-top:10px">🎫 كود استعادة تقدمك:
       <b style="direction:ltr;display:inline-block;letter-spacing:2px;color:var(--gold)">${esc(P.code)}</b></p>`:''}
+    ${myRole()==='teacher' && fbReady ? (fbUser && !fbUser.isAnonymous ? `
+      <p style="font-size:.88rem;margin-top:10px">🔐 حسابك مؤمّن بالإيميل: <b style="direction:ltr;display:inline-block">${esc(fbUser.email||'')}</b></p>
+      <button class="btn ghost sm" id="sklgout">🚪 تسجيل خروج من الجهاز ده</button>` : `
+      <p style="font-size:.88rem;margin-top:10px">🔒 حسابك كمعلم مربوط بالجهاز ده بس — أمّنه بإيميل وكلمة سر عشان يفتح من أي جهاز، وعشان تقدر تعمل حلقات.</p>
+      <div class="row" style="justify-content:flex-start">
+        <input type="email" id="skEmail" placeholder="الإيميل" style="direction:ltr;flex:1;min-width:170px;margin:0">
+        <input type="password" id="skPass" placeholder="كلمة سر (٦+ أحرف)" style="direction:ltr;flex:1;min-width:150px;margin:0">
+        <button class="btn sm" id="skGo">🔐 أمّن حسابي</button>
+      </div>`) : ''}
   </div>
   <div class="card fade">
     <h3>💡 مساعدة</h3>
@@ -1842,6 +1855,15 @@ function screenSettings(){
   app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); applyTheme(b.dataset.th); screenSettings(); });
   app.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); setDiff(b.dataset.d); screenSettings(); });
   $('#swRole').onclick=()=>{ Snd.click(); setRole(myRole()==='teacher'?'student':'teacher'); screenHome(); };
+  if($('#skGo')) $('#skGo').onclick=async()=>{ Snd.click();
+    const em=($('#skEmail').value||'').trim(), pw=$('#skPass').value||'';
+    if(!em||!pw) return toast('اكتب الإيميل وكلمة السر');
+    try{ await linkTeacherEmail(em, pw); Snd.correct();
+      toast('🔐 اتأمّن! افتح حسابك من أي جهاز بنفس الإيميل'); screenSettings(); }
+    catch(e){ toast('⚠️ '+authMsg(e)); } };
+  if($('#sklgout')) $('#sklgout').onclick=async()=>{ Snd.click();
+    if(!confirm('تسجل خروج من الجهاز ده؟ (بياناتك محفوظة في حسابك)')) return;
+    await teacherLogout(); toast('🚪 خرجت — الجهاز رجع هوية جديدة'); screenHome(); };
   $('#swUser').onclick=()=>{ Snd.click(); screenProfiles(); };
   $('#hlp').onclick=()=>{ Snd.click(); screenHelp(); };
   if($('#own')) $('#own').onclick=()=>{ Snd.click(); screenOwner(); };
@@ -2132,6 +2154,8 @@ async function screenTeacherHome(){
   $('#tPlay').onclick=()=>{ Snd.click(); screenPickHub(); };
   app.querySelectorAll('.hcard').forEach(b=>b.onclick=()=>{ Snd.click(); screenHalaqa(b.dataset.h); });
   $('#addh').onclick=async()=>{ const nm=($('#nh').value||'').trim(); if(!nm) return toast('اكتب اسم الحلقة');
+    if(fbUser && fbUser.isAnonymous){ Snd.wrong();
+      toast('🔒 أمّن حسابك بالإيميل الأول (من ⚙️ الإعدادات) عشان تقدر تعمل حلقات'); return; }
     Snd.click(); const hid=newHid();
     await halRef(hid).set({ t:fbUser.uid, tname:t.name, name:nm, created:Date.now() });
     t.hal=(t.hal||[]).concat(hid); t.groups=(t.groups||[]).concat(nm); await saveTeacher(t);
@@ -2582,7 +2606,7 @@ function screenReport(entry){
   <div class="card fade cert center">
     <div style="font-size:2.6rem">${gr.e}</div>
     <p class="muted" style="margin:0">شهادة تقدير</p>
-    <h2 style="color:var(--gold);margin:4px 0">${P.emoji} ${esc(P.name)}</h2>
+    <h2 style="color:var(--gold);margin:4px 0">${esc(P.emoji)} ${esc(P.name)}</h2>
     <p style="margin:2px 0">أتمّ تحديات <b>${esc(entry.name)}</b></p>
     <div style="font-size:1.5rem;color:var(--gold)">${gr.t}</div>
     <p class="muted" style="font-size:.85rem">⭐ ${earned}/${maxS} · دقة الإجابات ${acc}% · ${date}</p>
@@ -2693,20 +2717,57 @@ function screenHelp(){
     <p>عشان تشتغل — وعشان بيانات كل مستخدم تتقفل على صاحبها — الصق ده في <b>Realtime Database ← Rules ← Publish</b>:</p>
     <pre>{
   "rules": {
-    "config":  { ".read": true,
-                 ".write": "auth.token.email === 'yahia176@gmail.com'" },
-    "rooms":   { "$c": { ".read": "auth != null", ".write": "auth != null" } },
-    "restore": { "$code": { ".read": "auth != null", ".write": "auth != null" } },
+    "config": {
+      ".read": true,
+      ".write": "auth.token.email === 'yahia176@gmail.com'",
+      "ann": { "txt": { ".validate": "newData.isString() && newData.val().length <= 500" } }
+    },
+    "rooms": {
+      "$c": {
+        ".read": "auth != null",
+        ".write": "auth != null && $c.length === 5",
+        "players": {
+          "$u": {
+            "name":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+            "emoji": { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "char":  { ".validate": "newData.isString() && newData.val().length <= 16" },
+            "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" }
+          }
+        }
+      }
+    },
+    "restore": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && $code.length === 6 && (!data.exists() || data.child('o').val() === auth.uid) && newData.child('o').val() === auth.uid",
+        "name": { ".validate": "newData.isString() && newData.val().length <= 40" }
+      }
+    },
     "halaqas": {
-      "$h": { ".read": "auth != null",
-              ".write": "auth != null && (!data.exists() || data.child('t').val() === auth.uid)" }
+      "$h": {
+        ".read": "auth != null",
+        ".write": "auth != null && $h.length === 5 && ((!data.exists() && auth.token.email != null && newData.child('t').val() === auth.uid) || (data.exists() && data.child('t').val() === auth.uid))",
+        "name":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "tname": { ".validate": "newData.isString() && newData.val().length <= 40" }
+      }
     },
     "members": {
-      "$h": { ".read": "auth != null",
-              "$u": { ".write": "auth != null && (auth.uid === $u || root.child('halaqas').child($h).child('t').val() === auth.uid)" } }
+      "$h": {
+        ".read": "auth != null",
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || root.child('halaqas').child($h).child('t').val() === auth.uid)",
+          "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "char": { ".validate": "newData.isString() && newData.val().length <= 16" },
+          "wk": {
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)" }
+          }
+        }
+      }
     },
-    "index": { ".read": "auth.token.email === 'yahia176@gmail.com'",
-      "teachers": { "$u": { ".write": "auth != null && auth.uid === $u" } } },
+    "index": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "teachers": { "$u": { ".write": "auth != null && auth.uid === $u" } }
+    },
     "users": {
       ".read": "auth.token.email === 'yahia176@gmail.com'",
       "$u": {
@@ -3777,7 +3838,7 @@ async function screenGroups(sel){
   <div class="card fade">
     <h3>مستوى الطلاب — ${esc(g)} <span class="muted" style="font-size:.8rem">(${list.length} مسابقة)</span></h3>
     ${rows.length? `<table><tr><th>الطالب</th><th>شارك</th><th>متوسط النقاط</th><th>الدقة</th><th>آخر مسابقة</th><th></th></tr>
-      ${rows.map(r=>`<tr><td>${r.emoji||'🙂'} ${esc(r.name)}</td><td>${r.n}</td><td><b>${r.avg}</b></td>
+      ${rows.map(r=>`<tr><td>${esc(r.emoji||'🙂')} ${esc(r.name)}</td><td>${r.n}</td><td><b>${r.avg}</b></td>
         <td><b style="color:${r.acc>=70?'var(--ok)':'var(--bad)'}">${r.acc}%</b></td><td>${r.lastScore}</td>
         <td><button class="btn ghost sm ren" data-k="${esc(r.key)}" data-n="${esc(r.rawName)}" title="إعادة تسمية">✏️</button></td></tr>`).join('')}
     </table>
@@ -3794,7 +3855,7 @@ async function screenGroups(sel){
     </div>
     <table><tr><th>#</th><th>الطالب</th><th>النقاط</th><th>صح</th><th>غلط</th></tr>
       ${(qz.players||[]).filter(p=>!p.h).sort((a,b)=>b.score-a.score).map((p,i)=>
-        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${p.emoji||'🙂'} ${esc(dispName(p))}</td>
+        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(p.emoji||'🙂')} ${esc(dispName(p))}</td>
          <td><b>${p.score}</b></td><td>${p.c}</td><td>${p.w}</td></tr>`).join('')}
     </table>
   </div>`).join('')}`}
@@ -3844,7 +3905,7 @@ function renderLobby(){
   </div>
   <div class="card fade">
     <h3>اللاعبون (${ps.length})</h3>
-    <div>${ps.map(p=>`<span class="lobby-p">${p.emoji||'🙂'} ${esc(p.name)}</span>`).join('')}</div>
+    <div>${ps.map(p=>`<span class="lobby-p">${esc(p.emoji||'🙂')} ${esc(p.name)}</span>`).join('')}</div>
     ${R.isHost?'':'<p class="muted center" style="margin-top:10px">مستنيين المعلم يبدأ... ⏳</p>'}
   </div>
   ${R.isHost?`<div class="center"><button class="btn" id="st" ${ps.length<2?'disabled':''}>🚀 ابدأ المسابقة (${ps.length} لاعبين)</button></div>`:''}`;
@@ -3878,7 +3939,7 @@ function renderOnlineQ(){
   </div>
   <div class="card fade">
     <table>${ps.map(p=>`<tr class="${p.uid===st.turn&&v.settings.mode==='turns'?'turnGlow':''}">
-      <td>${p.emoji||'🙂'} ${esc(p.name)}</td><td><b>${p.score||0}</b></td></tr>`).join('')}</table>
+      <td>${esc(p.emoji||'🙂')} ${esc(p.name)}</td><td><b>${p.score||0}</b></td></tr>`).join('')}</table>
   </div>
   <div class="center noprint"><button class="btn ghost sm" id="lv">🚪 خروج</button></div>`;
   $('#lv').onclick=()=>{ Snd.click(); leaveRoom(); screenOnline(); };
@@ -3908,7 +3969,7 @@ function renderOnlineEnd(){
     <div style="font-size:3.4rem">🏆</div>
     <h2>نتيجة المسابقة</h2>
     <table><tr><th>#</th><th>اللاعب</th><th>النقاط</th></tr>
-      ${ps.map((p,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${p.emoji||'🙂'} ${esc(p.name)}</td><td><b>${p.score||0}</b></td></tr>`).join('')}
+      ${ps.map((p,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(p.emoji||'🙂')} ${esc(p.name)}</td><td><b>${p.score||0}</b></td></tr>`).join('')}
     </table>
     ${host?`<p class="muted" style="font-size:.85rem">💾 النتيجة اتسجلت تلقائيًا في سجلّ مجموعاتك (${esc((R.data.settings||{}).grp||'عام')})</p>`:''}
   </div>
