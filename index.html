@@ -1990,10 +1990,15 @@ function screenProfiles(){
   </div>
   <div class="card fade">
     <h3>مين اللي هيلعب النهارده؟ 👋</h3>
+    ${ps.length>1?'<p class="muted" style="margin:-4px 0 8px;font-size:.82rem">كل واحد ليه تقدّمه ونجومه لوحده — دوس على اسمك.</p>':''}
     ${ps.length? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
-      ${ps.map(p=>`<div class="stage" data-p="${p.id}">
-        ${p.char?charSVG(p.char,'idle',62):`<span class="em">${esc(p.emoji)}</span>`}<div style="font-weight:700">${esc(p.name)}</div>
-        <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${p.stats.c}</div>
+      ${ps.map(p=>`<div class="stage ${(P&&p.id===P.id)?'live':''}" data-p="${p.id}">
+        ${(p.img && p.avatar==='img')
+          ? `<img class="ava" src="${esc(p.img)}" alt="" style="width:62px;height:62px;margin:0 auto">`
+          : (p.char?charSVG(p.char,'idle',62):`<span class="em">${esc(p.emoji||'🙂')}</span>`)}
+        <div style="font-weight:700">${esc(p.name)}</div>
+        <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${(p.stats||{}).c||0}</div>
+        ${(P&&p.id===P.id)?'<div class="muted" style="font-size:.68rem;color:var(--ok)">داخل حاليًا</div>':''}
       </div>`).join('')}
     </div>`:'<p class="muted center">أول مرة تلعب؟ اعمل ملفك الشخصي وابدأ 🌟</p>'}
   </div>
@@ -2043,9 +2048,13 @@ function screenProfiles(){
 }
 
 /* ---------- الشاشة الرئيسية (بعد اختيار الملف) ---------- */
+/* جهاز مشترك: لو فيه أكتر من لاعب، نسأل مين بيلعب أول ما تفتح اللعبة — مرة واحدة بس */
+let ASKED_WHO = false;
 function screenHome(){
   stopTimer();
   if(!P) return screenProfiles();
+  if(!ASKED_WHO){ ASKED_WHO = true;
+    if(allProfiles().length > 1) return screenProfiles(); }
   if(!myRole()) return screenRole();
   paintAnn(); ensureCode();
   return myRole()==='teacher' ? screenTeacherHome() : screenStudentHome();
@@ -2141,7 +2150,12 @@ function screenStudentHome(){
   const live = (P.halaqas||[]).filter(x=>x.live);
   app.innerHTML = `
   <div class="hdr fade">
-    <span class="pill">${lv.cur.e} <b>${esc(P.name)}</b> · 🔥 ${P.streak||0}</span>
+    <button class="pill" id="whoBtn" title="غيّر اللاعب"
+      style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+      ${useImg()?`<img class="ava avaS" src="${esc(P.img)}" alt="">`:`<span>${lv.cur.e}</span>`}
+      <b>${esc(P.name)}</b> · 🔥 ${P.streak||0}
+      ${allProfiles().length>1?'<span style="opacity:.7;font-size:.8em">🔄</span>':''}
+    </button>
     <button class="btn ghost sm" id="cog">⚙️</button>
   </div>
   ${canInstall() && !localStorage.getItem(LS+'_instHint') ? `<div class="card fade" id="instBar" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
@@ -2193,6 +2207,7 @@ function screenStudentHome(){
     <button class="btn ghost sm" id="mLis">🎧 اسمع سورة ${esc(QURAN[sn].nm)} الأول</button>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
+  $('#whoBtn').onclick=()=>{ Snd.click(); screenProfiles(); };
   $('#goPlay').onclick=()=>{ Snd.init(); Snd.click();
     if(FP) startSurah(sn, FP.from, FP.to); else startSmart(); };
   $('#chgFocus').onclick=()=>{ Snd.init(); Snd.click(); screenPickFocus(); };
@@ -2645,7 +2660,12 @@ async function screenTeacherHome(){
   const qz = Object.keys((await firebase.database().ref('users/'+fbUser.uid+'/quizzes').once('value')).val()||{}).length;
   app.innerHTML = `
   <div class="hdr fade">
-    <span class="pill">🧑‍🏫 <b>${esc(t.name)}</b></span>
+    <button class="pill" id="whoBtn" title="غيّر اللاعب"
+      style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+      ${useImg()?`<img class="ava avaS" src="${esc(P.img)}" alt="">`:'<span>🧑‍🏫</span>'}
+      <b>${esc(t.name)}</b>
+      ${allProfiles().length>1?'<span style="opacity:.7;font-size:.8em">🔄</span>':''}
+    </button>
     <button class="btn ghost sm" id="cog">⚙️</button>
   </div>
   <div class="grid fade" style="grid-template-columns:repeat(3,1fr);max-width:520px;margin:0 auto 12px">
@@ -2672,6 +2692,7 @@ async function screenTeacherHome(){
       <div class="muted" style="font-size:.74rem">جرّب اللعبة كطالب</div></div>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
+  if($('#whoBtn')) $('#whoBtn').onclick=()=>{ Snd.click(); screenProfiles(); };
   $('#tRep').onclick=()=>{ Snd.click(); screenGroups(); };
   $('#tPlay').onclick=()=>{ Snd.click(); screenPickHub(); };
   app.querySelectorAll('.hcard').forEach(b=>b.onclick=()=>{ Snd.click(); screenHalaqa(b.dataset.h); });
