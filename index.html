@@ -223,6 +223,85 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 :root[data-theme="kids"] .chip{border-width:3px}
 @keyframes bounceIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 :root[data-theme="kids"] .pop{animation:bounceIn .4s cubic-bezier(.2,1.5,.4,1) both}
+/* ===== 🚪 بابا الطالب والمعلم — جنب بعض دايمًا ===== */
+.doors{display:grid!important;grid-template-columns:1fr 1fr;max-width:540px;margin:14px auto;gap:12px}
+.door{position:relative;background:var(--card);border:3px solid var(--line);border-radius:var(--rad);
+  padding:20px 10px 18px;text-align:center;cursor:pointer;overflow:hidden;
+  box-shadow:0 6px 0 0 var(--line), 0 10px 24px rgba(0,0,0,.16);
+  transition:transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .14s, border-color .14s;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.door::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--glow),transparent 70%);
+  opacity:0;transition:opacity .2s;pointer-events:none}
+.door:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 10px 0 0 var(--gold2),0 16px 30px rgba(0,0,0,.22)}
+.door:hover::before{opacity:.5}
+/* 👇 إحساس الضغط: الزر بينزل ويبلع ظله */
+.door:active{transform:translateY(4px) scale(.985);box-shadow:0 1px 0 0 var(--gold2),0 3px 10px rgba(0,0,0,.2);
+  border-color:var(--gold);transition-duration:.06s}
+.door.picked{border-color:var(--gold);box-shadow:0 0 0 4px var(--glow),0 10px 26px rgba(0,0,0,.25);
+  transform:translateY(2px) scale(.99);animation:doorPick .4s ease}
+@keyframes doorPick{0%{transform:scale(1)}45%{transform:scale(.95)}100%{transform:translateY(2px) scale(.99)}}
+.door .em{font-size:3rem;display:block;margin-bottom:4px;line-height:1;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.2));transition:transform .18s}
+.door:hover .em{transform:scale(1.12) rotate(-4deg)}
+.door b{display:block;font-size:1.28rem;color:var(--gold);margin-bottom:2px}
+.door span:not(.em){display:block;font-size:.76rem;color:var(--muted);line-height:1.35;padding:0 4px}
+@media(max-width:340px){ .door .em{font-size:2.4rem} .door b{font-size:1.1rem} .door span:not(.em){font-size:.7rem} }
+
+/* ===== ▶️ الزرار الكبير (ابدأ الجلسة) ===== */
+.hero{display:flex;align-items:center;gap:14px;max-width:560px;margin:0 auto 14px;cursor:pointer;
+  background:linear-gradient(135deg,var(--card),transparent);border:3px solid var(--gold);
+  border-radius:var(--rad);padding:14px 18px;position:relative;overflow:hidden;
+  box-shadow:0 6px 0 0 var(--gold2),0 12px 28px rgba(0,0,0,.2);
+  transition:transform .14s cubic-bezier(.34,1.56,.64,1),box-shadow .14s;-webkit-tap-highlight-color:transparent}
+.hero::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+  animation:sheen 3.6s ease-in-out infinite}
+@keyframes sheen{0%,72%{left:-60%}100%{left:120%}}
+.hero:hover{transform:translateY(-4px);box-shadow:0 10px 0 0 var(--gold2),0 18px 34px rgba(0,0,0,.28)}
+.hero:active{transform:translateY(4px) scale(.99);box-shadow:0 1px 0 0 var(--gold2),0 4px 12px rgba(0,0,0,.22);transition-duration:.06s}
+.heroArt{flex:none;color:var(--gold)}
+.heroTxt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.heroTxt b{font-size:1.45rem;color:var(--gold);line-height:1.3}
+.heroTxt .muted{font-size:.8rem}
+.heroGo{font-size:2rem;flex:none;animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+
+/* ===== الشبكة الثلاثية ===== */
+.three{grid-template-columns:repeat(3,1fr);max-width:560px;margin:0 auto;gap:10px}
+.three .stage{padding:14px 6px}
+.three b{display:block;font-size:1rem;margin-top:2px}
+@media(max-width:360px){ .three{gap:7px} .three .stage{padding:11px 3px} .three b{font-size:.86rem} }
+
+/* ===== 🏫 الحلقات ===== */
+.live{border-color:var(--ok)!important;background:rgba(61,220,151,.12);animation:pulseLive 1.8s ease-in-out infinite}
+@keyframes pulseLive{0%,100%{box-shadow:0 0 0 0 rgba(61,220,151,.4)}50%{box-shadow:0 0 0 12px rgba(61,220,151,0)}}
+.halrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;
+  background:var(--card);border:2px solid var(--line);border-radius:16px;margin-bottom:8px;cursor:pointer;
+  transition:.15s;-webkit-tap-highlight-color:transparent}
+.halrow:hover{border-color:var(--gold);transform:translateX(-4px)}
+.halrow:active{transform:translateX(-2px) scale(.99);background:rgba(255,214,126,.1)}
+.halrow span{font-size:1.4rem;color:var(--gold)}
+.hw{background:rgba(255,214,126,.1);border-right:4px solid var(--gold);border-radius:12px;padding:10px 12px;margin-top:8px}
+.linkbox{direction:ltr;background:var(--card);border:2px dashed var(--line);border-radius:12px;
+  padding:9px 12px;font-size:.82rem;word-break:break-all;color:var(--gold)}
+.hws{cursor:pointer;transition:.12s}
+.hws.on{border-color:var(--ok);background:rgba(61,220,151,.18)}
+.lvrow{display:flex;align-items:center;gap:12px}
+
+/* ===== 🏝️ طريق الحفظ ===== */
+.pathwrap{position:relative;max-width:430px;margin:0 auto;padding:10px 0}
+.pnode{position:relative;display:flex;align-items:center;gap:12px;margin:0 0 4px;cursor:pointer;
+  padding:8px 12px;border-radius:18px;transition:.15s;-webkit-tap-highlight-color:transparent}
+.pnode:hover{background:var(--card)}
+.pnode:active{transform:scale(.985)}
+.pdot{flex:none;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--card);border:3px solid var(--line);color:var(--gold);position:relative}
+.pnode.done .pdot{border-color:var(--ok);background:rgba(61,220,151,.16)}
+.pnode.now .pdot{border-color:var(--gold);box-shadow:0 0 0 6px var(--glow);animation:pop2 1.6s ease-in-out infinite}
+@keyframes pop2{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.pline{position:absolute;right:39px;top:56px;bottom:-6px;width:4px;background:var(--line);border-radius:4px}
+.pnode.done .pline{background:var(--ok)}
+
 /* 🎴 ألبوم البطاقات */
 .album{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:10px}
 .gcard{position:relative;aspect-ratio:3/4;border-radius:16px;border:3px solid var(--line);background:var(--card);
@@ -1731,8 +1810,14 @@ function screenRole(){
       <b>معلم</b><span>أدير حلقاتي وأتابع طلابي</span></div>
   </div>
   <p class="muted center" style="font-size:.8rem">تقدر تغيّرها في أي وقت من ⚙️</p>`;
-  $('#rStudent').onclick=()=>{ Snd.init(); Snd.win(); setRole('student'); screenHome(); };
-  $('#rTeacher').onclick=()=>{ Snd.init(); Snd.win(); setRole('teacher'); screenHome(); };
+  const pick = (el, role) => {
+    Snd.init(); Snd.star();
+    el.classList.add('picked');
+    app.querySelectorAll('.door').forEach(d=>{ if(d!==el) d.style.opacity='.45'; });
+    setTimeout(()=>{ Snd.win(); setRole(role); screenHome(); }, 340);
+  };
+  $('#rStudent').onclick=e=>pick(e.currentTarget,'student');
+  $('#rTeacher').onclick=e=>pick(e.currentTarget,'teacher');
 }
 
 /* ---------- 👦 بيت الطالب: زرار كبير + ٣ اختيارات ---------- */
@@ -1877,6 +1962,16 @@ function screenSettings(){
     <label class="switch" style="margin-top:12px"><input type="checkbox" id="sndChk" ${Snd.on?'checked':''}> 🔊 المؤثرات الصوتية</label>
   </div>
   <div class="card fade">
+    <h3>🎙️ صوت القارئ في التسميع</h3>
+    <div class="wear">
+      ${Object.entries(RECITERS).map(([k,r])=>`<div class="w ${reciterKey()===k?'on':''}" data-r="${k}"
+        style="padding:12px 6px"><span style="font-size:1.4rem">🎙️</span>
+        <b style="display:block;font-size:.86rem;margin-top:2px">${esc(r.nm)}</b>
+        <small>${esc(r.d)}</small></div>`).join('')}
+    </div>
+    <div class="center" style="margin-top:8px"><button class="btn ghost sm" id="rTry">▶️ جرّب الصوت</button></div>
+  </div>
+  <div class="card fade">
     <h3>👤 حسابك</h3>
     <p class="muted" style="font-size:.85rem">إنت داخل كـ <b>${myRole()==='teacher'?'🧑‍🏫 معلم':'👦 طالب'}</b></p>
     <div class="row" style="justify-content:flex-start">
@@ -1920,6 +2015,9 @@ function screenSettings(){
     await teacherLogout(); toast('🚪 خرجت — الجهاز رجع هوية جديدة'); screenHome(); };
   $('#swUser').onclick=()=>{ Snd.click(); screenProfiles(); };
   $('#hlp').onclick=()=>{ Snd.click(); screenHelp(); };
+  app.querySelectorAll('[data-r]').forEach(d=>d.onclick=()=>{ Snd.click();
+    P.reciter = d.dataset.r; saveP(); screenSettings(); toast('🎙️ اتغيّر لـ '+RECITERS[P.reciter].nm); });
+  if($('#rTry')) $('#rTry').onclick=e=>{ Snd.click(); playAyah(105, 1, e.currentTarget); };
   if($('#inst')) $('#inst').onclick=()=>{ Snd.click(); doInstall(); };
   if($('#own')) $('#own').onclick=()=>{ Snd.click(); screenOwner(); };
 }
@@ -2623,8 +2721,13 @@ function screenRaceEnd(){
 }
 
 /* ---------- 🎤 وضع التسميع + 🔊 صوت القارئ ---------- */
-const RECITER = 'Alafasy_128kbps';   /* الشيخ مشاري العفاسي — ترتيل واضح مناسب للأطفال */
-const ayAudioURL = (sn,a) => 'https://everyayah.com/data/'+RECITER+'/'
+const RECITERS = {
+  minshawi: { nm:'المنشاوي — مرتّل',  d:'ترتيل هادئ وواضح',      f:'Minshawy_Murattal_128kbps' },
+  husary:   { nm:'الحصري — مرتّل',    d:'ترتيل كلاسيكي متأنٍّ',   f:'Husary_128kbps' },
+  muallim:  { nm:'الحصري — المعلّم',  d:'يقرأ آية آية للتلقين 👶', f:'Husary_Muallim_128kbps' }
+};
+const reciterKey = () => (P && P.reciter && RECITERS[P.reciter]) ? P.reciter : 'minshawi';
+const ayAudioURL = (sn,a) => 'https://everyayah.com/data/' + RECITERS[reciterKey()].f + '/'
   + String(sn).padStart(3,'0') + String(a).padStart(3,'0') + '.mp3';
 let tasAudio = null;
 function stopAyah(){ if(tasAudio){ try{tasAudio.pause();}catch(e){} tasAudio=null; } }
@@ -4409,7 +4512,9 @@ const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
 if('serviceWorker' in navigator && location.protocol.startsWith('http'))
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
-function canInstall(){ return !isStandalone() && (installEvt || isIOS()); }
+/* 🚧 دعوة التثبيت متوقفة مؤقتًا بطلب المستخدم — خلّي SHOW_INSTALL=true عشان ترجع تظهر */
+const SHOW_INSTALL = false;
+function canInstall(){ return SHOW_INSTALL && !isStandalone() && (installEvt || isIOS()); }
 async function doInstall(){
   if(installEvt){ installEvt.prompt(); const r = await installEvt.userChoice;
     if(r.outcome==='accepted'){ Snd.win(); toast('🎉 اتثبّت! هتلاقي أيقونته على شاشتك'); installEvt=null; }
