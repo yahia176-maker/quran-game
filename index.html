@@ -316,6 +316,19 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .pline{position:absolute;right:39px;top:56px;bottom:-6px;width:4px;background:var(--line);border-radius:4px}
 .pnode.done .pline{background:var(--ok)}
 
+/* ===== 🏠 زر البيت العائم — يظهر في أي شاشة مفيهاش طريق للرئيسية ===== */
+.homeFab{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:16px;z-index:45;
+  width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.45rem;cursor:pointer;border:2px solid var(--line);
+  background:linear-gradient(180deg,var(--gold),var(--gold2));color:var(--btnink);
+  box-shadow:0 5px 0 var(--btnsh),0 10px 22px var(--sh1);transition:.12s;
+  -webkit-tap-highlight-color:transparent;animation:fabIn .28s ease}
+.homeFab:hover{transform:translateY(-3px);box-shadow:0 8px 0 var(--btnsh),0 14px 28px var(--sh1)}
+.homeFab:active{transform:translateY(4px);box-shadow:0 1px 0 var(--btnsh);transition-duration:.06s}
+.homeFab[hidden]{display:none}
+@keyframes fabIn{from{opacity:0;transform:scale(.7) translateY(8px)}to{opacity:1;transform:none}}
+@media print{ .homeFab{display:none!important} }
+
 /* ===== 🎧 شاشة الاستماع ===== */
 .lisWrap{max-height:52vh;overflow-y:auto;border:1px solid var(--line);border-radius:18px;
   padding:10px 8px;background:var(--sunk);scroll-behavior:smooth}
@@ -406,6 +419,7 @@ body:has(.annbar) #app{padding-top:52px}
 <body>
 <div id="stars"></div>
 <div id="app"></div>
+<button class="homeFab" id="homeFab" title="الرئيسية" aria-label="الرئيسية" hidden>🏠</button>
 
 <script>
 /* ==========================================================================
@@ -2804,6 +2818,31 @@ async function shareCard(o){
   d.querySelector('#shc').onclick=()=>{ d.remove(); URL.revokeObjectURL(url); };
 }
 
+/* ---------- 🏠 زر البيت العائم ---------- */
+/* أي زر من دول معناه إن الشاشة فيها طريق للرئيسية بالفعل */
+const HOME_IDS = ['#hm','#hm2','#lHome','#tHome','#rHome','#exitPlay','#rcExit','#tExit','#hHome'];
+function updateFab(){
+  const fab = document.getElementById('homeFab');
+  if(!fab) return;
+  const has = s => !!document.querySelector(s);
+  const atHome  = has('#goPlay') || has('#tRep');      /* بيت الطالب أو المعلم */
+  const preHome = !P || !myRole() || has('.door');     /* قبل ما يختار ملف/دور */
+  fab.hidden = atHome || preHome || HOME_IDS.some(has);
+}
+/* أي تغيير في الشاشة بيعيد التقييم — يشمل أي شاشة تتضاف مستقبلًا */
+function watchScreens(){
+  const fab = document.getElementById('homeFab');
+  if(fab) fab.onclick = () => {
+    Snd.click();
+    if(typeof G === 'object' && G && G.chal && G.chal.length && G.ch < G.chal.length && G.mode !== 'race')
+      return exitPlay();                                /* في نص جلسة؟ نسأل الأول */
+    if(typeof stopListen === 'function') stopListen();
+    stopTimer(); screenHome();
+  };
+  try{ new MutationObserver(updateFab).observe(app, {childList:true}); }catch(e){}
+  updateFab();
+}
+
 /* ---------- 🚪 الخروج الآمن + ▶️ استئناف الجلسة ---------- */
 const RESK = LS + '_resume';
 function saveResume(){
@@ -5000,6 +5039,7 @@ function renderOnlineEnd(){
 /* ===================== بدء ===================== */
 document.addEventListener('click', ()=>Snd.init(), {once:true});
 applyTheme(localStorage.getItem(LS+'_theme')||'garden');
+watchScreens();
 
 /* ---------- 📲 التطبيق القابل للتثبيت (PWA) ---------- */
 let installEvt = null;
