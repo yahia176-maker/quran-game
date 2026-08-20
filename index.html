@@ -302,6 +302,29 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .pline{position:absolute;right:39px;top:56px;bottom:-6px;width:4px;background:var(--line);border-radius:4px}
 .pnode.done .pline{background:var(--ok)}
 
+/* ===== 🎧 شاشة الاستماع ===== */
+.lisWrap{max-height:52vh;overflow-y:auto;border:1px solid var(--line);border-radius:18px;
+  padding:10px 8px;background:rgba(0,0,0,.10);scroll-behavior:smooth}
+.lisAy{font-family:var(--quran);font-size:clamp(1.25rem,4.6vw,1.7rem);line-height:2.5;
+  color:var(--ayah);text-align:center;padding:7px 10px;border-radius:14px;margin-bottom:4px;
+  opacity:.42;transition:opacity .3s,background .3s,transform .3s;cursor:pointer}
+.lisAy:hover{opacity:.75;background:var(--card)}
+.lisAy.on{opacity:1;background:rgba(255,214,126,.14);box-shadow:inset 0 0 0 2px var(--line);
+  transform:scale(1.015)}
+.lisAy .num{display:inline-flex;align-items:center;justify-content:center;min-width:1.5em;height:1.5em;
+  margin-right:6px;font-family:var(--ui);font-size:.55em;font-weight:700;
+  background:var(--card);border:1px solid var(--line);border-radius:50%;color:var(--gold);opacity:.85}
+.lisCtl{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.lisBig{width:64px;height:64px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:1.7rem;background:linear-gradient(180deg,var(--gold),var(--gold2));color:var(--btnink);
+  box-shadow:0 5px 0 var(--btnsh),0 10px 20px rgba(0,0,0,.24);transition:.12s;border:none;cursor:pointer}
+.lisBig:active{transform:translateY(4px);box-shadow:0 1px 0 var(--btnsh)}
+.lisRound{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:1.05rem;background:var(--card);border:2px solid var(--line);color:var(--gold);cursor:pointer;transition:.12s}
+.lisRound:active{transform:scale(.92)}
+.lisRound.on{border-color:var(--gold);background:rgba(255,214,126,.16)}
+.dlbar{height:6px;background:var(--card);border-radius:99px;overflow:hidden;margin-top:8px}
+.dlbar i{display:block;height:100%;background:var(--ok);transition:width .25s}
 /* 🎴 ألبوم البطاقات */
 .album{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:10px}
 .gcard{position:relative;aspect-ratio:3/4;border-radius:16px;border:3px solid var(--line);background:var(--card);
@@ -1823,6 +1846,7 @@ function screenRole(){
 /* ---------- 👦 بيت الطالب: زرار كبير + ٣ اختيارات ---------- */
 function screenStudentHome(){
   const sn = nextTarget(), lv = myLevel(), due = dueReviews().length;
+  const RES = getResume();
   const started = totalStars() > 0;
   const live = (P.halaqas||[]).filter(x=>x.live);
   app.innerHTML = `
@@ -1841,6 +1865,10 @@ function screenStudentHome(){
     <div class="artrow">${P.char?charSVG(P.char,'happy',88):''}
       <span class="speech">${esc(started?'يلا نكمّل حفظ سورة '+QURAN[sn].nm:'يلا نبدأ رحلتك من سورة الناس!')}</span></div>
   </div>
+  ${RES ? `<div class="card fade" id="resBar" style="display:flex;align-items:center;gap:10px;justify-content:space-between;border-color:var(--ok)">
+    <span style="font-size:.9rem">▶️ <b>كمّل جلستك</b> — ${esc(RES.title)} <span class="muted">(${RES.ch}/${RES.chal.length})</span></span>
+    <span style="display:flex;gap:6px"><button class="btn sm" id="resGo">كمّل</button>
+    <button class="btn ghost sm" id="resNo">✕</button></span></div>`:''}
   <div class="hero fade" id="goPlay">
     <div class="heroArt">${artOf(sn)?artSVG(sn,86):'<span style="font-size:3.2rem">📖</span>'}</div>
     <div class="heroTxt">
@@ -1866,9 +1894,14 @@ function screenStudentHome(){
       <div class="muted" style="font-size:.74rem">${cardsOwned()} / ${ALBUM_SET.length} بطاقة</div></div>
     <div class="stage" id="mDress"><span class="em">🎩</span><b>شكلي</b>
       <div class="muted" style="font-size:.74rem">غيّر شخصيتك</div></div>
+  </div>
+  <div class="center fade" style="margin-top:12px">
+    <button class="btn ghost sm" id="mLis">🎧 اسمع سورة ${esc(QURAN[sn].nm)} الأول</button>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
   $('#goPlay').onclick=()=>{ Snd.init(); Snd.click(); startSmart(); };
+  if($('#resGo')) $('#resGo').onclick=()=>{ Snd.init(); resumeSession(); };
+  if($('#resNo')) $('#resNo').onclick=()=>{ Snd.click(); clearResume(); $('#resBar').remove(); };
   if($('#instGo')) $('#instGo').onclick=()=>{ Snd.click(); localStorage.setItem(LS+'_instHint','1'); doInstall(); };
   if($('#instNo')) $('#instNo').onclick=()=>{ Snd.click(); localStorage.setItem(LS+'_instHint','1'); $('#instBar').remove(); };
   $('#mPick').onclick=()=>{ Snd.init(); Snd.click(); screenPickHub(); };
@@ -1877,6 +1910,7 @@ function screenStudentHome(){
   $('#mRace').onclick=()=>{ Snd.init(); Snd.click(); startRace(); };
   $('#mAlb').onclick=()=>{ Snd.init(); Snd.click(); screenAlbum(); };
   $('#mDress').onclick=()=>{ Snd.init(); Snd.click(); screenDressUp(); };
+  $('#mLis').onclick=()=>{ Snd.init(); Snd.click(); startListen(sn); };
   if($('#joinLive')) $('#joinLive').onclick=async()=>{ Snd.click();
     if(await fbInit()) joinRoom(live[0].live); };
 }
@@ -2085,7 +2119,7 @@ function startSmart(){
   screenPlay();
 }
 function screenSmartEnd(){
-  stopTimer();
+  stopTimer(); clearResume();
   const p = G.players[0], pct = Math.round(p.right/Math.max(1,G.chal.length)*100);
   /* نمنح نجوم السورة الهدف حسب دقة أسئلتها — عشان المحطة والمستوى يتقدّموا */
   const sn = G.smartSn;
@@ -2207,8 +2241,14 @@ async function screenMyHalaqas(){
         ${x.live?`<button class="btn sm jl" data-c="${esc(x.live)}">⚡ ادخل المسابقة</button>`:''}
       </div>
       ${x.hw&&x.hw.t?`<div class="hw"><b>📋 واجب: ${esc(x.hw.t)}</b>
-        ${(x.hw.items||[]).length?`<div style="margin-top:6px">${(x.hw.items||[]).map(it=>{
-          const st=surStars(it); return `<span class="pill" style="font-size:.78rem">${esc((QURAN[it]||{}).nm||it)} ${st?'✅':'⬜'}</span>`;}).join(' ')}</div>
+        ${(x.hw.items||[]).length?`
+          <p class="muted" style="font-size:.76rem;margin:6px 0 4px">اسمعها الأول 🎧 وبعدين العب ▶️</p>
+          ${(x.hw.items||[]).map(it=>{ const st=surStars(it); const Qn=(QURAN[it]||{}).nm||it;
+            return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+              <span style="flex:1;font-size:.9rem;font-weight:700">${st?'✅':'⬜'} ${esc(Qn)}</span>
+              <button class="btn ghost sm hwL" data-s="${it}" style="padding:5px 10px">🎧</button>
+              <button class="btn sm hwP" data-s="${it}" style="padding:5px 10px">▶️</button>
+            </div>`;}).join('')}
           <div class="bar" style="margin-top:8px"><i style="width:${Math.round((x.hw.items||[]).filter(i=>surStars(i)>0).length/Math.max(1,(x.hw.items||[]).length)*100)}%"></i></div>`:''}
       </div>`:''}
       <div class="row" style="justify-content:flex-start;margin-top:8px">
@@ -2230,6 +2270,8 @@ async function screenMyHalaqas(){
   $('#hgo').onclick=async()=>{ Snd.click();
     try{ const v=await joinHalaqa($('#hcode').value); Snd.win(); toast('🎉 انضممت لـ '+v.name); screenMyHalaqas(); }
     catch(e){ Snd.wrong(); toast(e.message==='notfound'?'❌ مفيش حلقة بالكود ده':'⚠️ محتاج إنترنت'); } };
+  app.querySelectorAll('.hwL').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); startListen(+b.dataset.s); });
+  app.querySelectorAll('.hwP').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); screenSurahOpts(+b.dataset.s); });
   app.querySelectorAll('.jl').forEach(b=>b.onclick=async()=>{ Snd.click(); if(await fbInit()) joinRoom(b.dataset.c); });
   app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{ if(!confirm('تخرج من الحلقة دي؟')) return;
     P.halaqas=(P.halaqas||[]).filter(x=>x.hid!==b.dataset.h); saveP(); watchHalaqas(); screenMyHalaqas(); });
@@ -2589,6 +2631,80 @@ async function shareCard(o){
   d.querySelector('#shc').onclick=()=>{ d.remove(); URL.revokeObjectURL(url); };
 }
 
+/* ---------- 🚪 الخروج الآمن + ▶️ استئناف الجلسة ---------- */
+const RESK = LS + '_resume';
+function saveResume(){
+  if(!G || !G.chal || !G.chal.length || !P) return;
+  if(G.players.length > 1 || G.mode === 'race') return;      /* الجماعي والسباق ما يتحفظوش */
+  if(G.ch >= G.chal.length) return clearResume();
+  try{
+    localStorage.setItem(RESK, JSON.stringify({
+      pid: P.id, at: Date.now(), mode: G.mode || 'stage', ch: G.ch,
+      chal: G.chal.map(c => { const o = Object.assign({}, c); delete o._m; return o; }),
+      surahId: (G.surah && G.surah.id) || null, solo: G.solo || null,
+      smartSn: G.smartSn || null, stage: G.stage, score: G.players[0].score,
+      right: G.players[0].right, wrong: G.players[0].wrong,
+      title: (G.soloStage && G.soloStage.title) || (curStage() && curStage().title) || 'جلستك'
+    }));
+  }catch(e){}
+}
+function clearResume(){ try{ localStorage.removeItem(RESK); }catch(e){} }
+function getResume(){
+  try{
+    const r = JSON.parse(localStorage.getItem(RESK) || 'null');
+    if(!r || !P || r.pid !== P.id) return null;
+    if(Date.now() - r.at > 3 * 864e5) { clearResume(); return null; }   /* أقدم من ٣ أيام */
+    if(!r.chal || r.ch >= r.chal.length) { clearResume(); return null; }
+    return r;
+  }catch(e){ return null; }
+}
+function resumeSession(){
+  const r = getResume(); if(!r) return screenHome();
+  const e = r.surahId ? entryById(r.surahId) : (r.solo ? surahEntry(r.solo) : null);
+  if(!e){ clearResume(); return screenHome(); }
+  G = { surah:e, players:[{name:P.name, score:r.score||0, right:r.right||0, wrong:r.wrong||0}],
+        turn:0, stage:r.stage!=null?r.stage:-1, ch:r.ch, chal:r.chal, stars:[], unlocked:0,
+        stageEarned:0, stageMax:r.chal.reduce((a,c)=>a+(PTS[c.type]||10)+TIME_BONUS,0),
+        timeLeft:QTIME, tId:null, locked:false, solo:r.solo||null, review:r.mode==='review',
+        mode:r.mode, sstars:{}, smartSn:r.smartSn||null,
+        soloStage:{title:r.title, emoji:'🧠', solo:true, story:[]} };
+  Snd.click(); screenPlay();
+}
+/* يستدعيها زر 🏠 في أي شاشة لعب */
+function exitPlay(){
+  Snd.click();
+  const mid = G && G.chal && G.ch > 0 && G.ch < G.chal.length;
+  const keep = mid && G.players.length === 1 && G.mode !== 'race';
+  if(mid){
+    askExit(keep, ok => {
+      if(!ok) return;
+      stopTimer();
+      if(keep) saveResume(); else clearResume();
+      screenHome();
+    });
+  } else { stopTimer(); clearResume(); screenHome(); }
+}
+/* نافذة تأكيد بسيطة بدل confirm() المزعج */
+function askExit(keep, cb){
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;'
+    + 'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:20px';
+  d.innerHTML = `<div class="card center" style="max-width:330px;margin:0;animation:pop .3s ease">
+    <div style="font-size:2.4rem;line-height:1">🚪</div>
+    <h3 style="margin:6px 0 4px">تخرج من الجلسة؟</h3>
+    <p class="muted" style="font-size:.88rem;margin:0 0 12px">
+      ${keep ? 'هنحفظلك مكانك وتقدر تكمّل بعدين من الرئيسية 👌' : 'اللي عملته في الجلسة دي مش هيتحفظ'}</p>
+    <div class="row" style="justify-content:center">
+      <button class="btn" id="exYes">${keep ? '💾 احفظ واخرج' : '🚪 اخرج'}</button>
+      <button class="btn ghost" id="exNo">↩️ أكمّل</button>
+    </div></div>`;
+  document.body.appendChild(d);
+  const close = v => { d.remove(); cb(v); };
+  d.querySelector('#exYes').onclick = () => { Snd.click(); close(true); };
+  d.querySelector('#exNo').onclick  = () => { Snd.click(); close(false); };
+  d.onclick = e => { if(e.target === d) close(false); };
+}
+
 /* ---------- 🎴 ألبوم بطاقات السور ---------- */
 const ALBUM_SET = Object.keys(ART).map(Number).sort((a,b)=>a-b);
 const hasCard = sn => surStars(sn) >= 3;
@@ -2679,11 +2795,13 @@ function screenRaceQ(){
         soloStage:{title:'سباق', emoji:'⚡', solo:true, story:[]} };
   app.innerHTML = `
   <div class="raceHud fade">
+    <button class="btn ghost sm" id="rcExit" title="خروج">🏠</button>
     <span class="pill">⚡ <b id="rcTime">${RC.left}</b> ث</span>
     <div class="raceBar ${RC.left<=15?'low':''}"><i id="rcBar" style="width:${RC.left/RACE_SEC*100}%"></i></div>
     <span class="pill">✅ <b>${RC.ok}</b></span>
   </div>
   <div class="card fade" id="qbox"></div>`;
+  $('#rcExit').onclick = () => { Snd.click(); clearInterval(RC.tId); RC = null; screenHome(); };
   renderChal($('#qbox'), c);
 }
 /* نتيجة الإجابة في السباق (يستدعيها finish) */
@@ -2718,6 +2836,183 @@ function screenRaceEnd(){
   $('#rAgain').onclick=()=>{ Snd.click(); startRace(); };
   $('#rHome').onclick=()=>{ Snd.click(); screenHome(); };
   $('#rShare').onclick=()=>{ Snd.click(); shareCard({title:'⚡ سباق الدقيقة', big:String(ok), sub:'إجابة صح في ٦٠ ثانية'}); };
+}
+
+/* ---------- 🎧 وضع الاستماع: استمرار + تكرار + قراءة ومتابعة ---------- */
+const AUD_CACHE = 'qg-audio-v1';
+let LSN = null;                                   /* حالة جلسة الاستماع */
+
+/* الصوت أوفلاين: نجيب من الكاش الأول، ولو مش موجود ننزّله ونحفظه */
+async function ayahBlobURL(sn, a){
+  const url = ayAudioURL(sn, a);
+  try{
+    const c = await caches.open(AUD_CACHE);
+    let r = await c.match(url);
+    if(!r){ r = await fetch(url, {mode:'cors'}); if(r && r.ok) await c.put(url, r.clone()); }
+    if(r && r.ok) return URL.createObjectURL(await r.blob());
+  }catch(e){}
+  return url;                                     /* فشل الكاش؟ نشغّل من النت مباشرة */
+}
+async function surahCachedCount(sn){
+  try{
+    const c = await caches.open(AUD_CACHE), N = QURAN[sn].ay.length; let k = 0;
+    for(let i=1;i<=N;i++) if(await c.match(ayAudioURL(sn,i))) k++;
+    return k;
+  }catch(e){ return 0; }
+}
+/* تحميل السورة كاملة للاستخدام بدون نت */
+async function downloadSurah(sn, onProg){
+  const N = QURAN[sn].ay.length; let done = 0, fail = 0;
+  const c = await caches.open(AUD_CACHE);
+  for(let i=1;i<=N;i++){
+    const url = ayAudioURL(sn,i);
+    try{ if(!(await c.match(url))){ const r = await fetch(url,{mode:'cors'});
+      if(r && r.ok) await c.put(url, r.clone()); else fail++; } }
+    catch(e){ fail++; }
+    done++; if(onProg) onProg(done, N, fail);
+  }
+  return fail;
+}
+
+/* شاشة الاستماع */
+function startListen(sn, from, to){
+  Snd.init(); stopAyah();
+  const N = QURAN[sn].ay.length;
+  LSN = { sn, a: from||1, b: to||N, i: from||1, playing:false, rep:1, left:1, au:null, url:null };
+  screenListen();
+}
+function screenListen(){
+  stopTimer();
+  const sn = LSN.sn, a = LSN.a, b = LSN.b, Q = QURAN[sn];
+  app.innerHTML = `
+  <div class="hdr">
+    <div class="row" style="gap:6px">
+      <button class="btn ghost sm" id="lHome">🏠</button>
+      <span class="pill">🎧 ${esc(Q.nm)}</span>
+    </div>
+    <span class="pill" id="lPos">${LSN.i} / ${b}</span>
+  </div>
+  <div class="card fade" style="padding:12px 10px">
+    <div class="lisWrap" id="lWrap">
+      ${Q.ay.slice(a-1, b).map((t,ix)=>{ const no=a+ix;
+        return `<div class="lisAy" data-a="${no}" id="la${no}">${esc(t)}<span class="num">${no}</span></div>`;}).join('')}
+    </div>
+    <div class="lisCtl">
+      <button class="lisRound" id="lPrev" title="الآية اللي فاتت">⏮️</button>
+      <button class="lisBig" id="lPlay">▶️</button>
+      <button class="lisRound" id="lNext" title="الآية اللي بعدها">⏭️</button>
+    </div>
+    <div class="lisCtl" style="margin-top:10px">
+      <span class="muted" style="font-size:.8rem">🔁 كرّر كل آية:</span>
+      ${[1,3,5,7].map(k=>`<button class="lisRound ${LSN.rep===k?'on':''}" data-rep="${k}"
+        style="width:38px;height:38px;font-size:.9rem;font-weight:700">${k===1?'✕':k}</button>`).join('')}
+    </div>
+  </div>
+  <div class="card fade" style="padding:12px">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
+      <span style="font-size:.86rem">🔇 <b>تشغيل بدون إنترنت</b><br>
+        <span class="muted" style="font-size:.76rem" id="dlTxt">بنشوف…</span></span>
+      <button class="btn ghost sm" id="dlGo">⬇️ نزّل</button>
+    </div>
+    <div class="dlbar" id="dlBar" hidden><i style="width:0%"></i></div>
+  </div>
+  <div class="center"><button class="btn ghost sm" id="lTas">🎤 جاهز أسمّعها</button></div>`;
+
+  $('#lHome').onclick = () => { Snd.click(); stopListen(); screenHome(); };
+  $('#lPlay').onclick = () => { Snd.click(); LSN.playing ? pauseListen() : playListen(); };
+  $('#lPrev').onclick = () => { Snd.click(); gotoAyah(Math.max(LSN.a, LSN.i-1)); };
+  $('#lNext').onclick = () => { Snd.click(); gotoAyah(Math.min(LSN.b, LSN.i+1)); };
+  $('#lTas').onclick  = () => { Snd.click(); const s=LSN.sn, f=LSN.a, t=LSN.b; stopListen(); startTasmee(s,f,t); };
+  app.querySelectorAll('[data-rep]').forEach(x=>x.onclick=()=>{ Snd.click();
+    LSN.rep = +x.dataset.rep; LSN.left = LSN.rep;
+    app.querySelectorAll('[data-rep]').forEach(y=>y.classList.toggle('on', +y.dataset.rep===LSN.rep)); });
+  app.querySelectorAll('.lisAy').forEach(d=>d.onclick=()=>{ Snd.click(); gotoAyah(+d.dataset.a); playListen(); });
+  $('#dlGo').onclick = () => doDownload(sn);
+  markAyah(); refreshDl(sn);
+}
+function markAyah(){
+  if(!LSN) return;
+  app.querySelectorAll('.lisAy').forEach(d=>d.classList.toggle('on', +d.dataset.a === LSN.i));
+  const el = document.getElementById('la'+LSN.i);
+  if(el) el.scrollIntoView({block:'center', behavior:'smooth'});
+  const pos = $('#lPos'); if(pos) pos.textContent = LSN.i + ' / ' + LSN.b;
+}
+function gotoAyah(no){ if(!LSN) return; LSN.i = no; LSN.left = LSN.rep; markAyah(); if(LSN.playing) playListen(); }
+function pauseListen(){
+  if(!LSN) return;
+  LSN.playing = false;
+  if(LSN.au){ try{ LSN.au.pause(); }catch(e){} }
+  const b = $('#lPlay'); if(b) b.textContent = '▶️';
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+}
+function stopListen(){
+  if(!LSN) return;
+  LSN.playing = false;
+  if(LSN.au){ try{ LSN.au.pause(); }catch(e){} LSN.au = null; }
+  if(LSN.url){ URL.revokeObjectURL(LSN.url); LSN.url = null; }
+  if('mediaSession' in navigator){ try{ navigator.mediaSession.metadata = null; }catch(e){} }
+  LSN = null;
+}
+async function playListen(){
+  if(!LSN) return;
+  const sn = LSN.sn, i = LSN.i;
+  LSN.playing = true;
+  const btn = $('#lPlay'); if(btn) btn.textContent = '⏸️';
+  if(LSN.au){ try{ LSN.au.pause(); }catch(e){} }
+  if(LSN.url){ URL.revokeObjectURL(LSN.url); LSN.url = null; }
+  const src = await ayahBlobURL(sn, i);
+  if(!LSN || !LSN.playing){ if(src.indexOf('blob:')===0) URL.revokeObjectURL(src); return; }
+  if(src.indexOf('blob:')===0) LSN.url = src;
+  const au = new Audio(src); LSN.au = au;
+  au.onended = () => {
+    if(!LSN || !LSN.playing) return;
+    if(LSN.left > 1){ LSN.left--; return playListen(); }        /* تكرار نفس الآية */
+    LSN.left = LSN.rep;
+    if(LSN.i >= LSN.b){ pauseListen(); Snd.win(); toast('✅ خلصت السورة — تحب تسمّعها؟'); return; }
+    LSN.i++; markAyah(); playListen();
+  };
+  au.onerror = () => { pauseListen(); toast('🔇 مشكلة في الصوت — اتأكد من النت أو نزّل السورة'); };
+  mediaMeta(sn, i);
+  au.play().catch(()=>{ pauseListen(); toast('🔇 دوس ▶️ تاني عشان الصوت يشتغل'); });
+}
+/* التحكم من شاشة القفل */
+function mediaMeta(sn, i){
+  if(!('mediaSession' in navigator)) return;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'سورة ' + QURAN[sn].nm + ' — آية ' + i,
+      artist: RECITERS[reciterKey()].nm, album: 'رحلة القرآن'
+    });
+    navigator.mediaSession.playbackState = 'playing';
+    navigator.mediaSession.setActionHandler('play',  ()=>playListen());
+    navigator.mediaSession.setActionHandler('pause', ()=>pauseListen());
+    navigator.mediaSession.setActionHandler('previoustrack', ()=>gotoAyah(Math.max(LSN.a, LSN.i-1)));
+    navigator.mediaSession.setActionHandler('nexttrack',     ()=>gotoAyah(Math.min(LSN.b, LSN.i+1)));
+  }catch(e){}
+}
+async function refreshDl(sn){
+  if(!$('#dlTxt')) return;
+  const k = await surahCachedCount(sn), N = QURAN[sn].ay.length;
+  if(!$('#dlTxt')) return;
+  if(k >= N){ $('#dlTxt').textContent = '✅ محمّلة كاملة — تشتغل من غير نت';
+              if($('#dlGo')) $('#dlGo').hidden = true; }
+  else $('#dlTxt').textContent = k ? ('محمّل ' + k + ' من ' + N + ' آية')
+                                   : 'محتاجة نت — نزّلها مرة وتشتغل للأبد';
+}
+async function doDownload(sn){
+  Snd.click();
+  const btn = $('#dlGo'), bar = $('#dlBar');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ بينزّل...'; }
+  if(bar) bar.hidden = false;
+  const fail = await downloadSurah(sn, (d,N)=>{
+    if(bar && bar.firstElementChild) bar.firstElementChild.style.width = Math.round(d/N*100)+'%';
+    if($('#dlTxt')) $('#dlTxt').textContent = 'بينزّل ' + d + ' / ' + N;
+  });
+  if(btn){ btn.disabled = false; btn.textContent = '⬇️ نزّل'; }
+  if(bar) bar.hidden = true;
+  if(fail){ Snd.wrong(); toast('⚠️ ' + fail + ' آية مانزلتش — جرّب تاني'); }
+  else { Snd.win(); toast('✅ اتحمّلت! تقدر تسمعها من غير نت'); }
+  refreshDl(sn);
 }
 
 /* ---------- 🎤 وضع التسميع + 🔊 صوت القارئ ---------- */
@@ -2922,6 +3217,7 @@ function screenSurahOpts(sn){
     <div class="st" style="font-size:1.4rem;letter-spacing:4px;color:var(--gold)">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
     <div class="row" style="justify-content:center">
       <button class="btn" id="all">▶️ العب السورة كاملة</button>
+      <button class="btn ghost" id="lis">🎧 اسمع السورة</button>
       <button class="btn ghost" id="tas">🎤 سمّع السورة</button>
     </div>
   </div>
@@ -2939,6 +3235,7 @@ function screenSurahOpts(sn){
     <p class="muted" id="rngInfo" style="font-size:.85rem;margin:10px 0 0"></p>
     <div class="center row" style="margin-top:8px;justify-content:center">
       <button class="btn" id="go">▶️ العب المدى المحدد</button>
+      <button class="btn ghost" id="goLis">🎧 اسمع المدى</button>
       <button class="btn ghost" id="goTas">🎤 سمّع المدى</button>
     </div>
   </div>
@@ -2960,7 +3257,9 @@ function screenSurahOpts(sn){
   $('#bk').onclick=()=>{ Snd.click(); screenSurahs(); };
   $('#all').onclick=()=>{ Snd.click(); startSurah(sn); };
   $('#tas').onclick=()=>{ Snd.click(); startTasmee(sn); };
+  $('#lis').onclick=()=>{ Snd.click(); startListen(sn); };
   $('#goTas').onclick=()=>{ Snd.click(); const [a,b]=refresh(); startTasmee(sn,a,b); };
+  $('#goLis').onclick=()=>{ Snd.click(); const [a,b]=refresh(); startListen(sn,a,b); };
   $('#go').onclick=()=>{ Snd.click(); const [a,b]=refresh(); startSurah(sn,a,b); };
 }
 function startSurah(sn, from, to){
@@ -3504,7 +3803,10 @@ function screenPlay(){
 
   app.innerHTML = `
   <div class="hdr">
-    <span class="pill">${st.emoji} ${esc(st.title)}</span>
+    <div class="row" style="gap:6px">
+      <button class="btn ghost sm" id="exitPlay" title="خروج">🏠</button>
+      <span class="pill">${st.emoji} ${esc(st.title)}</span>
+    </div>
     <div class="row" style="gap:6px">
       <span class="pill">${G.ch+1} / ${G.chal.length}</span>
       ${multi?`<span class="pill turn">🎯 دور: ${esc(p.name)}</span>`:`<span class="pill">🏅 ${p.score}</span>`}
@@ -3515,6 +3817,7 @@ function screenPlay(){
   <div class="card fade" id="cbox"></div>
   <div id="after"></div>`;
 
+  if($('#exitPlay')) $('#exitPlay').onclick = exitPlay;
   renderChal($('#cbox'), c);
   startTimer();
 }
@@ -3762,6 +4065,8 @@ function finish(ok, c, base, note){
       ${note?`<div class="muted" style="font-size:.9rem">${esc(note)}</div>`:''}
       ${c.explain?`<div style="margin-top:8px">${esc(c.explain)}</div>`:''}
       ${c.ayah?ayahHTML(c.ayah):''}
+      ${c.ayah?`<div class="center" style="margin-top:6px">
+        <button class="btn ghost sm" id="hearAy">🔊 اسمع الآية</button></div>`:''}
     </div>
     <div class="center" style="margin-top:12px"><button class="btn" id="nx">${last?'إنهاء المرحلة ✓':'التحدي التالي ◀'}</button></div>`;
   /* في وضع المراجعة: الإجابة الصحيحة ترفع صندوق التكرار، والغلط يرجّعه للبداية */
@@ -3771,6 +4076,8 @@ function finish(ok, c, base, note){
       else m.due=Date.now()+REV_DAYS[m.box]*864e5; }
     else { m.box=0; m.due=Date.now()+864e5; }
     saveP(); awardBadges(); }
+  if($('#hearAy')) $('#hearAy').onclick = e => { Snd.click();
+    playAyah(Math.floor(c.ayah/1000), c.ayah%1000, e.currentTarget); };
   $('#nx').onclick=()=>{ Snd.click(); G.ch++; G.turn++; screenPlay(); };
   $('#after').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
