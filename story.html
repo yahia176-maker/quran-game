@@ -1,0 +1,219 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سِجِل المشروع — رحلة القرآن</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+<style>
+@page{size:A4;margin:15mm 14mm}
+*{box-sizing:border-box}
+:root{--ink:#2b3d34;--muted:#5c7265;--gold:#8a6d24;--gold2:#bb9a55;--ok:#4a8168;
+  --info:#3f7a9e;--line:rgba(138,109,36,.28);--card:#fbfcfa;--bg:#f7faf6}
+html,body{margin:0;padding:0}
+body{font-family:'Tajawal','Segoe UI','Noto Kufi Arabic',sans-serif;color:var(--ink);
+  background:#fff;line-height:1.75;font-size:11.5pt}
+.wrap{max-width:190mm;margin:0 auto;padding:0}
+h1{font-size:23pt;color:var(--gold);margin:0 0 2px;line-height:1.25}
+h2{font-size:15pt;color:var(--gold);margin:20px 0 8px;padding-bottom:5px;
+  border-bottom:2.5px solid var(--line);page-break-after:avoid}
+h3{font-size:12.5pt;margin:14px 0 5px;color:var(--ink);page-break-after:avoid}
+p{margin:0 0 8px}
+ul,ol{margin:0 0 10px;padding-right:20px}
+li{margin-bottom:5px}
+.lead{font-size:12pt;color:var(--muted);margin:0 0 14px}
+.cover{text-align:center;padding:14px 0 18px;border-bottom:3px solid var(--gold2);margin-bottom:18px}
+.cover .em{font-size:44pt;line-height:1}
+.box{background:var(--card);border:1.5px solid var(--line);border-radius:12px;
+  padding:11px 14px;margin:10px 0;page-break-inside:avoid}
+.tip{background:rgba(74,129,104,.09);border-right:4px solid var(--ok)}
+.warn{background:rgba(168,95,86,.09);border-right:4px solid #a85f56}
+.note{background:rgba(63,122,158,.09);border-right:4px solid var(--info)}
+.box b:first-child{color:var(--gold)}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10.5pt;page-break-inside:avoid}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:right;vertical-align:top}
+th{background:rgba(138,109,36,.10);font-weight:700;color:var(--gold)}
+.step{display:flex;gap:11px;align-items:flex-start;margin-bottom:10px;page-break-inside:avoid}
+.step .num{flex:none;width:27px;height:27px;border-radius:50%;background:var(--gold);color:#fffdf6;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11pt}
+.step .txt{flex:1}
+.step .txt b{display:block;margin-bottom:1px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1.5px solid var(--line);border-radius:20px;padding:3px 11px;font-size:10pt;background:var(--card)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:10.5pt}
+.sw{width:15px;height:15px;border-radius:5px;display:inline-block;border:1px solid rgba(0,0,0,.14)}
+.foot{margin-top:22px;padding-top:9px;border-top:1.5px solid var(--line);
+  font-size:9.5pt;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+.url{direction:ltr;display:inline-block;color:var(--gold);font-weight:700}
+.pb{page-break-before:always}
+.noprint{margin:14px 0;text-align:center}
+.noprint button{font:inherit;font-weight:700;background:linear-gradient(180deg,var(--gold),var(--gold2));
+  color:#fffdf6;border:none;border-radius:12px;padding:11px 26px;cursor:pointer;box-shadow:0 4px 0 #6f5a1d}
+@media print{ .noprint{display:none!important} body{font-size:11pt} }
+@media screen{ body{background:var(--bg);padding:22px 14px}
+  .wrap{background:#fff;padding:26px 24px;border-radius:16px;box-shadow:0 8px 30px rgba(50,70,58,.12)} }
+</style>
+</head>
+<body><div class="wrap">
+<div class="noprint"><button onclick="window.print()">🖨️ احفظ الدليل PDF أو اطبعه</button></div>
+
+<div class="cover">
+  <div class="em">📔</div>
+  <h1>سِجِل المشروع</h1>
+  <p class="lead">رحلة القرآن — الفكرة من أول يوم، وكل تعديل وليه اتعمل</p>
+  <p class="muted" style="font-size:10pt;margin:0">آخر تحديث: ٢٠ أغسطس ٢٠٢٦</p>
+</div>
+
+<div class="box note"><b>الملف ده بيتحدّث مع كل تعديل.</b> الغرض منه إن أي حد
+  (إنت بعد سنة، أو حد بيساعدك) يفهم <b>ليه</b> اللعبة بالشكل ده — مش بس إيه اللي فيها.
+  القرار من غير سببه بيتنقض بالغلط.</div>
+
+<h2>الفكرة الأصلية — ٨ أغسطس ٢٠٢٦</h2>
+<div class="box"><b>الطلب الأول بالحرف:</b> «عايز أعمل أداة أديها سورة من سور القرآن،
+  تعملّي عليها لعبة تفاعلية تشتغل بسهولة من أي حد معاه اللينك… موجّهة للأطفال ٦–١٥ سنة.»</div>
+<p>الشروط اللي اتحطت من البداية وفضلت محكومة لحد النهاردة:</p>
+<ul>
+  <li><b>سهلة الفتح</b> — من غير تنزيل ولا تسجيل معقّد</li>
+  <li><b>تتبعت بلينك</b> — أي حد يفتحها ويلعب</li>
+  <li><b>للأطفال</b> — لغة بسيطة وتصميم مبهج، مش تطبيق «جاد»</li>
+  <li><b>مجانية</b> — من غير سيرفر ولا تكلفة شهرية</li>
+</ul>
+<p>ابتدينا بسورة القمر كتجربة، وقرارنا من أول يوم إن نص القرآن <b>يتجاب من مصدر موثوق
+  مش يتكتب بالإيد</b> — عشان استحالة يحصل خطأ في حرف.</p>
+
+<h2>الخط الزمني — إيه اللي اتعمل وليه</h2>
+
+<h3>١ · من سورة واحدة للمصحف كله</h3>
+<p>بدأنا بالقمر، بعدها جزء عمّ، وبعدها <b>المصحف كامل</b> (١١٤ سورة، ٦٢٣٦ آية).</p>
+<div class="box"><b>ليه:</b> لأن تحديد سور معيّنة بيقفل الباب على أي حلقة بتحفظ حاجة تانية.
+  <b>النتيجة:</b> اللعبة بتولّد التحديات <b>تلقائيًا</b> من أي مدى آيات — يعني بتشتغل على أي حتة في المصحف.</div>
+
+<h3>٢ · مشكلة الموبايل — وأول تحوّل كبير</h3>
+<p>اللعبة كانت ملف على الكمبيوتر. اتضح إن <b>الموبايل مش بيفتح ملفات HTML</b> اللي بتتبعت
+  على واتساب أو الإيميل.</p>
+<div class="box tip"><b>الحل:</b> استضافة مجانية على GitHub Pages → بقى فيه <b>لينك</b>
+  يفتح على أي جهاز. ده كان شرط أساسي عشان اللعبة توصل لحد أصلًا.</div>
+
+<h3>٣ · اللعب الجماعي والحلقات</h3>
+<p>اتضافت المسابقات المباشرة، وبعدها نظام الحلقات كامل: المعلم يعمل حلقة، يبعت رابطها،
+  الطلاب يدخلوا مرة واحدة وتفضل عندهم، واجب أسبوعي، وترتيب أسبوعي.</p>
+<div class="box"><b>قرار مهم اتاخد هنا:</b> المسابقة <b>ما تعتمدش على شاشة المعلم</b> —
+  لو قفل موبايله أو النت قطع لحظة، المسابقة بتكمّل لوحدها. اتعملت كده بعد ما اكتشفنا
+  إن المسابقة كانت بتقف لما المعلم يخفي التبويب.</div>
+
+<h3>٤ · التبسيط الكبير — أهم تحوّل في المشروع</h3>
+<div class="box warn"><b>الملاحظة اللي غيّرت كل حاجة:</b> «الواجهة الأساسية معقدة قوي،
+  حتى المعلمين مش عارفين يتعاملوا معاها.»</div>
+<p>اتعادت الواجهة من الصفر: بابين بس في الأول (<b>طالب</b> / <b>معلم</b>)، وبعدها
+  <b>زرار واحد كبير</b> يوديك للي المفروض تعمله دلوقتي، وتلات اختيارات تحته، وكل حاجة
+  متقدمة اتخبّت وراء ⚙️.</p>
+<div class="box tip"><b>الدرس:</b> الميزة اللي المستخدم مش لاقيها = ميزة مش موجودة.
+  ده الدرس اللي رجع يتكرر أكتر من مرة بعد كده.</div>
+
+<h3>٥ · طبقة الأطفال</h3>
+<p>ثيمات حسب العمر، شخصية كرتونية (ولد/بنت) بتتفاعل مع إجاباتك، ٢٩ رسمة لأبطال السور
+  (سورة الفيل بطلها فيل)، احتفالات ونجوم ومستويات.</p>
+
+<h3>٦ · مراجعة أمنية شاملة</h3>
+<p>قبل ما تنتشر اللعبة على ناس حقيقية، اتعملت مراجعة كاملة. الأخطر اللي اتلقى:
+  <b>ثغرة تسمح لطالب شاطر يحقن كود يتنفّذ على أجهزة كل اللي في الحلقة</b> — واتقفلت.
+  واتحطت قواعد حماية بتمنع الغش في النقاط، وإغراق قاعدة البيانات، والعبث بحسابات غيره.</p>
+<div class="box note"><b>القاعدة اللي بنمشي عليها:</b> بعد أي تعديل في الحماية، بنجرّب
+  <b>نخترقها بنفسنا</b> ونتأكد إنها بترفض. القواعد الغلط أخطر من غير قواعد.</div>
+
+<h3 class="pb">٧ · دفعة المتعة والاستمرارية</h3>
+<p>تطبيق يتثبّت على الموبايل ويشتغل بدون نت · <b>وضع التسميع</b> (الآية نقط وتكشفها كلمة كلمة) ·
+  <b>صوت القارئ</b> · <b>ألبوم بطاقات السور</b> · <b>سباق الدقيقة</b> · تخصيص الشخصية ·
+  مشاركة الإنجاز كصورة.</p>
+<div class="box"><b>ليه دي بالذات:</b> الحفظ محتاج <b>تكرار يومي</b>. الحاجات دي بتدّي الطفل
+  سبب يرجع بكرة — مش بتعلّمه حاجة جديدة، بتخليه يكمّل.</div>
+
+<h3>٨ · رحلات المواضيع</h3>
+<p>السور الطويلة في جزء عمّ (النبأ، النازعات، عبس، المطففين) اتقسمت لمحطات
+  <b>حسب موضوعها</b>، كل محطة بقصتها.</p>
+<div class="box"><b>القرار الفني:</b> تقسيم المواضيع وقصصها <b>مكتوبة بالإيد</b> (ده الجزء
+  اللي محتاج بني آدم)، والأسئلة <b>بتتولّد تلقائيًا</b>. لو الأسئلة اتكتبت بالإيد كمان،
+  كانت ٤ سور هتاخد شهور. كده إضافة سورة جديدة بقت شغل ساعة.</div>
+
+<h3>٩ · السور الطويلة — أكبر فجوة اتكشفت</h3>
+<div class="box warn"><b>السؤال اللي كشفها:</b> «لو الطفل بيحفظ البقرة ووصل لآية ٢٠٠ وعايز
+  يراجع حاجة قديمة، هيتعامل معاها إزاي؟»</div>
+<p>الاختبار أثبت إن اللعبة كانت <b>مبنية على مقاس جزء عمّ</b>: طفل حافظ ٤٠ آية من البقرة
+  كانت اللعبة توريله ☆☆☆ كأنه معملش حاجة، ومفيش طريقة يرجع لمقطع قديم غير إنه يفتكر أرقام الآيات.</p>
+<p><b>الحل:</b> المقطع بقى = <b>صفحة مصحف</b>، والسورة بقت خريطة مربعات ملوّنة،
+  والمراجعة بقت ضغطة على مربع.</p>
+<div class="box tip"><b>ليه صفحة المصحف بالذات؟</b> لأن ده اللي المعلم والطفل بيتكلموا بيه
+  فعلًا: «احفظ صفحة». مش ١٠ آيات ولا ربع — <b>صفحة</b>.</div>
+
+<h3>١٠ · الطفل اللي جه حافظ من قبل</h3>
+<div class="box warn"><b>الملاحظة:</b> «لو الطفل خلاص حافظ ١٠٠ آية وهيبدأ معايا من ١٠١،
+  القديم ده مش متسجل عندك.»</div>
+<p>دي كانت هتكسر الخريطة كلها — الطفل هيشوف ١٠٠ مربع فاضي يعني «إنت مش حافظ حاجة».
+  اتعمل نظام <b>الإعلان</b>: الطالب أو معلمه يقول حافظ لحد فين.</p>
+<div class="box"><b>وأهم قرار فيها:</b> اللي بيتعلن بيبقى <b>أزرق</b> مش أخضر —
+  «قال إنه حافظها» غير «اختبرناه فيها». والأزرق <b>ما بياخدش نجوم</b>.
+  <b>ليه:</b> لو أخد، أي طفل يكتب ٢٨٦ وياخد مستوى ببلاش، ويبقى الترتيب الأسبوعي بلا معنى.
+  والمكسب الجانبي: تحويل الأزرق لأخضر بقى <b>هدف</b> بيشد الطفل للمراجعة.</div>
+
+<h3>١١ · الجهاز المشترك والحساب</h3>
+<p>«أنا وأخويا شغالين من جهاز واحد» → شاشة «مين بيلعب؟» عند الفتح وتبديل بضغطة.
+  و«لو الجهاز باظ واشتريت تليفون جديد؟» → كشف إن التأمين بالإيميل كان بيحفظ
+  <b>ملخّص بس</b> مش الملف كامل — يعني مكنش هيرجّع التقدّم فعلًا. اتصلح واتجرّب.</p>
+
+<h2>القرارات الكبيرة وأسبابها</h2>
+<table>
+  <tr><th>القرار</th><th>السبب</th></tr>
+  <tr><td>الطالب من غير كلمة سر</td><td>الأطفال مش هيفتكروا كلمات سر. البديل: كود استعادة + حساب اختياري بإيميل</td></tr>
+  <tr><td>المعلم لازم إيميل</td><td>حلقاته ما تضيعش لو الموبايل ضاع + يمنع أي زائر يعمل حلقات عبثية</td></tr>
+  <tr><td>«محفوظ سابقًا» بلا نجوم</td><td>يمنع الغش ويحوّل المراجعة لهدف</td></tr>
+  <tr><td>صور الأطفال جوّه الحلقة بس</td><td>دي صور أطفال — مسؤولية مش ميزة. والمعلم يقدر يشيل أي صورة</td></tr>
+  <tr><td>الأسئلة تتولّد تلقائيًا</td><td>عشان تشتغل على أي مدى آيات في المصحف، ومن غيرها المشروع ماكانش هيكبر</td></tr>
+  <tr><td>المقطع = صفحة مصحف</td><td>ده اللي الناس بتتكلم بيه فعلًا</td></tr>
+  <tr><td>الأخطاء ترجع بعد ١ و٣ و٧ و٣٠ يوم</td><td>المراجعة المتباعدة — الطريقة المثبتة علميًا لتثبيت الحفظ</td></tr>
+  <tr><td>مفيش إضافة زوم/ميت</td><td>محتاجة سيرفر ومراجعة أشهر، وبتخدم منصة واحدة — ومعظم الحلقات على واتساب</td></tr>
+  <tr><td>مفيش سيرفر خاص</td><td>عشان تفضل مجانية للأبد. كل حاجة اتصممت على أساس ده</td></tr>
+</table>
+
+<h2>أخطاء وقعنا فيها واتعلمنا منها</h2>
+<div class="box note">القسم ده متعمّد. الأخطاء دي كلفتنا وقت، وتوثيقها بيمنع تكرارها.</div>
+<table>
+  <tr><th>الخطأ</th><th>الدرس</th></tr>
+  <tr><td>تعديل مسح بيانات المعلمين والمسابقات</td><td>ما تكتبش على عقدة كاملة — اكتب على الجزء اللي بتغيّره بس</td></tr>
+  <tr><td>المسابقة كانت بتقف لما المعلم يقفل شاشته</td><td>ما تخليش النظام يعتمد على جهاز واحد</td></tr>
+  <tr><td>بلوك تنسيق كامل (١٧ عنصر) ضاع من غير ما حد ياخد باله</td><td>بعد أي تعديل تلقائي، اتأكد إن التعديل نزل فعلًا مش بس إن الأمر نجح</td></tr>
+  <tr><td>ألوان مثبّتة في الكود ظهرت لما اتغيّر الثيم</td><td>أي لون لازم يكون متغيّر — مش رقم مكتوب في مكانين</td></tr>
+  <tr><td>التأمين بالإيميل مكنش بيرجّع التقدّم</td><td>الميزة مش «موجودة» غير لما تتجرّب من الأول للآخر بجد</td></tr>
+  <tr><td>٣ شكاوى «مفيش أوبشن…» والميزة كانت موجودة</td><td>افحص <b>الوصول للميزة</b> قبل ما تبني ميزة جديدة</td></tr>
+</table>
+
+<h2>الوضع الحالي</h2>
+<div class="chips">
+  <span class="chip">المصحف كامل ١١٤ سورة</span><span class="chip">٩ أنواع تحديات</span>
+  <span class="chip">خريطة حفظ بالصفحات</span><span class="chip">محفوظ سابقًا</span>
+  <span class="chip">استماع + تكرار + أوفلاين</span><span class="chip">تسميع</span>
+  <span class="chip">٤ رحلات مواضيع</span><span class="chip">حلقات وواجبات ومسابقات</span>
+  <span class="chip">ترتيب أسبوعي</span><span class="chip">ألبوم ٢٩ بطاقة</span>
+  <span class="chip">سباق الدقيقة</span><span class="chip">صور شخصية</span>
+  <span class="chip">٣ ثيمات</span><span class="chip">يشتغل بدون نت</span>
+  <span class="chip">لوحة مالك</span><span class="chip">قواعد حماية مُختبَرة</span>
+</div>
+
+<h2>اللي لسه مفتوح</h2>
+<ul>
+  <li><b>باقي رحلات المواضيع</b> — اتعمل ٤، والباقي بنفس الطريقة</li>
+  <li><b>دعوة تثبيت التطبيق</b> — الكود جاهز ومتوقف بطلب، يرجع بمتغيّر واحد</li>
+  <li><b>تقرير ولي الأمر الأسبوعي</b> — اتأجّل</li>
+  <li><b>وضع العرض للمعلم</b> (شاشة كبيرة للمشاركة) — اتقترح واتأجّل</li>
+</ul>
+
+<div class="box tip" style="margin-top:16px;text-align:center">
+  <b>الخيط اللي ماشي في المشروع كله:</b> كل تعديل كبير جه من ملاحظة حقيقية
+  على استخدام حقيقي — مش من فكرة على الورق.
+</div>
+
+<div class="foot">
+  <span>رحلة القرآن — <span class="url">https://yahia176-maker.github.io/quran-game/</span></span>
+  <span>سِجِل المشروع · ٢٠ أغسطس ٢٠٢٦</span>
+</div>
+</div></body></html>
