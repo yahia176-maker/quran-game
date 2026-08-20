@@ -321,6 +321,20 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .pline{position:absolute;right:39px;top:56px;bottom:-6px;width:4px;background:var(--line);border-radius:4px}
 .pnode.done .pline{background:var(--ok)}
 
+/* ===== 📷 الصورة الشخصية ===== */
+.ava{border-radius:50%;object-fit:cover;display:block;border:3px solid var(--gold);
+  box-shadow:0 4px 12px var(--sh2);background:var(--card)}
+.avaS{width:30px;height:30px;border-width:2px;vertical-align:middle}
+.avaBox{position:relative;display:inline-block}
+.avaBox .badge{position:absolute;bottom:-2px;left:-2px;width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:.95rem;
+  background:var(--card);border:2px solid var(--line)}
+.avaPick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.avaOpt{border:3px solid var(--line);border-radius:18px;background:var(--card);padding:12px 6px;
+  text-align:center;cursor:pointer;transition:.15s}
+.avaOpt.on{border-color:var(--gold);background:var(--goldA)}
+.avaOpt b{display:block;font-size:.86rem;margin-top:5px}
+
 /* ===== 📄 خريطة مقاطع السورة ===== */
 .pmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:7px;margin-top:10px}
 .pchip{position:relative;border:2px solid var(--line);border-radius:13px;background:var(--card);
@@ -1519,7 +1533,7 @@ function saveP(){ if(!P) return; const ps=allProfiles(); const i=ps.findIndex(x=
   if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); backupProfile(); }
 function newProfile(name, emoji){
   return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', char:'boy', age:'mid', diff:'normal', theme:curTheme(),
-    stars:{}, sstars:{}, memo:{}, streak:0, lastPlay:'', daily:'', mistakes:[],
+    stars:{}, sstars:{}, memo:{}, img:null, avatar:'char', focus:0, streak:0, lastPlay:'', daily:'', mistakes:[],
     stats:{c:0, w:0, per:{}}, badges:[], created:Date.now() };
 }
 function activateProfile(p){
@@ -1542,7 +1556,8 @@ function makeCode(){ return Array.from({length:6},()=>RCHARS[Math.floor(RNG()*RC
 function packProfile(p){
   return { name:p.name, emoji:p.emoji, char:p.char||'boy', age:p.age||'mid', diff:p.diff, theme:p.theme||'garden', stars:p.stars, sstars:p.sstars,
     streak:p.streak, lastPlay:p.lastPlay, daily:p.daily, mistakes:(p.mistakes||[]).slice(-80),
-    stats:p.stats, badges:p.badges, jdone:p.jdone||{}, revs:p.revs||0, memo:p.memo||{}, at:Date.now() };
+    stats:p.stats, badges:p.badges, jdone:p.jdone||{}, revs:p.revs||0, memo:p.memo||{},
+    img:p.img||null, avatar:p.avatar||'char', focus:p.focus||0, at:Date.now() };
 }
 let backupT=null;
 function backupProfile(){
@@ -1572,6 +1587,7 @@ async function restoreByCode(code){
   const d = s.val();
   const p = newProfile(d.name||'لاعب', d.emoji||'🙂');
   Object.assign(p, { code:c, char:d.char||'boy', age:d.age||'mid', diff:d.diff||'normal', theme:d.theme||'garden', stars:d.stars||{}, sstars:d.sstars||{}, memo:d.memo||{},
+    img:d.img||null, avatar:d.avatar||'char', focus:d.focus||0,
     streak:d.streak||0, lastPlay:d.lastPlay||'', daily:d.daily||'', mistakes:d.mistakes||[],
     stats:d.stats||{c:0,w:0,per:{}}, badges:d.badges||[], jdone:d.jdone||{}, revs:d.revs||0, migrated:true });
   const ps = allProfiles().filter(x=>x.code!==c); ps.push(p); saveAll(ps);
@@ -2062,9 +2078,65 @@ function screenRole(){
 }
 
 /* ---------- 👦 بيت الطالب: زرار كبير + ٣ اختيارات ---------- */
+/* 🎯 «اللي بحفظه دلوقتي» — الطفل يختارها، ولو مختارش نرجع لمسار جزء عمّ */
+function focusSurah(){
+  const f = P && P.focus;
+  if(f && QURAN[f]){
+    const g = surProgress(f);
+    if(g.pct < 100 || surStarsAgg(f) < 3) return f;   /* لسه فيها شغل */
+  }
+  return nextTarget();
+}
+/* المقطع الجاي في السورة دي (للسور الطويلة) */
+function focusPortion(sn){
+  const pts = surahPortions(sn);
+  if(pts.length <= 1) return null;
+  return surProgress(sn).next || pts[0];
+}
+function screenPickFocus(){
+  stopTimer();
+  const cur = focusSurah();
+  const withProg = [];
+  for(let sn = 1; sn <= 114; sn++){
+    const g = surahPortions(sn).length > 1 ? surProgress(sn) : null;
+    const cov = g ? g.covered : (surStars(sn) > 0 ? QURAN[sn].ay.length : 0);
+    if(cov) withProg.push({ sn, pct: g ? g.pct : 100 });
+  }
+  app.innerHTML = `
+  <div class="hdr"><h2>🎯 بتحفظ إيه دلوقتي؟</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="card fade">
+    <p class="muted" style="margin:0 0 8px;font-size:.86rem">الزرار الكبير في الرئيسية هيوديك للسورة دي على طول.
+      والمراجعة هتفضل بتيجي لوحدها من كل اللي حفظته.</p>
+    ${withProg.length?`<h3 style="font-size:.95rem;margin:10px 0 6px">📈 سور بدأت فيها</h3>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px">
+      ${withProg.map(x=>`<div class="stage fpick ${x.sn===cur?'live':''}" data-s="${x.sn}" style="padding:10px 5px">
+        <b style="font-size:.9rem">${esc(QURAN[x.sn].nm)}</b>
+        <div class="muted" style="font-size:.7rem">${x.pct}%</div></div>`).join('')}</div>`:''}
+    <h3 style="font-size:.95rem;margin:14px 0 6px">📖 أو اختار أي سورة</h3>
+    <input type="text" id="fq" placeholder="ابحث بالاسم أو الرقم…" style="width:100%">
+    <div class="grid" id="fall" style="grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;
+      max-height:44vh;overflow-y:auto;margin-top:8px">
+      ${Array.from({length:114},(_,i)=>i+1).map(sn=>`<div class="stage fpick" data-s="${sn}"
+        data-nm="${esc(norm(QURAN[sn].nm))}" style="padding:9px 4px">
+        <b style="font-size:.84rem">${sn}. ${esc(QURAN[sn].nm)}</b>
+        <div class="muted" style="font-size:.66rem">${QURAN[sn].ay.length} آية</div></div>`).join('')}
+    </div>
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
+  app.querySelectorAll('.fpick').forEach(d=>d.onclick=()=>{ Snd.star();
+    P.focus = +d.dataset.s; saveP();
+    toast('🎯 يلا نحفظ ' + QURAN[P.focus].nm); screenHome(); });
+  $('#fq').oninput = e => { const t=e.target.value.trim(), nt=norm(t);
+    app.querySelectorAll('#fall .fpick').forEach(d=>{
+      const ok = !t || (nt && d.dataset.nm.includes(nt)) || (/^\d+$/.test(t) && d.dataset.s.indexOf(t)===0);
+      d.style.display = ok?'':'none'; }); };
+}
+
 function screenStudentHome(){
-  const sn = nextTarget(), lv = myLevel(), due = dueReviews().length;
+  const sn = focusSurah(), lv = myLevel(), due = dueReviews().length;
   const RES = getResume();
+  const FP = focusPortion(sn);
   const started = totalStars() > 0;
   const live = (P.halaqas||[]).filter(x=>x.live);
   app.innerHTML = `
@@ -2080,7 +2152,7 @@ function screenStudentHome(){
     <b>⚡ مسابقة شغالة دلوقتي في ${esc(live[0].name)}</b>
     <button class="btn sm" id="joinLive">ادخل حالًا</button></div>`:''}
   <div class="center fade" style="margin:2px 0 10px">
-    <div class="artrow">${P.char?charSVG(P.char,'happy',88):''}
+    <div class="artrow">${avatarHTML(88,'happy')}
       <span class="speech">${esc(started?'يلا نكمّل حفظ سورة '+QURAN[sn].nm:'يلا نبدأ رحلتك من سورة الناس!')}</span></div>
   </div>
   ${RES ? `<div class="card fade" id="resBar" style="display:flex;align-items:center;gap:10px;justify-content:space-between;border-color:var(--ok)">
@@ -2092,10 +2164,14 @@ function screenStudentHome(){
     <div class="heroTxt">
       <span class="muted">${started?'أكمِل حفظك':'ابدأ رحلتك'}</span>
       <b>سورة ${esc(QURAN[sn].nm)}</b>
+      ${FP?`<span class="muted" style="font-size:.75rem">📄 صفحة ${FP.pg} · الآيات ${FP.from}–${FP.to}</span>`:''}
       ${due?`<span class="pill turn" style="font-size:.72rem;padding:3px 10px">+${due} مراجعة</span>`
-           :`<span class="muted" style="font-size:.78rem">${QURAN[sn].ay.length} آية</span>`}
+           :(FP?'':`<span class="muted" style="font-size:.78rem">${QURAN[sn].ay.length} آية</span>`)}
     </div>
     <span class="heroGo">▶️</span>
+  </div>
+  <div class="center fade" style="margin:-8px 0 12px">
+    <button class="btn ghost sm" id="chgFocus">✏️ مش دي؟ اختار السورة اللي بتحفظها</button>
   </div>
   <div class="grid fade three">
     <div class="stage" id="mPick"><span class="em">📚</span><b>اختر سورة</b>
@@ -2117,7 +2193,9 @@ function screenStudentHome(){
     <button class="btn ghost sm" id="mLis">🎧 اسمع سورة ${esc(QURAN[sn].nm)} الأول</button>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
-  $('#goPlay').onclick=()=>{ Snd.init(); Snd.click(); startSmart(); };
+  $('#goPlay').onclick=()=>{ Snd.init(); Snd.click();
+    if(FP) startSurah(sn, FP.from, FP.to); else startSmart(); };
+  $('#chgFocus').onclick=()=>{ Snd.init(); Snd.click(); screenPickFocus(); };
   if($('#resGo')) $('#resGo').onclick=()=>{ Snd.init(); resumeSession(); };
   if($('#resNo')) $('#resNo').onclick=()=>{ Snd.click(); clearResume(); $('#resBar').remove(); };
   if($('#instGo')) $('#instGo').onclick=()=>{ Snd.click(); localStorage.setItem(LS+'_instHint','1'); doInstall(); };
@@ -2615,7 +2693,8 @@ async function screenHalaqa(hid){
   const v = hs.val()||{}, mv = ms.val()||{};
   const k = weekKey();
   const studs = Object.entries(mv).map(([uid,m])=>({uid, name:m.name||'—',
-    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0, memo:m.memo||null})).sort((a,b)=>b.pts-a.pts);
+    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0, memo:m.memo||null,
+    img:m.img||null, char:m.char||'boy'})).sort((a,b)=>b.pts-a.pts);
   app.innerHTML = `
   <div class="hdr"><h2>🏫 ${esc(v.name||'')}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade center">
@@ -2641,7 +2720,10 @@ async function screenHalaqa(hid){
     <div class="hdr" style="margin:0"><h3 style="margin:0">👦 الطلاب (${studs.length})</h3>
       <button class="btn ghost sm" id="lb">🏆 ترتيب الأسبوع</button></div>
     ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>المحفوظ</th><th>آخر نشاط</th></tr>
-      ${studs.map(s=>`<tr><td>${esc(s.name)}</td><td><b>${s.pts}</b></td>
+      ${studs.map(s=>`<tr><td><span class="row" style="gap:6px;justify-content:flex-start">
+          <button class="btn ghost sm imgEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}" data-has="${s.img?1:0}"
+            style="padding:2px;border:none;background:none">${avatarOf(s,30)}</button>
+          ${esc(s.name)}</span></td><td><b>${s.pts}</b></td>
         <td><button class="btn ghost sm memoEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
           style="padding:4px 9px;font-size:.76rem">${memoLabel(s.memo)} ✏️</button></td>
         <td class="muted" style="font-size:.8rem">${ago(s.last)}</td></tr>`).join('')}</table>`
@@ -2655,6 +2737,8 @@ async function screenHalaqa(hid){
   $('#lb').onclick=()=>{ Snd.click(); screenLeaderboard(hid); };
   app.querySelectorAll('.memoEd').forEach(b=>b.onclick=()=>{ Snd.click();
     teacherMemoDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).memo||null); });
+  app.querySelectorAll('.imgEd').forEach(b=>b.onclick=()=>{ Snd.click();
+    teacherImgDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).img||null); });
   $('#cp').onclick=()=>{ navigator.clipboard?.writeText(halLink(hid)); Snd.correct(); toast('📋 اتنسخ!'); };
   $('#wa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent('انضم لحلقة '+(v.name||'')+' في لعبة رحلة القرآن:\n'+halLink(hid)),'_blank'); };
   let items = ((v.hw||{}).items||[]).slice();
@@ -2809,8 +2893,23 @@ function screenDressUp(){
   app.innerHTML = `
   <div class="hdr"><h2>🎩 شكل شخصيتي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
   <div class="card fade center">
-    <div id="prev" style="color:var(--gold)">${charSVG(myChar(),'happy',130)}</div>
+    <div id="prev" style="color:var(--gold)">${avatarHTML(130,'happy')}</div>
     <p class="muted" style="margin:4px 0 0;font-size:.85rem">عندك <b style="color:var(--gold)">${t}</b> نجمة — كل ما تكسب نجوم تتفتحلك حاجات جديدة</p>
+  </div>
+  <div class="card fade">
+    <h3>📷 صورتك ولا شخصيتك؟</h3>
+    <p class="muted" style="font-size:.8rem;margin:0">اختار زي ما تحب — لو حطيت صورتك، <b>حلقتك بس</b> اللي هتشوفها.</p>
+    <div class="avaPick">
+      <div class="avaOpt ${!useImg()?'on':''}" id="avC">${charSVG(myChar(),'happy',66)}<b>🎨 شخصيتي</b></div>
+      <div class="avaOpt ${useImg()?'on':''}" id="avI">
+        ${hasImg()?`<img class="ava" src="${esc(P.img)}" style="width:66px;height:66px;margin:0 auto">`
+                  :'<div style="font-size:2.6rem;line-height:1.2">📷</div>'}
+        <b>صورتي</b></div>
+    </div>
+    <div class="center" style="margin-top:8px">
+      <button class="btn ghost sm" id="avUp">📷 ${hasImg()?'غيّر الصورة':'اختار صورة'}</button>
+      ${hasImg()?'<button class="btn ghost sm" id="avDel">🗑️ امسح صورتي</button>':''}
+    </div>
   </div>
   <div class="card fade">
     <h3>👦 الشخصية</h3>
@@ -2826,7 +2925,15 @@ function screenDressUp(){
     </div>
   </div>
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
-  const redraw = () => { $('#prev').innerHTML = charSVG(myChar(),'happy',130); };
+  const redraw = () => { $('#prev').innerHTML = avatarHTML(130,'happy'); };
+  $('#avUp').onclick = () => { Snd.click(); pickImage(url => {
+    setAvatarImg(url); Snd.win(); toast('📷 اتحفظت!'); screenDressUp(); }); };
+  if($('#avDel')) $('#avDel').onclick = () => { Snd.click();
+    setAvatarImg(null); toast('اتمسحت'); screenDressUp(); };
+  $('#avC').onclick = () => { Snd.click(); P.avatar='char'; saveP(); pushHalaqaImg(); screenDressUp(); };
+  $('#avI').onclick = () => { Snd.click();
+    if(!hasImg()) return pickImage(url => { setAvatarImg(url); Snd.win(); screenDressUp(); });
+    P.avatar='img'; saveP(); pushHalaqaImg(); screenDressUp(); };
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('[data-c]').forEach(d=>d.onclick=()=>{ Snd.click();
     P.char = d.dataset.c; saveP(); cloudSync&&cloudSync(); screenDressUp(); });
@@ -2960,6 +3067,35 @@ function surStarsAgg(sn){
   return s >= 2.4 ? 3 : s >= 1.2 ? 2 : s > 0 ? 1 : 0;
 }
 
+/* 🧑‍🏫 المعلمة: ترفع صورة لطالب أو تشيلها */
+function teacherImgDialog(hid, uid, name, cur){
+  const d = document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:18px';
+  d.innerHTML = `<div class="card center" style="margin:0;max-width:340px;width:100%;animation:pop .25s ease">
+    <h3 style="margin:0 0 8px">📷 صورة ${esc(name)}</h3>
+    <div style="margin:6px 0 10px">${cur?`<img class="ava" src="${esc(cur)}" style="width:110px;height:110px;margin:0 auto">`
+      :'<div style="font-size:3rem">🙂</div><p class="muted" style="font-size:.82rem;margin:4px 0 0">مفيش صورة</p>'}</div>
+    <div class="row" style="justify-content:center">
+      <button class="btn sm" id="tiUp">📷 ${cur?'غيّرها':'ارفع صورة'}</button>
+      ${cur?'<button class="btn ghost sm" id="tiDel">🗑️ شيل الصورة</button>':''}
+    </div>
+    <div class="center" style="margin-top:8px"><button class="btn ghost sm" id="tiX">إغلاق</button></div>
+    <p class="muted" style="font-size:.72rem;margin:10px 0 0">الصورة بتتشاف جوّه الحلقة دي بس.</p>
+  </div>`;
+  document.body.appendChild(d);
+  const close = () => d.remove();
+  d.querySelector('#tiX').onclick = () => { Snd.click(); close(); };
+  d.onclick = e => { if(e.target===d) close(); };
+  d.querySelector('#tiUp').onclick = () => { Snd.click(); pickImage(async url => {
+    await memRef(hid).child(uid).update({ img: url, imgX: null }).catch(()=>{});
+    Snd.win(); close(); toast('📷 اترفعت'); screenHalaqa(hid); }); };
+  if(d.querySelector('#tiDel')) d.querySelector('#tiDel').onclick = async () => {
+    Snd.click();
+    await memRef(hid).child(uid).update({ img: null, imgX: true }).catch(()=>{});
+    close(); toast('🗑️ اتشالت'); screenHalaqa(hid); };
+}
+
 /* 🧑‍🏫 المعلم بيحدد الطالب حافظ لحد فين — بيتخزن في عضوية الحلقة والطالب بيقراه */
 const memoLabel = m => {
   if(!m || !m.sn || !m.to) return 'حدّد';
@@ -3023,6 +3159,86 @@ async function pullTeacherMemo(){
     }catch(e){}
   }
   return changed;
+}
+
+/* ---------- 📷 الصورة الشخصية ---------- */
+/* الصورة بتتصغّر على جهاز الطفل قبل أي رفع — مفيش خدمة تخزين خارجية */
+const AVA_PX = 128, AVA_Q = 0.75, AVA_MAX = 30000;   /* سقف الطول بعد التصغير */
+function pickImage(cb){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if(!f) return;
+    if(!/^image\//.test(f.type)) return toast('⚠️ لازم تكون صورة');
+    const fr = new FileReader();
+    fr.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const side = Math.min(im.width, im.height);
+        const c = document.createElement('canvas'); c.width = c.height = AVA_PX;
+        const x = c.getContext('2d');
+        x.drawImage(im, (im.width - side) / 2, (im.height - side) / 2, side, side, 0, 0, AVA_PX, AVA_PX);
+        let url = c.toDataURL('image/jpeg', AVA_Q);
+        if(url.length > AVA_MAX) url = c.toDataURL('image/jpeg', 0.55);
+        if(url.length > AVA_MAX) return toast('⚠️ الصورة كبيرة — جرّب صورة تانية');
+        cb(url);
+      };
+      im.onerror = () => toast('⚠️ مقدرناش نقرأ الصورة');
+      im.src = fr.result;
+    };
+    fr.onerror = () => toast('⚠️ مقدرناش نقرأ الملف');
+    fr.readAsDataURL(f);
+  };
+  inp.click();
+}
+const hasImg = () => !!(P && P.img);
+const useImg = () => !!(P && P.img && P.avatar === 'img');
+/* أفاتار الهوية: صورة أو شخصية — حسب اختيار الطفل */
+function avatarHTML(size, mood, badge){
+  size = size || 72;
+  if(useImg()){
+    const b = badge ? `<span class="badge">${badge}</span>` : '';
+    return `<span class="avaBox"><img class="ava" src="${esc(P.img)}" alt=""
+      style="width:${size}px;height:${size}px">${b}</span>`;
+  }
+  return (P && P.char) ? charSVG(P.char, mood || 'idle', size) : '';
+}
+/* أفاتار أي شخص تاني (من الحلقة) */
+function avatarOf(o, size){
+  size = size || 30;
+  if(o && o.img) return `<img class="ava avaS" src="${esc(o.img)}" alt=""
+    style="width:${size}px;height:${size}px">`;
+  return `<span style="font-size:${Math.round(size*0.8)}px;line-height:1">${(o&&o.char==='girl')?'🧒':'👦'}</span>`;
+}
+function setAvatarImg(url){
+  if(!P) return;
+  P.img = url || null; if(!url && P.avatar==='img') P.avatar = 'char';
+  if(url) P.avatar = 'img';
+  saveP(); if(typeof cloudSync === 'function') cloudSync();
+  pushHalaqaImg();
+}
+/* الصورة تتنشر في الحلقات اللي هو فيها بس — مش لأي حد معاه اللينك */
+function pushHalaqaImg(){
+  if(!fbReady || !P || !fbUser) return;
+  (P.halaqas || []).forEach(x => {
+    memRef(x.hid).child(fbUser.uid).child('img')
+      .set(useImg() ? P.img : null).catch(()=>{});
+  });
+}
+/* لو المعلم شال الصورة: تتمسح من عند الطالب كمان ومتترفعش تاني */
+async function checkImgRemoved(){
+  if(!fbReady || !P || !fbUser || !P.img) return false;
+  for(const x of (P.halaqas || [])){
+    try{
+      const s = await memRef(x.hid).child(fbUser.uid).child('imgX').once('value');
+      if(s.val()){
+        P.img = null; P.avatar = 'char'; saveP();
+        toast('📷 معلمك شال صورتك — رجعت لشخصيتك');
+        return true;
+      }
+    }catch(e){}
+  }
+  return false;
 }
 
 /* ---------- 🏠 زر البيت العائم ---------- */
@@ -4112,7 +4328,8 @@ function screenHelp(){
       "$code": {
         ".read": "auth != null",
         ".write": "auth != null && $code.length === 6 && (!data.exists() || data.child('o').val() === auth.uid) && newData.child('o').val() === auth.uid",
-        "name": { ".validate": "newData.isString() && newData.val().length <= 40" }
+        "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "img":  { ".validate": "newData.isString() && newData.val().length <= 30000" }
       }
     },
     "halaqas": {
@@ -4130,6 +4347,12 @@ function screenHelp(){
           ".write": "auth != null && (auth.uid === $u || root.child('halaqas').child($h).child('t').val() === auth.uid)",
           "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
           "char": { ".validate": "newData.isString() && newData.val().length <= 16" },
+          "img":  { ".validate": "newData.isString() && newData.val().length <= 30000 && newData.val().beginsWith('data:image/')" },
+          "imgX": { ".validate": "newData.isBoolean()" },
+          "memo": {
+            "sn": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 114" },
+            "to": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 300" }
+          },
           "wk": {
             "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)" }
           }
@@ -4641,7 +4864,7 @@ function finish(ok, c, base, note){
   $('#after').innerHTML = `
     <div class="fb ${ok?'ok':'bad'} pop">
       ${P&&P.char?`<div class="artrow" style="justify-content:flex-start;margin-bottom:6px">
-        ${charSVG(P.char, ok?'happy':'sad', 58)}
+        ${avatarHTML(58, ok?'happy':'sad', useImg()?(ok?'✅':'❌'):'')}
         <span class="speech">${esc(ok?rnd(ENCOURAGE):rnd(CONSOLE_))}</span></div>`:''}
       <b>${ok?'✅ إجابة صحيحة!':'❌ مش مظبوط'}</b>
       ${ok?` <span class="muted">(+${base}${bonus?` نقطة، +${bonus} سرعة`:' نقطة'})</span>`:''}
@@ -5265,7 +5488,7 @@ async function screenGroups(sel){
     </div>
     <table><tr><th>#</th><th>الطالب</th><th>النقاط</th><th>صح</th><th>غلط</th></tr>
       ${(qz.players||[]).filter(p=>!p.h).sort((a,b)=>b.score-a.score).map((p,i)=>
-        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(p.emoji||'🙂')} ${esc(dispName(p))}</td>
+        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${avatarOf(p,26)} ${esc(dispName(p))}</td>
          <td><b>${p.score}</b></td><td>${p.c}</td><td>${p.w}</td></tr>`).join('')}
     </table>
   </div>`).join('')}`}
@@ -5421,7 +5644,12 @@ if(FIREBASE_CONFIG) fbInit().then(async ok=>{ if(!ok) return;
   await tryPendingHal();
   watchHalaqas();
   screenHome();   /* نعيد الرسم بعد التعرف على الحساب والحلقات */
-  setTimeout(function(){ pullTeacherMemo().then(function(ch){ if(ch) screenHome(); }); }, 1800);
+  setTimeout(function(){
+    Promise.all([pullTeacherMemo(), checkImgRemoved()]).then(function(r){
+      pushHalaqaImg();
+      if(r[0] || r[1]) screenHome();
+    });
+  }, 1800);
 });
 screenHome();
 </script>
