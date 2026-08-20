@@ -2207,7 +2207,7 @@ function screenStudentHome(){
     <button class="btn ghost sm" id="mLis">🎧 اسمع سورة ${esc(QURAN[sn].nm)} الأول</button>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
-  $('#whoBtn').onclick=()=>{ Snd.click(); screenProfiles(); };
+  $('#whoBtn').onclick=()=>{ Snd.click(); screenAccount(); };
   $('#goPlay').onclick=()=>{ Snd.init(); Snd.click();
     if(FP) startSurah(sn, FP.from, FP.to); else startSmart(); };
   $('#chgFocus').onclick=()=>{ Snd.init(); Snd.click(); screenPickFocus(); };
@@ -2322,6 +2322,7 @@ function screenSettings(){
     <div class="row" style="justify-content:flex-start">
       <button class="btn ghost sm" id="swRole">↔️ بدّل بين طالب ومعلم</button>
       <button class="btn ghost sm" id="swUser">👥 غيّر اللاعب</button>
+      <button class="btn ghost sm" id="acct">👤 حسابي وكود الاستعادة</button>
     </div>
     ${P.code?`<p class="muted" style="font-size:.8rem;margin-top:10px">🎫 كود استعادة تقدمك:
       <b style="direction:ltr;display:inline-block;letter-spacing:2px;color:var(--gold)">${esc(P.code)}</b></p>`:''}
@@ -2359,6 +2360,7 @@ function screenSettings(){
     if(!confirm('تسجل خروج من الجهاز ده؟ (بياناتك محفوظة في حسابك)')) return;
     await teacherLogout(); toast('🚪 خرجت — الجهاز رجع هوية جديدة'); screenHome(); };
   $('#swUser').onclick=()=>{ Snd.click(); screenProfiles(); };
+  if($('#acct')) $('#acct').onclick=()=>{ Snd.click(); screenAccount(); };
   $('#hlp').onclick=()=>{ Snd.click(); screenHelp(); };
   app.querySelectorAll('[data-r]').forEach(d=>d.onclick=()=>{ Snd.click();
     P.reciter = d.dataset.r; saveP(); screenSettings(); toast('🎙️ اتغيّر لـ '+RECITERS[P.reciter].nm); });
@@ -2692,7 +2694,7 @@ async function screenTeacherHome(){
       <div class="muted" style="font-size:.74rem">جرّب اللعبة كطالب</div></div>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
-  if($('#whoBtn')) $('#whoBtn').onclick=()=>{ Snd.click(); screenProfiles(); };
+  if($('#whoBtn')) $('#whoBtn').onclick=()=>{ Snd.click(); screenAccount(); };
   $('#tRep').onclick=()=>{ Snd.click(); screenGroups(); };
   $('#tPlay').onclick=()=>{ Snd.click(); screenPickHub(); };
   app.querySelectorAll('.hcard').forEach(b=>b.onclick=()=>{ Snd.click(); screenHalaqa(b.dataset.h); });
@@ -3260,6 +3262,162 @@ async function checkImgRemoved(){
     }catch(e){}
   }
   return false;
+}
+
+/* بعد الدخول بالإيميل من جهاز جديد: نرجّع الملف من السحابة */
+async function pullCloudProfile(){
+  if(!fbReady || !fbUser) return null;
+  try{
+    const s = await firebase.database().ref('users/'+fbUser.uid+'/profile').once('value');
+    const d = s.val();
+    if(!d || !d.name || !d.sstars) return null;         /* ملخّص قديم مش ملف كامل */
+    const ps = allProfiles();
+    const mine = ps.find(x => x.id === d.pid);
+    if(mine){                                            /* موجود على الجهاز — ناخد الأحدث */
+      if((d.at || 0) > (mine.at || 0)) Object.assign(mine, packProfile(d), { id: mine.id });
+      saveAll(ps); activateProfile(mine); return mine;
+    }
+    const p = newProfile(d.name, d.emoji || '🙂');
+    if(d.pid) p.id = d.pid;
+    Object.assign(p, { char:d.char||'boy', age:d.age||'mid', diff:d.diff||'normal',
+      theme:d.theme||'garden', stars:d.stars||{}, sstars:d.sstars||{}, memo:d.memo||{},
+      img:d.img||null, avatar:d.avatar||'char', focus:d.focus||0,
+      streak:d.streak||0, lastPlay:d.lastPlay||'', daily:d.daily||'', mistakes:d.mistakes||[],
+      stats:d.stats||{c:0,w:0,per:{}}, badges:d.badges||[], jdone:d.jdone||{}, revs:d.revs||0 });
+    ps.push(p); saveAll(ps); activateProfile(p);
+    return p;
+  }catch(e){ return null; }
+}
+/* 👤 قائمة الحساب — تبديل، تأمين، كود الاستعادة، خروج، حذف */
+function screenAccount(){
+  stopTimer();
+  const secured = !!(fbUser && !fbUser.isAnonymous);
+  const many = allProfiles().length > 1;
+  app.innerHTML = `
+  <div class="hdr"><h2>👤 حسابي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="card fade center">
+    ${avatarHTML(96,'happy')}
+    <h2 style="margin:8px 0 0">${esc(P.name)}</h2>
+    <p class="muted" style="margin:2px 0 0;font-size:.85rem">
+      ${secured ? '🔐 مؤمّن بـ <b style="direction:ltr;display:inline-block">'+esc(fbUser.email||'')+'</b>'
+                : '🔓 محفوظ على الجهاز ده بس'}</p>
+  </div>
+
+  ${!secured ? `<div class="card fade" style="border-color:var(--gold)">
+    <h3>🔐 أمّن حسابك — عشان ما يضيعش</h3>
+    <p style="font-size:.88rem;margin:0 0 4px">لو الموبايل باظ أو اشتريت جهاز جديد، تدخل بالإيميل وكلمة السر
+      <b>وترجعلك نجومك وخريطة حفظك كلها</b>.</p>
+    <p class="muted" style="font-size:.78rem;margin:0 0 10px">الطفل ممكن يستخدم إيميل بابا أو ماما.</p>
+    <div class="row" style="justify-content:flex-start">
+      <input type="email" id="acEmail" placeholder="الإيميل" style="direction:ltr;flex:1;min-width:170px;margin:0">
+      <input type="password" id="acPass" placeholder="كلمة سر (٦+ أحرف)" style="direction:ltr;flex:1;min-width:150px;margin:0">
+      <button class="btn sm" id="acGo">🔐 أمّن</button>
+    </div>
+    <div class="center" style="margin-top:8px">
+      <button class="btn ghost sm" id="acLogin">عندي حساب — سجّل دخولي</button>
+    </div>
+  </div>` : ''}
+
+  <div class="card fade">
+    <h3>🎫 كود الاستعادة</h3>
+    <p class="muted" style="font-size:.82rem;margin:0 0 8px">طريقة تانية ترجّع بيها تقدّمك على أي جهاز —
+      <b>صوّر الكود ده أو اكتبه في مكان أمان</b>.</p>
+    <div class="center">
+      <div class="codebox" style="font-size:1.7rem;letter-spacing:8px;padding:8px 18px;display:inline-block">
+        ${esc(P.code || '…')}</div>
+    </div>
+    ${P.code?`<div class="row" style="justify-content:center;margin-top:10px">
+      <button class="btn ghost sm" id="acCopy">📋 انسخ</button>
+      <button class="btn ghost sm" id="acShare">💬 ابعته لنفسي</button>
+    </div>`:'<p class="muted center" style="font-size:.78rem">الكود بيتعمل أول ما تتصل بالإنترنت</p>'}
+  </div>
+
+  <div class="card fade">
+    <h3>🔄 اللاعبين على الجهاز ده</h3>
+    <div class="row" style="justify-content:flex-start">
+      <button class="btn ghost sm" id="acSwitch">👥 ${many?'غيّر اللاعب':'ضيف لاعب جديد'}</button>
+      ${secured?'<button class="btn ghost sm" id="acOut">🚪 تسجيل خروج</button>':''}
+      <button class="btn ghost sm" id="acDel" style="border-color:var(--bad);color:var(--bad)">🗑️ شيل ملفي من الجهاز</button>
+    </div>
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+
+  $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
+  $('#acSwitch').onclick = () => { Snd.click(); screenProfiles(); };
+  if($('#acCopy')) $('#acCopy').onclick = () => {
+    navigator.clipboard && navigator.clipboard.writeText(P.code); Snd.correct(); toast('📋 اتنسخ'); };
+  if($('#acShare')) $('#acShare').onclick = () => { Snd.click();
+    window.open('https://wa.me/?text=' + encodeURIComponent(
+      'كود استعادة تقدّمي في لعبة رحلة القرآن: ' + P.code + '\n' + location.origin + location.pathname), '_blank'); };
+  if($('#acGo')) $('#acGo').onclick = async () => { Snd.click();
+    const em = ($('#acEmail').value||'').trim(), pw = $('#acPass').value||'';
+    if(!em || !pw) return toast('اكتب الإيميل وكلمة السر');
+    try{ await linkTeacherEmail(em, pw); cloudSync(); Snd.win();
+      toast('🔐 اتأمّن! تقدر تدخل من أي جهاز'); screenAccount(); }
+    catch(e){ Snd.wrong(); toast('⚠️ ' + authMsg(e)); } };
+  if($('#acLogin')) $('#acLogin').onclick = () => { Snd.click(); screenAccountLogin(); };
+  if($('#acOut')) $('#acOut').onclick = async () => { Snd.click();
+    askExit2('تسجّل خروج؟', 'تقدّمك محفوظ في حسابك — ترجعله بالإيميل في أي وقت.', '🚪 اخرج', async ok => {
+      if(!ok) return; await teacherLogout(); toast('🚪 خرجت'); ASKED_WHO = false; screenHome(); }); };
+  $('#acDel').onclick = () => { Snd.click();
+    askExit2('تشيل ملفك من الجهاز ده؟',
+      (P.code ? 'كود الاستعادة بتاعك <b>' + esc(P.code) + '</b> — احفظه الأول عشان ترجّع تقدّمك بيه.'
+              : '⚠️ مفيش كود استعادة — التقدّم هيضيع خالص.'),
+      '🗑️ شيل', ok => {
+        if(!ok) return;
+        const ps = allProfiles().filter(x => x.id !== P.id);
+        saveAll(ps); localStorage.removeItem(PACT); P = null; ASKED_WHO = false;
+        toast('اتشال من الجهاز'); screenProfiles();
+      }); };
+}
+function screenAccountLogin(){
+  stopTimer();
+  app.innerHTML = `
+  <div class="hdr"><h2>🔐 تسجيل الدخول</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="card fade">
+    <p style="font-size:.9rem;margin:0 0 10px">دخلت قبل كده من جهاز تاني؟ اكتب إيميلك وكلمة السر
+      وهنرجّعلك تقدّمك.</p>
+    <input type="email" id="liEmail" placeholder="الإيميل" style="direction:ltr">
+    <input type="password" id="liPass" placeholder="كلمة السر" style="direction:ltr">
+    <div class="center" style="margin-top:8px">
+      <button class="btn" id="liGo">دخول</button>
+      <button class="btn ghost sm" id="liRst">نسيت كلمة السر</button>
+    </div>
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenAccount(); };
+  $('#liGo').onclick = async () => { Snd.click();
+    const em = ($('#liEmail').value||'').trim(), pw = $('#liPass').value||'';
+    if(!em || !pw) return toast('اكتب الإيميل وكلمة السر');
+    try{
+      await teacherLogin(em, pw);
+      const p = await pullCloudProfile();
+      Snd.win(); toast(p ? ('🎉 أهلًا ' + p.name + ' — رجّعنالك تقدّمك') : '🔐 دخلت');
+      ASKED_WHO = true; screenHome();
+    }catch(e){ Snd.wrong(); toast('⚠️ ' + authMsg(e)); } };
+  $('#liRst').onclick = async () => { Snd.click();
+    const em = ($('#liEmail').value||'').trim();
+    if(!em) return toast('اكتب الإيميل الأول');
+    try{ await teacherResetPass(em); toast('📧 بعتنالك رسالة على الإيميل'); }
+    catch(e){ toast('⚠️ ' + authMsg(e)); } };
+}
+/* نافذة تأكيد عامة */
+function askExit2(title, body, okTxt, cb){
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;'
+    + 'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:20px';
+  d.innerHTML = `<div class="card center" style="max-width:340px;margin:0;animation:pop .3s ease">
+    <h3 style="margin:4px 0 6px">${esc(title)}</h3>
+    <p class="muted" style="font-size:.86rem;margin:0 0 12px">${body}</p>
+    <div class="row" style="justify-content:center">
+      <button class="btn" id="k2y">${esc(okTxt)}</button>
+      <button class="btn ghost" id="k2n">↩️ رجوع</button>
+    </div></div>`;
+  document.body.appendChild(d);
+  const close = v => { d.remove(); cb(v); };
+  d.querySelector('#k2y').onclick = () => { Snd.click(); close(true); };
+  d.querySelector('#k2n').onclick = () => { Snd.click(); close(false); };
+  d.onclick = e => { if(e.target === d) close(false); };
 }
 
 /* ---------- 🏠 زر البيت العائم ---------- */
@@ -5094,9 +5252,11 @@ function cloudSync(){
   if(!fbReady || !fbUser || !P) return;
   clearTimeout(syncT);
   /* نكتب في users/{uid}/profile فقط — حتى لا نمسح سجل المسابقات وبيانات المعلم المجاورة */
-  syncT = setTimeout(()=>{ firebase.database().ref('users/'+fbUser.uid+'/profile').set({
-    name:P.name, emoji:P.emoji, correct:P.stats.c, wrong:P.stats.w,
-    streak:P.streak||0, badges:P.badges, updated:Date.now() }).catch(()=>{}); }, 1500);
+  syncT = setTimeout(()=>{
+    /* الملف كامل — عشان لو الجهاز باظ ودخل بالإيميل من جهاز تاني يرجعله تقدّمه */
+    const full = Object.assign(packProfile(P), { pid: P.id, updated: Date.now() });
+    firebase.database().ref('users/'+fbUser.uid+'/profile').set(full).catch(()=>{});
+  }, 1500);
 }
 
 /* --- توليد أسئلة موحّدة للمسابقة (كل الأجهزة تعرض نفس المحتوى) --- */

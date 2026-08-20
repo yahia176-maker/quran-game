@@ -1,156 +1,162 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!doctype html>
+<html dir="rtl" lang="ar">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>دليل المعلم — رحلة القرآن</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
 <style>
-:root{ --ink:#1f2430; --gold:#8a6a00; --bg:#faf7ef; --line:#e3d9bd; --accent:#0e6e5c; }
+@page{size:A4;margin:15mm 14mm}
 *{box-sizing:border-box}
-body{ margin:0; font-family:'Tajawal','Segoe UI','Noto Kufi Arabic',system-ui,sans-serif;
-  background:var(--bg); color:var(--ink); line-height:1.9; }
-.wrap{ max-width:800px; margin:0 auto; padding:24px 18px 60px; }
-header{ text-align:center; border-bottom:3px double var(--line); padding-bottom:18px; margin-bottom:24px; }
-h1{ margin:.2em 0; color:var(--gold); font-size:1.9rem; }
-h2{ color:var(--accent); font-size:1.25rem; margin:2em 0 .5em; border-right:5px solid var(--accent);
-    padding-right:10px; }
-h3{ font-size:1.05rem; margin:1.2em 0 .3em; }
-p, li{ font-size:1rem; }
-.badge{ display:inline-block; background:#fff; border:1px solid var(--line); border-radius:99px;
-  padding:4px 14px; font-size:.85rem; color:var(--gold); margin:2px; }
-.card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin:12px 0; }
-.step{ display:flex; gap:12px; align-items:flex-start; margin:10px 0; }
-.step b.n{ flex:none; width:30px; height:30px; border-radius:50%; background:var(--accent); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:.95rem; }
-.tip{ background:#fdf6e3; border-right:4px solid var(--gold); padding:10px 14px; border-radius:8px;
-  font-size:.92rem; margin:10px 0; }
-.warn{ background:#fdeaea; border-right:4px solid #b3413c; padding:10px 14px; border-radius:8px;
-  font-size:.92rem; margin:10px 0; }
-table{ width:100%; border-collapse:collapse; background:#fff; }
-th,td{ border:1px solid var(--line); padding:8px 10px; text-align:right; font-size:.92rem; }
-th{ background:#f4eeda; color:var(--gold); }
-code{ background:#eee9d9; border-radius:6px; padding:1px 8px; direction:ltr; display:inline-block; font-size:.9em; }
-.url{ text-align:center; font-size:1.05rem; background:#fff; border:2px dashed var(--gold);
-  border-radius:12px; padding:10px; direction:ltr; word-break:break-all; }
-footer{ text-align:center; color:#888; font-size:.8rem; margin-top:40px; border-top:1px solid var(--line); padding-top:14px; }
-@media print{ body{background:#fff} .card,.tip,.warn{break-inside:avoid} }
+:root{--ink:#2b3d34;--muted:#5c7265;--gold:#8a6d24;--gold2:#bb9a55;--ok:#4a8168;
+  --info:#3f7a9e;--line:rgba(138,109,36,.28);--card:#fbfcfa;--bg:#f7faf6}
+html,body{margin:0;padding:0}
+body{font-family:'Tajawal','Segoe UI','Noto Kufi Arabic',sans-serif;color:var(--ink);
+  background:#fff;line-height:1.75;font-size:11.5pt}
+.wrap{max-width:190mm;margin:0 auto;padding:0}
+h1{font-size:23pt;color:var(--gold);margin:0 0 2px;line-height:1.25}
+h2{font-size:15pt;color:var(--gold);margin:20px 0 8px;padding-bottom:5px;
+  border-bottom:2.5px solid var(--line);page-break-after:avoid}
+h3{font-size:12.5pt;margin:14px 0 5px;color:var(--ink);page-break-after:avoid}
+p{margin:0 0 8px}
+ul,ol{margin:0 0 10px;padding-right:20px}
+li{margin-bottom:5px}
+.lead{font-size:12pt;color:var(--muted);margin:0 0 14px}
+.cover{text-align:center;padding:14px 0 18px;border-bottom:3px solid var(--gold2);margin-bottom:18px}
+.cover .em{font-size:44pt;line-height:1}
+.box{background:var(--card);border:1.5px solid var(--line);border-radius:12px;
+  padding:11px 14px;margin:10px 0;page-break-inside:avoid}
+.tip{background:rgba(74,129,104,.09);border-right:4px solid var(--ok)}
+.warn{background:rgba(168,95,86,.09);border-right:4px solid #a85f56}
+.note{background:rgba(63,122,158,.09);border-right:4px solid var(--info)}
+.box b:first-child{color:var(--gold)}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10.5pt;page-break-inside:avoid}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:right;vertical-align:top}
+th{background:rgba(138,109,36,.10);font-weight:700;color:var(--gold)}
+.step{display:flex;gap:11px;align-items:flex-start;margin-bottom:10px;page-break-inside:avoid}
+.step .num{flex:none;width:27px;height:27px;border-radius:50%;background:var(--gold);color:#fffdf6;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11pt}
+.step .txt{flex:1}
+.step .txt b{display:block;margin-bottom:1px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1.5px solid var(--line);border-radius:20px;padding:3px 11px;font-size:10pt;background:var(--card)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:10.5pt}
+.sw{width:15px;height:15px;border-radius:5px;display:inline-block;border:1px solid rgba(0,0,0,.14)}
+.foot{margin-top:22px;padding-top:9px;border-top:1.5px solid var(--line);
+  font-size:9.5pt;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+.url{direction:ltr;display:inline-block;color:var(--gold);font-weight:700}
+.pb{page-break-before:always}
+.noprint{margin:14px 0;text-align:center}
+.noprint button{font:inherit;font-weight:700;background:linear-gradient(180deg,var(--gold),var(--gold2));
+  color:#fffdf6;border:none;border-radius:12px;padding:11px 26px;cursor:pointer;box-shadow:0 4px 0 #6f5a1d}
+@media print{ .noprint{display:none!important} body{font-size:11pt} }
+@media screen{ body{background:var(--bg);padding:22px 14px}
+  .wrap{background:#fff;padding:26px 24px;border-radius:16px;box-shadow:0 8px 30px rgba(50,70,58,.12)} }
 </style>
 </head>
 <body><div class="wrap">
+<div class="noprint"><button onclick="window.print()">🖨️ احفظ الدليل PDF أو اطبعه</button></div>
 
-<header>
-  <div style="font-size:2.6rem">🌙📖</div>
-  <h1>دليل المعلم — لعبة رحلة القرآن</h1>
-  <p>لعبة تفاعلية لتحفيظ ومراجعة القرآن الكريم للأطفال والناشئة (٨–١٥ سنة وما فوق)</p>
-  <div>
-    <span class="badge">المصحف كاملًا — ٣٠ جزءًا</span>
-    <span class="badge">مسابقات جماعية أونلاين</span>
-    <span class="badge">متابعة مستوى كل طالب</span>
-    <span class="badge">مجانية بالكامل</span>
-  </div>
-</header>
-
-<h2>🔗 لينك اللعبة</h2>
-<p class="url" id="gameUrl">https://yahia176-maker.github.io/quran-game/</p>
-<p>يفتح من أي متصفح على أي موبايل أو كمبيوتر — بدون تحميل تطبيق وبدون تسجيل معقد. ابعته لطلابك مرة واحدة في جروب الواتساب.</p>
-
-<h2>🙋 أولًا: الطالب يعمل إيه؟ (بسيطة جدًا)</h2>
-<div class="card">
-  <div class="step"><b class="n">١</b><div>يفتح اللينك ويكتب <b>اسمه الحقيقي</b> ويختار صورة — مرة واحدة بس، والجهاز يفضل فاكره.</div></div>
-  <div class="step"><b class="n">٢</b><div>يلعب لوحده من <b>🗺️ خريطة المصحف</b> (أي جزء، أي ربع، أي سورة — كله مفتوح)، أو…</div></div>
-  <div class="step"><b class="n">٣</b><div>يدخل مسابقة حلقته: <b>🙋 ادخل مسابقة</b> → يكتب <b>الكود</b> اللي قاله المعلم → يلعب.</div></div>
+<div class="cover">
+  <div class="em">🧑‍🏫</div>
+  <h1>دليل المعلم</h1>
+  <p class="lead">إدارة حلقتك ومتابعة طلابك في رحلة القرآن</p>
 </div>
-<div class="tip">💡 نبّه الطلاب يكتبوا أسماءهم الحقيقية (مش «الصقر» و«الأسطورة» 😄) عشان تعرفهم في المتابعة. ولو اتنين بنفس الاسم، اللعبة بتفرّق بينهم تلقائيًا وتقدر تعيد تسميتهم من عندك.</div>
 
-<h2>🧑‍🏫 ثانيًا: تسجيلك كمعلم (مرة واحدة)</h2>
-<div class="card">
-  <div class="step"><b class="n">١</b><div>من الشاشة الرئيسية: <b>🧑‍🏫 ركن المعلم</b>.</div></div>
-  <div class="step"><b class="n">٢</b><div>اكتب اسمك واسم أول حلقة (مثلًا «حلقة الفجر») → <b>سجّلني</b>.</div></div>
-  <div class="step"><b class="n">٣</b><div><b>مهم:</b> من كارت <b>🔐 حسابك</b> في لوحتك، أمّن حسابك بإيميلك وكلمة سر — عشان تقدر تفتح حلقاتك من أي جهاز، وما تضيعش بياناتك لو اتغير موبايلك.</div></div>
-  <div class="step"><b class="n">٤</b><div>تقدر تضيف حلقات إضافية في أي وقت من خانة «اسم حلقة جديدة».</div></div>
-</div>
-<div class="warn">⚠️ من غير تأمين بالإيميل، حسابك مربوط بالجهاز والمتصفح اللي سجلت منهم. لو بتدير حلقاتك من نفس الجهاز دايمًا فمفيش مشكلة — لكن التأمين أضمن.</div>
+<div class="box tip"><b>في سطرين:</b> إنت بتعمل «حلقة»، بتبعت رابطها لطلابك مرة واحدة،
+  وبعدها بتحدّد لكل واحد واجبه وتتابع تقدّمه — وتقدر تعمل مسابقة مباشرة في أي وقت.</div>
 
-<h2>🚀 ثالثًا: إدارة مسابقة جماعية</h2>
-<div class="card">
-  <div class="step"><b class="n">١</b><div>ركن المعلم → <b>➕ إنشاء مسابقة</b>.</div></div>
-  <div class="step"><b class="n">٢</b><div>اختار: <b>الحلقة</b> (من قايمة حلقاتك) — ثم <b>المحتوى</b> — ثم <b>عدد الأسئلة</b> و<b>طريقة اللعب</b>.</div></div>
-  <div class="step"><b class="n">★</b><div><b>المحتوى له ٣ اختيارات:</b> 📚 <b>جزء كامل</b> · 📖 <b>سورة كاملة</b> · 🎯 <b>مدى آيات</b> (تحدد من آية كذا لآية كذا) — يعني تقدر تعمل مسابقة على مقرر الأسبوع بالظبط.</div></div>
-  <div class="step"><b class="n">٣</b><div>هيظهر <b>كود من ٥ حروف</b> — قوله للطلاب أو اكتبه على السبورة.</div></div>
-  <div class="step"><b class="n">٤</b><div>تابع أسماء الداخلين في القايمة، ولما يكتملوا دوس <b>🚀 ابدأ المسابقة</b>.</div></div>
-  <div class="step"><b class="n">٥</b><div>النتيجة النهائية بتظهر للجميع مرتبة — وبتتسجل في سجلّك تلقائيًا.</div></div>
+<h2>١ · حسابك — أول خطوة وأهمها</h2>
+<div class="step"><div class="num">١</div><div class="txt">
+  <b>افتح اللعبة واختار «🧑‍🏫 معلم»</b>واكتب اسمك واسم أول حلقة.</div></div>
+<div class="step"><div class="num">٢</div><div class="txt">
+  <b>أمّن حسابك بإيميل وكلمة سر</b>من ⚙️ الإعدادات ← «🔐 أمّن حسابي».</div></div>
+<div class="box warn"><b>لازم تعمل ده.</b> من غير حساب مؤمّن <b>مش هتقدر تعمل حلقات أصلًا</b>،
+  وحلقاتك هتبقى مربوطة بالموبايل ده بس — لو ضاع، تضيع معاه.
+  وبالحساب تفتح حلقاتك من أي جهاز.</div>
+
+<h2>٢ · الحلقة وضم الطلاب</h2>
+<div class="step"><div class="num">١</div><div class="txt">
+  <b>اعمل حلقة</b>من «🏫 حلقاتي ← ➕ إنشاء»، واكتب اسمها.</div></div>
+<div class="step"><div class="num">٢</div><div class="txt">
+  <b>ابعت الرابط</b>في صفحة الحلقة فيه رابط — «📋 انسخ» أو «💬 واتساب».
+  <b>الطالب يفتحه مرة واحدة بس</b> وتفضل الحلقة عنده للأبد.</div></div>
+<div class="step"><div class="num">٣</div><div class="txt">
+  <b>أو الكود</b>لو الرابط صعب: في كود من ٥ حروف، الطالب يكتبه من «🏫 حلقتي».</div></div>
+<div class="box note"><b>الطالب مش محتاج تسجيل ولا كلمة سر.</b> بيكتب اسمه وبس.
+  ولو اتنين اسمهم «محمد»، اللعبة بتفرّق بينهم تلقائيًا، وتقدر تعيد تسمية أي واحد من شاشة المتابعة ✏️.</div>
+
+<h2>٣ · الواجب الأسبوعي 📋</h2>
+<p>من صفحة الحلقة، اختار السور واحفظ الواجب. الطالب هيلاقيه في «🏫 حلقتي»،
+  وجنب كل سورة زرين: <b>🎧 يسمعها</b> و <b>▶️ يلعبها</b>.</p>
+<div class="box tip"><b>رتّب الطريق لطلابك:</b> قولهم يسمعوا السورة الأول مع تكرار كل آية ٣ مرات،
+  وبعدين يسمّعوا، وبعدين يلعبوا. الترتيب ده بيفرق جدًا في التثبيت.</div>
+
+<h2>٤ · «المحفوظ سابقًا» — لطلابك اللي حافظين قبل اللعبة 🔵</h2>
+<p>طالب جالك حافظ ١٠٠ آية من البقرة؟ اللعبة ماتعرفش ده. حدّدها له:</p>
+<p>صفحة الحلقة ← جدول الطلاب ← عمود <b>«المحفوظ»</b> ← دوس ✏️ ← اختار السورة واكتب آخر آية.</p>
+<div class="legend">
+  <span><i class="sw" style="background:#4a8168"></i> <b>أخضر</b> = اتقنها في اللعبة (اختبرناه)</span>
+  <span><i class="sw" style="background:#3f7a9e"></i> <b>أزرق</b> = محفوظ سابقًا (لسه ما اتأكدناش)</span>
 </div>
-<h3>طريقتا اللعب — امتى تستخدم أنهي؟</h3>
+<div class="box"><b>ليه الفرق مهم؟</b> الأزرق <b>مش بياخد نجوم</b> — عشان الادعاء ما ياخدش
+  مكان المجهود. ولمّا الطالب يراجع المقطع الأزرق ويعديه، <b>يتحوّل أخضر</b> وياخد نجومه.
+  وده بيدّي الطفل هدف واضح: يلوّن كل الأزرق أخضر. وفي التقرير إنت بتفرّق بين
+  اللي اتأكدنا منه واللي لأ.</div>
+
+<h2>٥ · صور الطلاب 📷</h2>
+<ul>
+  <li>الطالب يقدر يحطّ صورته أو يفضل بشخصيته الكرتونية — زي ما يحب.</li>
+  <li><b>الصورة بتتشاف جوّه الحلقة بس</b> — مش لأي حد معاه اللينك، ولا في أي مكان عام.</li>
+  <li>إنت تقدر <b>ترفع أو تشيل</b> صورة أي طالب: دوس على صورته في جدول الطلاب.</li>
+</ul>
+<div class="box warn"><b>مسؤوليتك:</b> لو طالب حطّ صورة مش مناسبة، شيلها فورًا من نفس المكان —
+  وهتتمسح من جهازه كمان ومش هترجع. ولو أهالي طلابك مش موافقين على الصور،
+  قولهم يسيبوا الشخصية الكرتونية.</div>
+
+<h2>٦ · المسابقة المباشرة ⚡</h2>
+<div class="step"><div class="num">١</div><div class="txt">
+  <b>ابدأ مسابقة</b>من صفحة الحلقة ← «🚀 ابدأ مسابقة». اختار المحتوى وعدد الأسئلة.</div></div>
+<div class="step"><div class="num">٢</div><div class="txt">
+  <b>طلابك يدخلوا بضغطة</b>هيلاقوا شريط أخضر في شاشتهم — من غير أكواد.</div></div>
+<div class="step"><div class="num">٣</div><div class="txt">
+  <b>المسابقة بتكمّل لوحدها</b>لو قفلت شاشتك أو النت قطع لحظة، اللعبة بتكمّل عادي.</div></div>
+<div class="box tip"><b>حلقة أونلاين؟</b> شارك شاشتك على زوم أو ميت أو واتساب،
+  والطلاب يجاوبوا من موبايلاتهم. بتشتغل على أي برنامج مكالمات.</div>
+
+<h2>٧ · المتابعة والتقارير 📊</h2>
 <table>
-  <tr><th>الطريقة</th><th>إزاي بتشتغل</th><th>مناسبة لـ</th></tr>
-  <tr><td><b>🔄 بالدور</b></td><td>كل سؤال يظهر لطالب واحد والباقي بيتفرجوا</td><td>التسميع الفردي — بتسمع إجابة كل طالب وتقيّمه بنفسك</td></tr>
-  <tr><td><b>⚡ الكل معًا</b></td><td>نفس السؤال يظهر للجميع في نفس اللحظة، والأسرع صح ياخد أكتر</td><td>الحماس والمنافسة — مفيش طالب مستني دوره</td></tr>
+  <tr><th>المكان</th><th>بيوريك إيه</th></tr>
+  <tr><td>جدول الطلاب</td><td>نقاط الأسبوع · المحفوظ · آخر نشاط لكل طالب</td></tr>
+  <tr><td>🏆 ترتيب الأسبوع</td><td>ترتيب طلابك — بيبدأ من الأول كل أسبوع</td></tr>
+  <tr><td>📊 التقارير</td><td>متوسط الدقة لكل طالب عبر كل المسابقات</td></tr>
 </table>
-<div class="tip">💡 الأسئلة بتتولّد من نص المصحف نفسه (كلمة ناقصة، أكمل الآية، ترتيب الآيات) وبتختلف كل مسابقة. الأجزاء ⭐ (عمّ، تبارك، قد سمع) فيها كمان أسئلة فهم وكلمات مشروحة.</div>
+<div class="box note"><b>اقرأ الأرقام صح:</b> الطالب اللي دقّته واطية في سورة معينة مش «مقصّر» —
+  ده مؤشر إن السورة دي محتاجة مراجعة معاه. واللي نقاطه صفر الأسبوع ده يمكن يكون مشغول،
+  بص على «آخر نشاط» قبل ما تحكم.</div>
 
-<h2>📊 رابعًا: متابعة مستوى طلابك</h2>
-<div class="card">
-  <p>ركن المعلم → جنب اسم أي حلقة → <b>📊 المتابعة</b>. هتلاقي:</p>
-  <ul>
-    <li><b>جدول الطلاب:</b> كل طالب — عدد مشاركاته، متوسط نقاطه، دقة إجاباته الإجمالية، وآخر نتيجة. يعني بتشوف <b>التطور</b> مش آخر مسابقة بس.</li>
-    <li><b>سجل المسابقات:</b> كل مسابقة قديمة بتاريخها وترتيبها الكامل (صح/غلط لكل طالب)، مع إمكانية حذف أي مسابقة 🗑️.</li>
-    <li><b>إعادة تسمية ✏️:</b> لو في اسمين متشابهين («محمد ‹A3f2›» و«محمد ‹9kQx›») سمّيهم «محمد أحمد» و«محمد سمير» — والاسم يثبت في كل السجل.</li>
-  </ul>
-</div>
-<div class="tip">💡 كل طالب متميّز بجهازه تلقائيًا — مستحيل تختلط نتيجة طالبين حتى لو بنفس الاسم، ولو طالب كتب اسم زميله ما ينفعش يدخل على حسابه.</div>
-
-<h2>📖 خامسًا: أدوات الحفظ الفردي (شغل البيت)</h2>
+<h2>٨ · مشاكل شائعة وحلولها</h2>
 <table>
-  <tr><th>الأداة</th><th>الفايدة</th></tr>
-  <tr><td>🗺️ <b>خريطة المصحف</b></td><td>الـ ٣٠ جزءًا، كل جزء مقسوم أرباعًا: الطالب يقرأ الربع ثم يحل تحدياته. <b>كله مفتوح</b> — يبدأ من أي مكان يناسب حفظه (آخر المصحف، سور متفرقة، مراجعة).</td></tr>
-  <tr><td>📖 <b>اختر سورة</b></td><td>الـ ١١٤ سورة في شاشة واحدة مع بحث بالاسم أو الرقم. يختار سورة → يلعبها <b>كاملة</b>، أو يحدد <b>مدى آيات</b> بعينه (من آية كذا لآية كذا) — مثالي للمقرر الأسبوعي أو مراجعة جزء من سورة طويلة.</td></tr>
-  <tr><td>📅 <b>تحدي اليوم</b></td><td>٥ أسئلة يومية + عدّاد أيام متواصلة 🔥 — بيبني عادة يومية.</td></tr>
-  <tr><td>🔁 <b>مراجعتي</b></td><td>أي سؤال غلط فيه بيرجعله تلقائيًا بعد يوم، فـ ٣، فـ ٧، فـ ٣٠ — نظام التكرار المتباعد لتثبيت الحفظ.</td></tr>
-  <tr><td>📊 <b>التقييم والشهادة</b></td><td>بعد إتمام أي جزء: تقرير بدقة كل سورة + شهادة باسم الطالب تتطبع. كلّف الطالب يوريك شهادته!</td></tr>
-  <tr><td>⚖️ <b>مستويات الصعوبة</b></td><td>سهل / عادي / صعب — بتغيّر وقت المؤقت وعدد الاختيارات والنقاط.</td></tr>
-  <tr><td>🎨 <b>شكل اللعبة (الثيمات)</b></td><td>من الشاشة الرئيسية: <b>🌙 ليلي</b> (١٠–١٥) · <b>🌈 أطفال</b> ألوان نهارية مبهجة وأزرار أكبر (٦–١٠) · <b>📜 مصحفي</b> هادئ وكلاسيكي (الكبار والمعلمين). كل لاعب بيختار شكله وبيتحفظ معاه.</td></tr>
+  <tr><th>المشكلة</th><th>الحل</th></tr>
+  <tr><td>مش عارف أعمل حلقة</td><td>أمّن حسابك بإيميل الأول — ده شرط</td></tr>
+  <tr><td>طالب فقد تقدّمه / غيّر موبايل</td><td>كود الاستعادة عنده في «👤 حسابي». أو يعمل حساب بإيميل ويدخل بيه من أي جهاز</td></tr>
+  <tr><td>نسيت كلمة السر</td><td>شاشة الدخول ← «نسيت كلمة السر» → رسالة على إيميلك</td></tr>
+  <tr><td>الطالب مش شايف الواجب</td><td>يتأكد إنه فتح رابط الحلقة، ويعمل تحديث للصفحة</td></tr>
+  <tr><td>الصوت مش شغال</td><td>الاستماع محتاج إنترنت أول مرة — أو ينزّل السورة من زر «⬇️ نزّل»</td></tr>
+  <tr><td>اللعبة شكلها قديم بعد تحديث</td><td>تحديث قوي: <b>Ctrl+Shift+R</b> على الكمبيوتر، أو اقفل التبويب وافتحه على الموبايل</td></tr>
 </table>
 
-<h2>🎮 أنواع التحديات داخل اللعبة</h2>
-<table>
-  <tr><th>التحدي</th><th>بيدرّب على</th></tr>
-  <tr><td>✍️ <b>الكلمة الناقصة</b></td><td>دقة الحفظ — كلمة محذوفة من الآية والاختيار من بدائل متشابهة النهايات</td></tr>
-  <tr><td>🔢 <b>ترتيب الآيات</b></td><td>تسلسل الآيات داخل السورة</td></tr>
-  <tr><td>➡️ <b>أكمل الآية</b></td><td>المتشابهات — يختار الآية اللي بعد المعروضة</td></tr>
-  <tr><td>🧩 <b>ركّب الآية</b> <span class="badge">جديد</span></td><td>كلمات الآية متبعثرة والطالب يرصّها بالترتيب — تفاعلي جدًا ومناسب للصغار</td></tr>
-  <tr><td>🔎 <b>الكلمة الدخيلة</b> <span class="badge">جديد</span></td><td>كلمة واحدة في الآية اتبدّلت والطالب يكتشفها — بيقوّي التدقيق ويمنع أخطاء التلاوة</td></tr>
-  <tr><td>🔗 <b>وصّل الكلمة بمعناها</b></td><td>فهم المفردات (في الأجزاء المشروحة ⭐)</td></tr>
-  <tr><td>❓ <b>أسئلة الفهم</b></td><td>معاني السور وموضوعاتها (في الأجزاء المشروحة ⭐)</td></tr>
-</table>
+<h2>٩ · نصائح من التجربة</h2>
+<ul>
+  <li><b>ابدأ صغير:</b> حلقة واحدة وواجب سورة واحدة أول أسبوع. متغرقش الطلاب.</li>
+  <li><b>المسابقة آخر ١٠ دقايق</b> في الحلقة — بتخلي الأطفال مستنيين الحصة.</li>
+  <li><b>الترتيب الأسبوعي سلاح ذو حدين</b> — اذكر المتقدمين، وشجّع المتأخرين على انفراد.</li>
+  <li><b>حدّد «المحفوظ سابقًا» لكل طالب من أول أسبوع</b> — من غيرها اللعبة هتبدأ معاه من الصفر وهيزهق.</li>
+</ul>
 
-<h2>❓ أسئلة شائعة</h2>
-<div class="card">
-  <h3>هل اللعبة محتاجة إنترنت؟</h3>
-  <p>اللعب الفردي من اللينك محتاج إنترنت لأول تحميل بس. المسابقات الجماعية والمتابعة محتاجين إنترنت طول الوقت.</p>
-  <h3>طالب غيّر موبايله — نتايجه القديمة؟</h3>
-  <p>بتفضل محفوظة في سجلّك باسمه القديم. على الجهاز الجديد هيظهر صفًّا جديدًا — سمّيه بنفس الاسم بالقلم ✏️ وكمّلوا عادي (الصفّان بيبانوا تحت بعض).</p>
-  <h3>المسابقة بتقف لو موبايلي قفل؟</h3>
-  <p>لأ — المسابقة بتكمل من أجهزة الطلاب حتى لو جهازك اتقفل مؤقتًا، وبترجع تتابع أول ما تفتح.</p>
-  <h3>نسيت كلمة سر حسابي؟</h3>
-  <p>تواصل مع مدير اللعبة لإعادة تعيينها من لوحة تحكم Firebase (Authentication ← Users ← ⋮ ← Reset password).</p>
-  <h3>في تكلفة؟ في إعلانات؟</h3>
-  <p>لا ولا — مجانية بالكامل، ومفيش أي بيانات بتتجمع غير الاسم المستعار والنقاط.</p>
+<div class="foot">
+  <span>رحلة القرآن — <span class="url">https://yahia176-maker.github.io/quran-game/</span></span>
+  <span>دليل المعلم</span>
 </div>
-
-<div class="tip" style="margin-top:30px">
-  <b>وصفة حلقة ناجحة مجرّبة:</b> ابدأ الحصة بمسابقة «⚡ الكل معًا» قصيرة (١٠ أسئلة) على المحفوظ القديم للإحماء والمراجعة، واختم بمسابقة «🔄 بالدور» على مقرر اليوم كتسميع — وكلّف الطلاب بـ«تحدي اليوم» و«مراجعتي» كواجب منزلي، وتابع التزامهم من شاشة المتابعة أسبوعيًا.
-</div>
-
-<footer>دليل المعلم — لعبة رحلة القرآن · اطبع هذه الصفحة أو شاركها بالرابط: <span id="guideUrl" style="direction:ltr">/guide.html</span></footer>
-
-</div>
-<script>
-/* اعرض الروابط حسب مكان الاستضافة الحالي تلقائيًا */
-if(location.protocol.startsWith('http')){
-  const base = location.origin + location.pathname.replace(/guide\.html.*$/,'');
-  document.getElementById('gameUrl').textContent = base;
-  document.getElementById('guideUrl').textContent = base + 'guide.html';
-}
-</script>
-</body>
-</html>
+</div></body></html>
