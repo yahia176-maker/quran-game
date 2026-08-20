@@ -14,36 +14,49 @@
 <title>رحلة القرآن — لعبة تفاعلية للأطفال</title>
 <style>
 :root{
-  /* 🌙 الثيم الليلي — الافتراضي (١٠–١٥ سنة) */
-  --bg1:#070b1f; --bg2:#141a3d; --bg3:#251a45;
-  --gold:#ffd67e; --gold2:#f5b942; --ink:#f3f0ff;
-  --muted:#a6a3c9; --ok:#3ddc97; --bad:#ff6b81;
-  --card:rgba(255,255,255,.07); --line:rgba(255,214,126,.28);
-  --btnink:#2a1d00; --btnsh:#a97a17; --ayah:#ffeec2;
-  --glow:rgba(255,214,126,.55); --skyA:#3a2a6b; --skyB:#14325c;
+  /* 🌿 بستان — الافتراضي: أخضر هادي وذهبي مطفي، مريح للقراءة الطويلة */
+  --bg1:#f7faf6; --bg2:#edf4ec; --bg3:#e7f0f2;
+  --gold:#8a6d24; --gold2:#bb9a55; --ink:#2b3d34;
+  --muted:#5c7265; --ok:#4a8168; --bad:#a85f56;
+  --card:rgba(255,255,255,.74); --line:rgba(138,109,36,.24);
+  --btnink:#fffdf6; --btnsh:#6f5a1d; --ayah:#2a3b31;
+  --glow:rgba(187,154,85,.30); --skyA:#dbe9d7; --skyB:#dfeaee;
+  /* أسطح وظلال محايدة — بتتغيّر مع فاتح/غامق */
+  --tint:rgba(43,61,52,.055); --sunk:rgba(43,61,52,.04);
+  --sh1:rgba(50,70,58,.14); --sh2:rgba(50,70,58,.08); --sheen:rgba(255,255,255,.5);
+  --goldA:rgba(138,109,36,.10); --goldB:rgba(138,109,36,.16); --goldC:rgba(138,109,36,.22);
+  --okA:rgba(74,129,104,.12); --okB:rgba(74,129,104,.18); --okC:rgba(74,129,104,.30);
   --rad:20px; --scale:1;
   --ui:'Tajawal','Segoe UI','Noto Kufi Arabic','Cairo',system-ui,sans-serif;
   --quran:'Amiri Quran','Amiri','Scheherazade New','Traditional Arabic','Noto Naskh Arabic',serif;
 }
-/* 🌈 ثيم الأطفال — ألوان نهارية مبهجة وأزرار أكبر (٦–١٠ سنوات) */
-:root[data-theme="kids"]{
-  --bg1:#fff8ec; --bg2:#ffeedd; --bg3:#e8f6ff;
-  --gold:#ff8a3d; --gold2:#ffb03a; --ink:#2b2140;
-  --muted:#584a6e; --ok:#0f8b52; --bad:#c93a4a;
-  --card:rgba(255,255,255,.82); --line:rgba(255,138,61,.35);
-  --btnink:#fff; --btnsh:#d9631f; --ayah:#1f3a5f;
-  --glow:rgba(255,176,58,.55); --skyA:#ffd9a8; --skyB:#bfe8ff;
+/* ☀️ شروق — نهاري دافئ، أزرار أكبر (مناسب للصغار) */
+:root[data-theme="sunrise"]{
+  --bg1:#fdf8f2; --bg2:#f9ece0; --bg3:#f6e7ea;
+  --gold:#b05a2d; --gold2:#d18f56; --ink:#463127;
+  --muted:#776254; --ok:#3d8468; --bad:#b85560;
+  --card:rgba(255,255,255,.72); --line:rgba(176,90,45,.24);
+  --btnink:#fffaf5; --btnsh:#8f4a24; --ayah:#3d2a20;
+  --glow:rgba(209,143,86,.30); --skyA:#f7e0c4; --skyB:#f6e2e8;
+  --tint:rgba(70,49,39,.055); --sunk:rgba(70,49,39,.04);
+  --sh1:rgba(120,80,50,.14); --sh2:rgba(120,80,50,.08); --sheen:rgba(255,255,255,.5);
+  --goldA:rgba(176,90,45,.10); --goldB:rgba(176,90,45,.16); --goldC:rgba(176,90,45,.22);
+  --okA:rgba(61,132,104,.12); --okB:rgba(61,132,104,.18); --okC:rgba(61,132,104,.30);
   --rad:26px; --scale:1.08;
 }
-/* 📜 الثيم المصحفي — هادئ وكلاسيكي (الكبار والمعلمين) */
-:root[data-theme="mushaf"]{
-  --bg1:#f7f2e4; --bg2:#efe7d2; --bg3:#e6ddc4;
-  --gold:#8a6a12; --gold2:#a8862a; --ink:#241f16;
-  --muted:#4f4736; --ok:#0b5b4c; --bad:#8e2a21;
-  --card:rgba(255,255,255,.78); --line:rgba(138,106,18,.32);
-  --btnink:#fffdf5; --btnsh:#6a5210; --ayah:#1c3b2e;
-  --glow:rgba(138,106,18,.35); --skyA:#e7dcbe; --skyB:#dfe9d8;
-  --rad:12px; --scale:1;
+/* 🌙 ليل دافئ — غامق بنّي بنفسجي، مريح بالليل */
+:root[data-theme="warm"]{
+  --bg1:#241a2b; --bg2:#2f2033; --bg3:#3a2632;
+  --gold:#e0bc8a; --gold2:#c9a173; --ink:#efe4dc;
+  --muted:#a99aa3; --ok:#7ec4a4; --bad:#d99097;
+  --card:rgba(255,255,255,.07); --line:rgba(224,188,138,.24);
+  --btnink:#2b1e10; --btnsh:#8a6c44; --ayah:#f0e0c9;
+  --glow:rgba(224,188,138,.30); --skyA:#3d2b44; --skyB:#452d38;
+  --tint:rgba(255,255,255,.08); --sunk:rgba(0,0,0,.18);
+  --sh1:rgba(0,0,0,.34); --sh2:rgba(0,0,0,.22); --sheen:rgba(255,255,255,.12);
+  --goldA:rgba(224,188,138,.10); --goldB:rgba(224,188,138,.16); --goldC:rgba(224,188,138,.22);
+  --okA:rgba(126,196,164,.12); --okB:rgba(126,196,164,.18); --okC:rgba(126,196,164,.30);
+  --rad:20px; --scale:1;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;min-height:100%}
@@ -71,7 +84,7 @@ p{line-height:1.9;margin:.4em 0}
 .muted{color:var(--muted)}
 .center{text-align:center}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:18px;
-  backdrop-filter:blur(8px);box-shadow:0 12px 40px rgba(0,0,0,.35);margin-bottom:14px}
+  backdrop-filter:blur(8px);box-shadow:0 12px 40px var(--sh1);margin-bottom:14px}
 .fade{animation:fade .35s ease both}
 @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .pop{animation:pop .3s cubic-bezier(.2,1.4,.4,1) both}
@@ -83,7 +96,7 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
   background:linear-gradient(180deg,var(--gold),var(--gold2));color:var(--btnink);
   font-weight:700;padding:14px 26px;border-radius:16px;
-  box-shadow:0 6px 0 var(--btnsh), 0 12px 24px rgba(0,0,0,.28);transition:.12s}
+  box-shadow:0 6px 0 var(--btnsh), 0 12px 24px var(--sh1);transition:.12s}
 .btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--btnsh)}
 .btn.ghost{background:transparent;color:var(--gold);border:2px solid var(--line);box-shadow:none;font-weight:600}
 .btn.ghost:active{transform:translateY(2px)}
@@ -93,9 +106,9 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .opt{display:block;width:100%;text-align:right;background:var(--card);
   border:2px solid var(--line);border-radius:16px;padding:15px 18px;margin-bottom:10px;
   font-size:1.05rem;line-height:1.7;transition:.15s}
-.opt:hover:not(:disabled){border-color:var(--gold);background:rgba(255,214,126,.12)}
+.opt:hover:not(:disabled){border-color:var(--gold);background:var(--goldA)}
 .opt:disabled{cursor:default}
-.opt.ok{border-color:var(--ok);background:rgba(61,220,151,.18)}
+.opt.ok{border-color:var(--ok);background:var(--okB)}
 .opt.bad{border-color:var(--bad);background:rgba(255,107,129,.18)}
 .opt .tag{float:left;font-weight:800}
 
@@ -110,13 +123,13 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .blankbox.filled{border-bottom-style:solid;color:#fff}
 
 .hdr{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.pill{background:rgba(255,255,255,.09);border:1px solid var(--line);border-radius:999px;
+.pill{background:var(--tint);border:1px solid var(--line);border-radius:999px;
   padding:7px 14px;font-size:.88rem;font-weight:700;white-space:nowrap}
-.pill.turn{background:linear-gradient(90deg,rgba(255,214,126,.25),rgba(255,214,126,.05));color:var(--gold)}
-.bar{height:9px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin:10px 0}
+.pill.turn{background:linear-gradient(90deg,var(--goldC),var(--goldA));color:var(--gold)}
+.bar{height:9px;background:var(--tint);border-radius:99px;overflow:hidden;margin:10px 0}
 .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));
   border-radius:99px;transition:width .4s}
-.timer{height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.timer{height:6px;background:var(--tint);border-radius:99px;overflow:hidden}
 .timer>i{display:block;height:100%;background:var(--ok);transition:width 1s linear}
 .timer.low>i{background:var(--bad)}
 
@@ -126,7 +139,7 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .surahs .stage{padding:11px 6px;border-radius:14px}
 .surahs .stage .st{font-size:.9rem;letter-spacing:1px}
 .qbox{max-height:44vh;overflow-y:auto;border:1px solid var(--line);border-radius:16px;padding:8px 4px;
-  background:rgba(0,0,0,.18)}
+  background:var(--sunk)}
 .qbox .ayah{font-size:clamp(1.25rem,4.4vw,1.6rem);line-height:2.2;margin:0}
 .stage{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px 12px;
   text-align:center;transition:.15s;cursor:pointer}
@@ -139,18 +152,18 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 .pair{background:var(--card);border:2px solid var(--line);border-radius:14px;
   padding:13px 10px;text-align:center;font-size:.98rem;line-height:1.6;transition:.15s}
 .pair.q{font-family:var(--quran);font-size:1.35rem;color:var(--ayah)}
-.pair.sel{border-color:var(--gold);background:rgba(255,214,126,.16)}
-.pair.done{border-color:var(--ok);background:rgba(61,220,151,.16);opacity:.65;cursor:default}
+.pair.sel{border-color:var(--gold);background:var(--goldB)}
+.pair.done{border-color:var(--ok);background:var(--okB);opacity:.65;cursor:default}
 .pair.err{border-color:var(--bad)}
 
 .slots{min-height:60px;border:2px dashed var(--line);border-radius:16px;padding:10px;margin-bottom:12px}
-.slot{background:rgba(255,214,126,.14);border:1px solid var(--line);border-radius:12px;
+.slot{background:var(--goldB);border:1px solid var(--line);border-radius:12px;
   padding:8px 12px;margin:5px 0;font-family:var(--quran);font-size:1.2rem;color:var(--ayah);
   display:flex;justify-content:space-between;align-items:center;gap:8px}
 .slot .rm{font-family:var(--ui);font-size:.8rem;color:var(--bad);cursor:pointer;font-weight:700}
 
 .fb{border-radius:16px;padding:14px 16px;margin-top:12px;line-height:1.9;font-size:.98rem}
-.fb.ok{background:rgba(61,220,151,.14);border:1px solid var(--ok)}
+.fb.ok{background:var(--okB);border:1px solid var(--ok)}
 .fb.bad{background:rgba(255,107,129,.14);border:1px solid var(--bad)}
 .fb b{color:var(--gold)}
 
@@ -164,7 +177,7 @@ button{font-family:inherit;font-size:1rem;cursor:pointer;border:0;color:inherit}
 @keyframes sr{0%,45%,100%{transform:translateX(0) rotate(0)}70%{transform:translateX(-22px) rotate(-9deg)}}
 
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:right;font-size:.95rem}
+th,td{padding:10px 8px;border-bottom:1px solid var(--tint);text-align:right;font-size:.95rem}
 th{color:var(--gold);font-size:.85rem}
 input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--line);
   background:var(--card);color:var(--ink);font-family:inherit;font-size:1rem;margin-bottom:8px}
@@ -172,14 +185,15 @@ input:focus{outline:none;border-color:var(--gold)}
 select{padding:12px 14px;border-radius:12px;border:2px solid var(--line);
   background:var(--bg2);color:var(--ink);font-family:inherit;font-size:1rem}
 .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.9rem}
+  background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.9rem}
 code{background:var(--card);padding:2px 6px;border-radius:6px;font-size:.85em;direction:ltr;display:inline-block}
 pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px;
   overflow-x:auto;direction:ltr;text-align:left;font-size:.8rem;line-height:1.6}
 /* رقائق الكلمات — لعبة «ركّب الآية» */
 /* الشخصيات المرافقة */
-:root{ --skin:#f6cfa4; --hair:#3a2a20; --c1:#4aa3ff; --c2:#ff8a3d; --fline:#33251c; }
-:root[data-theme="kids"]{ --c1:#ff5fa2; --c2:#5ec2ff; }
+:root{ --skin:#f2d3b3; --hair:#4a3a30; --c1:#4a8168; --c2:#bb9a55; --fline:#2b3d34; }
+:root[data-theme="sunrise"]{ --c1:#b05a2d; --c2:#d18f56; }
+:root[data-theme="warm"]{ --skin:#e8c9aa; --hair:#2a1f1a; --c1:#c9a173; --c2:#e0bc8a; --fline:#2a1f1a; }
 .mascot .m,.mascot .eyes{display:none}
 .mascot[data-mood="idle"] .m.idle,.mascot[data-mood="idle"] .eyes.idle,
 .mascot[data-mood="happy"] .m.happy,.mascot[data-mood="happy"] .eyes.happy,
@@ -190,10 +204,10 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .mascot[data-mood="sad"]{animation:shiver .5s ease}
 .charpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
 .charpick button{background:var(--card);border:3px solid var(--line);border-radius:20px;padding:10px 4px;cursor:pointer;transition:.15s}
-.charpick button.on{border-color:var(--gold);background:rgba(255,214,126,.14);transform:translateY(-3px)}
+.charpick button.on{border-color:var(--gold);background:var(--goldB);transform:translateY(-3px)}
 .charpick b{display:block;color:var(--ink);font-size:.95rem;margin-top:4px}
 /* رسومات السور */
-.art{color:var(--gold);display:block;margin:0 auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}
+.art{color:var(--gold);display:block;margin:0 auto;filter:drop-shadow(0 4px 10px var(--sh1))}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .art.big{animation:floaty 3.4s ease-in-out infinite}
 .artrow{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
@@ -205,15 +219,15 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
   border-radius:14px;padding:8px 14px;cursor:pointer;transition:.12s}
 .chip:hover{border-color:var(--gold);transform:translateY(-2px)}
 .chip:active{transform:scale(.94)}
-.chip.in{background:rgba(255,214,126,.14)}
-.chip.ok{border-color:var(--ok);background:rgba(61,220,151,.18)}
+.chip.in{background:var(--goldB)}
+.chip.ok{border-color:var(--ok);background:var(--okB)}
 .chip.bad{border-color:var(--bad);background:rgba(255,107,129,.18)}
 /* اختيار كلمة داخل الآية — لعبة «الكلمة الدخيلة» */
 .wordpick .w{cursor:pointer;border-radius:10px;padding:5px 9px;margin:2px 0;transition:.12s;
   display:inline-block;min-width:44px;text-align:center;border-bottom:2px dashed transparent}
 :root[data-theme="kids"] .wordpick .w{padding:8px 12px;min-width:52px}
-.wordpick .w:hover{background:rgba(255,214,126,.16);border-bottom-color:var(--gold)}
-.wordpick .w.ok{background:rgba(61,220,151,.25);border-bottom-color:var(--ok)}
+.wordpick .w:hover{background:var(--goldB);border-bottom-color:var(--gold)}
+.wordpick .w.ok{background:var(--okC);border-bottom-color:var(--ok)}
 .wordpick .w.bad{background:rgba(255,107,129,.25);border-bottom-color:var(--bad)}
 /* الثيم المبهج: أزرار وبطاقات أكبر وأكثر استدارة */
 :root[data-theme="kids"] .btn{border-radius:18px;font-weight:800}
@@ -227,21 +241,21 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .doors{display:grid!important;grid-template-columns:1fr 1fr;max-width:540px;margin:14px auto;gap:12px}
 .door{position:relative;background:var(--card);border:3px solid var(--line);border-radius:var(--rad);
   padding:20px 10px 18px;text-align:center;cursor:pointer;overflow:hidden;
-  box-shadow:0 6px 0 0 var(--line), 0 10px 24px rgba(0,0,0,.16);
+  box-shadow:0 6px 0 0 var(--line), 0 10px 24px var(--sh2);
   transition:transform .14s cubic-bezier(.34,1.56,.64,1), box-shadow .14s, border-color .14s;
   -webkit-tap-highlight-color:transparent;user-select:none}
 .door::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--glow),transparent 70%);
   opacity:0;transition:opacity .2s;pointer-events:none}
-.door:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 10px 0 0 var(--gold2),0 16px 30px rgba(0,0,0,.22)}
+.door:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 10px 0 0 var(--gold2),0 16px 30px var(--sh2)}
 .door:hover::before{opacity:.5}
 /* 👇 إحساس الضغط: الزر بينزل ويبلع ظله */
-.door:active{transform:translateY(4px) scale(.985);box-shadow:0 1px 0 0 var(--gold2),0 3px 10px rgba(0,0,0,.2);
+.door:active{transform:translateY(4px) scale(.985);box-shadow:0 1px 0 0 var(--gold2),0 3px 10px var(--sh2);
   border-color:var(--gold);transition-duration:.06s}
-.door.picked{border-color:var(--gold);box-shadow:0 0 0 4px var(--glow),0 10px 26px rgba(0,0,0,.25);
+.door.picked{border-color:var(--gold);box-shadow:0 0 0 4px var(--glow),0 10px 26px var(--sh1);
   transform:translateY(2px) scale(.99);animation:doorPick .4s ease}
 @keyframes doorPick{0%{transform:scale(1)}45%{transform:scale(.95)}100%{transform:translateY(2px) scale(.99)}}
 .door .em{font-size:3rem;display:block;margin-bottom:4px;line-height:1;
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.2));transition:transform .18s}
+  filter:drop-shadow(0 4px 8px var(--sh2));transition:transform .18s}
 .door:hover .em{transform:scale(1.12) rotate(-4deg)}
 .door b{display:block;font-size:1.28rem;color:var(--gold);margin-bottom:2px}
 .door span:not(.em){display:block;font-size:.76rem;color:var(--muted);line-height:1.35;padding:0 4px}
@@ -251,14 +265,14 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .hero{display:flex;align-items:center;gap:14px;max-width:560px;margin:0 auto 14px;cursor:pointer;
   background:linear-gradient(135deg,var(--card),transparent);border:3px solid var(--gold);
   border-radius:var(--rad);padding:14px 18px;position:relative;overflow:hidden;
-  box-shadow:0 6px 0 0 var(--gold2),0 12px 28px rgba(0,0,0,.2);
+  box-shadow:0 6px 0 0 var(--gold2),0 12px 28px var(--sh2);
   transition:transform .14s cubic-bezier(.34,1.56,.64,1),box-shadow .14s;-webkit-tap-highlight-color:transparent}
 .hero::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+  background:linear-gradient(90deg,transparent,var(--sheen),transparent);
   animation:sheen 3.6s ease-in-out infinite}
 @keyframes sheen{0%,72%{left:-60%}100%{left:120%}}
-.hero:hover{transform:translateY(-4px);box-shadow:0 10px 0 0 var(--gold2),0 18px 34px rgba(0,0,0,.28)}
-.hero:active{transform:translateY(4px) scale(.99);box-shadow:0 1px 0 0 var(--gold2),0 4px 12px rgba(0,0,0,.22);transition-duration:.06s}
+.hero:hover{transform:translateY(-4px);box-shadow:0 10px 0 0 var(--gold2),0 18px 34px var(--sh1)}
+.hero:active{transform:translateY(4px) scale(.99);box-shadow:0 1px 0 0 var(--gold2),0 4px 12px var(--sh2);transition-duration:.06s}
 .heroArt{flex:none;color:var(--gold)}
 .heroTxt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .heroTxt b{font-size:1.45rem;color:var(--gold);line-height:1.3}
@@ -273,19 +287,19 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 @media(max-width:360px){ .three{gap:7px} .three .stage{padding:11px 3px} .three b{font-size:.86rem} }
 
 /* ===== 🏫 الحلقات ===== */
-.live{border-color:var(--ok)!important;background:rgba(61,220,151,.12);animation:pulseLive 1.8s ease-in-out infinite}
-@keyframes pulseLive{0%,100%{box-shadow:0 0 0 0 rgba(61,220,151,.4)}50%{box-shadow:0 0 0 12px rgba(61,220,151,0)}}
+.live{border-color:var(--ok)!important;background:var(--okA);animation:pulseLive 1.8s ease-in-out infinite}
+@keyframes pulseLive{0%,100%{box-shadow:0 0 0 0 var(--okC)}50%{box-shadow:0 0 0 12px rgba(126,196,164,0)}}
 .halrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;
   background:var(--card);border:2px solid var(--line);border-radius:16px;margin-bottom:8px;cursor:pointer;
   transition:.15s;-webkit-tap-highlight-color:transparent}
 .halrow:hover{border-color:var(--gold);transform:translateX(-4px)}
-.halrow:active{transform:translateX(-2px) scale(.99);background:rgba(255,214,126,.1)}
+.halrow:active{transform:translateX(-2px) scale(.99);background:var(--goldA)}
 .halrow span{font-size:1.4rem;color:var(--gold)}
-.hw{background:rgba(255,214,126,.1);border-right:4px solid var(--gold);border-radius:12px;padding:10px 12px;margin-top:8px}
+.hw{background:var(--goldA);border-right:4px solid var(--gold);border-radius:12px;padding:10px 12px;margin-top:8px}
 .linkbox{direction:ltr;background:var(--card);border:2px dashed var(--line);border-radius:12px;
   padding:9px 12px;font-size:.82rem;word-break:break-all;color:var(--gold)}
 .hws{cursor:pointer;transition:.12s}
-.hws.on{border-color:var(--ok);background:rgba(61,220,151,.18)}
+.hws.on{border-color:var(--ok);background:var(--okB)}
 .lvrow{display:flex;align-items:center;gap:12px}
 
 /* ===== 🏝️ طريق الحفظ ===== */
@@ -296,7 +310,7 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .pnode:active{transform:scale(.985)}
 .pdot{flex:none;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   background:var(--card);border:3px solid var(--line);color:var(--gold);position:relative}
-.pnode.done .pdot{border-color:var(--ok);background:rgba(61,220,151,.16)}
+.pnode.done .pdot{border-color:var(--ok);background:var(--okB)}
 .pnode.now .pdot{border-color:var(--gold);box-shadow:0 0 0 6px var(--glow);animation:pop2 1.6s ease-in-out infinite}
 @keyframes pop2{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .pline{position:absolute;right:39px;top:56px;bottom:-6px;width:4px;background:var(--line);border-radius:4px}
@@ -304,12 +318,12 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 
 /* ===== 🎧 شاشة الاستماع ===== */
 .lisWrap{max-height:52vh;overflow-y:auto;border:1px solid var(--line);border-radius:18px;
-  padding:10px 8px;background:rgba(0,0,0,.10);scroll-behavior:smooth}
+  padding:10px 8px;background:var(--sunk);scroll-behavior:smooth}
 .lisAy{font-family:var(--quran);font-size:clamp(1.25rem,4.6vw,1.7rem);line-height:2.5;
   color:var(--ayah);text-align:center;padding:7px 10px;border-radius:14px;margin-bottom:4px;
   opacity:.42;transition:opacity .3s,background .3s,transform .3s;cursor:pointer}
 .lisAy:hover{opacity:.75;background:var(--card)}
-.lisAy.on{opacity:1;background:rgba(255,214,126,.14);box-shadow:inset 0 0 0 2px var(--line);
+.lisAy.on{opacity:1;background:var(--goldB);box-shadow:inset 0 0 0 2px var(--line);
   transform:scale(1.015)}
 .lisAy .num{display:inline-flex;align-items:center;justify-content:center;min-width:1.5em;height:1.5em;
   margin-right:6px;font-family:var(--ui);font-size:.55em;font-weight:700;
@@ -317,12 +331,12 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .lisCtl{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px}
 .lisBig{width:64px;height:64px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
   font-size:1.7rem;background:linear-gradient(180deg,var(--gold),var(--gold2));color:var(--btnink);
-  box-shadow:0 5px 0 var(--btnsh),0 10px 20px rgba(0,0,0,.24);transition:.12s;border:none;cursor:pointer}
+  box-shadow:0 5px 0 var(--btnsh),0 10px 20px var(--sh1);transition:.12s;border:none;cursor:pointer}
 .lisBig:active{transform:translateY(4px);box-shadow:0 1px 0 var(--btnsh)}
 .lisRound{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
   font-size:1.05rem;background:var(--card);border:2px solid var(--line);color:var(--gold);cursor:pointer;transition:.12s}
 .lisRound:active{transform:scale(.92)}
-.lisRound.on{border-color:var(--gold);background:rgba(255,214,126,.16)}
+.lisRound.on{border-color:var(--gold);background:var(--goldB)}
 .dlbar{height:6px;background:var(--card);border-radius:99px;overflow:hidden;margin-top:8px}
 .dlbar i{display:block;height:100%;background:var(--ok);transition:width .25s}
 /* 🎴 ألبوم البطاقات */
@@ -331,7 +345,7 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;
   cursor:pointer;transition:.18s;overflow:hidden}
 .gcard.got{border-color:var(--gold);box-shadow:0 6px 20px var(--glow)}
-.gcard.got::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,214,126,.18) 50%,transparent 60%)}
+.gcard.got::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,var(--goldB) 50%,transparent 60%)}
 .gcard:hover{transform:translateY(-4px)}
 .gcard .gart{color:var(--gold);opacity:1}
 .gcard.locked .gart{opacity:.16;filter:grayscale(1)}
@@ -346,33 +360,33 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 /* 🎩 تخصيص الشخصية */
 .wear{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
 .wear .w{border:2px solid var(--line);border-radius:14px;background:var(--card);padding:10px 4px;text-align:center;cursor:pointer;transition:.15s}
-.wear .w.on{border-color:var(--gold);background:rgba(255,214,126,.1)}
+.wear .w.on{border-color:var(--gold);background:var(--goldA)}
 .wear .w.lk{opacity:.45;cursor:not-allowed}
 .wear .w span{font-size:1.7rem;display:block}
 .wear .w small{font-size:.68rem;color:var(--muted);display:block;margin-top:2px}
 .tword{display:inline-block;background:var(--card);border:2px solid var(--line);border-radius:10px;
   padding:5px 12px;margin:3px 2px;font-size:1.3rem;min-width:48px;text-align:center;color:var(--muted);transition:.15s}
-.tword.on{color:var(--gold);border-color:var(--gold);background:rgba(255,214,126,.08)}
+.tword.on{color:var(--gold);border-color:var(--gold);background:var(--goldA)}
 .seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
 .seg .btn{width:100%;padding:11px 4px;font-size:.92rem}
 .annbar{position:fixed;top:0;right:0;left:0;z-index:95;display:flex;align-items:center;gap:10px;
   justify-content:center;background:linear-gradient(90deg,var(--gold2),var(--gold));color:#2a1d00;
-  font-weight:700;padding:9px 16px;font-size:.9rem;box-shadow:0 3px 14px rgba(0,0,0,.25);color:var(--btnink)}
+  font-weight:700;padding:9px 16px;font-size:.9rem;box-shadow:0 3px 14px var(--sh1);color:var(--btnink)}
 .annbar button{background:transparent;font-size:1rem;color:var(--btnink);cursor:pointer;font-weight:800}
 body:has(.annbar) #app{padding-top:52px}
 .toast{position:fixed;bottom:24px;right:50%;transform:translateX(50%);z-index:100;
   background:linear-gradient(180deg,var(--gold),var(--gold2));color:var(--btnink);font-weight:700;
-  padding:12px 22px;border-radius:99px;box-shadow:0 8px 30px rgba(0,0,0,.35);transition:opacity .4s;max-width:90vw;color:var(--btnink)}
-.jbar{height:5px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-top:6px}
+  padding:12px 22px;border-radius:99px;box-shadow:0 8px 30px var(--sh1);transition:opacity .4s;max-width:90vw;color:var(--btnink)}
+.jbar{height:5px;background:var(--tint);border-radius:99px;overflow:hidden;margin-top:6px}
 .jbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:99px}
-.jz-part{border-color:rgba(255,214,126,.55)}
-.jz-done{border-color:var(--ok);background:rgba(61,220,151,.12)}
+.jz-part{border-color:var(--gold)}
+.jz-done{border-color:var(--ok);background:var(--okA)}
 .jz-done .jbar>i{background:var(--ok)}
-.lobby-p{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);
+.lobby-p{display:inline-flex;align-items:center;gap:6px;background:var(--tint);
   border:1px solid var(--line);border-radius:99px;padding:7px 14px;margin:3px;font-weight:700}
-.turnGlow{outline:3px solid var(--gold);box-shadow:0 0 22px rgba(255,214,126,.35)}
+.turnGlow{outline:3px solid var(--gold);box-shadow:0 0 22px var(--glow)}
 .codebox{font-size:2.2rem;letter-spacing:10px;color:var(--gold);font-weight:800;direction:ltr;
-  background:rgba(0,0,0,.3);border:2px dashed var(--line);border-radius:16px;padding:10px 18px;display:inline-block}
+  background:var(--sunk);border:2px dashed var(--line);border-radius:16px;padding:10px 18px;display:inline-block}
 @media print{
   body{background:#fff!important;color:#000}
   #stars,.noprint,.moon{display:none!important}
@@ -1309,9 +1323,9 @@ const ROLEK = 'quran_game_v1_role';
 const myRole = () => (P && P.role) || localStorage.getItem(ROLEK) || '';
 function setRole(r){ if(P){ P.role=r; saveP(); } try{ localStorage.setItem(ROLEK,r); }catch(e){} }
 const AGES = [
-  {k:'small', nm:'٦ – ٩ سنوات',  em:'🧸', th:'kids'},
-  {k:'mid',   nm:'١٠ – ١٥ سنة',  em:'🌙', th:'night'},
-  {k:'big',   nm:'١٦ فما فوق',   em:'📜', th:'mushaf'}
+  {k:'small', nm:'٦ – ٩ سنوات',  em:'🧸', th:'sunrise'},
+  {k:'mid',   nm:'١٠ – ١٥ سنة',  em:'🌿', th:'garden'},
+  {k:'big',   nm:'١٦ فما فوق',   em:'📜', th:'garden'}
 ];
 
 /* ===================== 🎨 رسومات أبطال السور =====================
@@ -1418,18 +1432,23 @@ const DIFFS = { easy:{nm:'سهل', em:'🌱', t:50, dis:2, mult:1},
 let DIFF = DIFFS.normal;
 /* ===== الثيمات: مظهر لكل فئة عمرية ===== */
 const THEMES = {
-  night : {nm:'ليلي',   em:'🌙', d:'نجوم وذهب — للأعمار ١٠–١٥'},
-  kids  : {nm:'أطفال',  em:'🌈', d:'ألوان نهارية مبهجة وأزرار أكبر — ٦–١٠'},
-  mushaf: {nm:'مصحفي',  em:'📜', d:'هادئ وكلاسيكي — للكبار والمعلمين'}
+  garden : {nm:'بستان',    em:'🌿', d:'أخضر هادي وذهبي مطفي — مريح للقراءة الطويلة'},
+  sunrise: {nm:'شروق',     em:'☀️', d:'نهاري دافئ وأزرار أكبر — مناسب للصغار'},
+  warm   : {nm:'ليل دافئ', em:'🌙', d:'غامق ومريح بالليل — وبيوفّر بطارية الموبايل'}
 };
+/* أسماء الثيمات القديمة → الجديدة */
+const THEME_OLD = { night:'warm', kids:'sunrise', mushaf:'garden' };
 function applyTheme(k){
-  const t = THEMES[k] ? k : 'night';
-  if(t==='night') document.documentElement.removeAttribute('data-theme');
+  const t = THEMES[k] ? k : (THEME_OLD[k] || 'garden');
+  if(t==='garden') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', t);
   try{ localStorage.setItem(LS+'_theme', t); }catch(e){}
   if(P && P.theme!==t){ P.theme=t; saveP(); }
 }
-const curTheme = () => (P && P.theme) || localStorage.getItem(LS+'_theme') || 'night';
+const curTheme = () => {
+  const raw = (P && P.theme) || localStorage.getItem(LS+'_theme') || 'garden';
+  return THEMES[raw] ? raw : (THEME_OLD[raw] || 'garden');
+};
 let QTIME = DIFF.t;
 function setDiff(k){ DIFF = DIFFS[k]||DIFFS.normal; QTIME = DIFF.t; if(P){ P.diff=k; saveP(); } }
 
@@ -4086,7 +4105,7 @@ function renderNext(box,c){
   const wrap=document.createElement('div');
   list.forEach(o=>{
     const b=document.createElement('button'); b.className='opt';
-    b.style.cssText='font-family:var(--quran);font-size:1.2rem;color:#ffeec2;line-height:2';
+    b.style.cssText='font-family:var(--quran);font-size:1.2rem;color:var(--ayah);line-height:2';
     b.textContent=o.label;
     b.onclick=()=>{ if(G.locked) return; G.locked=true; stopTimer();
       wrap.querySelectorAll('.opt').forEach((x,i)=>{ x.disabled=true; if(list[i].ok) x.classList.add('ok'); });
@@ -4145,7 +4164,7 @@ function renderOrder(box,c){
     chk.disabled = picked.length!==want.length;
   };
   pool.innerHTML = shuffle(want).map(n=>
-    `<button class="opt" data-n="${n}" style="font-family:var(--quran);font-size:1.25rem;color:#ffeec2">${esc(ayahOf(G.surah,n))}</button>`).join('');
+    `<button class="opt" data-n="${n}" style="font-family:var(--quran);font-size:1.25rem;color:var(--ayah)">${esc(ayahOf(G.surah,n))}</button>`).join('');
   pool.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ if(G.locked)return; Snd.click(); picked.push(+b.dataset.n); draw(); });
   draw();
   chk.onclick=()=>{
@@ -4931,7 +4950,7 @@ function renderOnlineQ(){
     ${q.ayah?`<div class="ayah">${esc(q.ayah)}</div>`:''}
     ${q.src?`<div class="src">${esc(q.src)}</div>`:''}
     <div id="oOpts">${q.opts.map((t,i)=>`<button class="opt" data-i="${i}"
-      ${(!myTurn||iAnswered)?'disabled':''} ${q.quranOpts?'style="font-family:var(--quran);font-size:1.15rem;color:#ffeec2;line-height:2"':''}>${esc(t)}</button>`).join('')}</div>
+      ${(!myTurn||iAnswered)?'disabled':''} ${q.quranOpts?'style="font-family:var(--quran);font-size:1.15rem;color:var(--ayah);line-height:2"':''}>${esc(t)}</button>`).join('')}</div>
     ${!myTurn?`<p class="muted center">👀 بنتفرج — ${esc((turnP||{}).name||'')} بيجاوب</p>`:''}
   </div>
   <div class="card fade">
@@ -4980,7 +4999,7 @@ function renderOnlineEnd(){
 
 /* ===================== بدء ===================== */
 document.addEventListener('click', ()=>Snd.init(), {once:true});
-applyTheme(localStorage.getItem(LS+'_theme')||'night');
+applyTheme(localStorage.getItem(LS+'_theme')||'garden');
 
 /* ---------- 📲 التطبيق القابل للتثبيت (PWA) ---------- */
 let installEvt = null;
