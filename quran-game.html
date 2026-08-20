@@ -25,6 +25,7 @@
   --tint:rgba(43,61,52,.055); --sunk:rgba(43,61,52,.04);
   --sh1:rgba(50,70,58,.14); --sh2:rgba(50,70,58,.08); --sheen:rgba(255,255,255,.5);
   --goldA:rgba(138,109,36,.10); --goldB:rgba(138,109,36,.16); --goldC:rgba(138,109,36,.22);
+  --info:#3f7a9e; --infoA:rgba(63,122,158,.12);
   --okA:rgba(74,129,104,.12); --okB:rgba(74,129,104,.18); --okC:rgba(74,129,104,.30);
   --rad:20px; --scale:1;
   --ui:'Tajawal','Segoe UI','Noto Kufi Arabic','Cairo',system-ui,sans-serif;
@@ -41,6 +42,7 @@
   --tint:rgba(70,49,39,.055); --sunk:rgba(70,49,39,.04);
   --sh1:rgba(120,80,50,.14); --sh2:rgba(120,80,50,.08); --sheen:rgba(255,255,255,.5);
   --goldA:rgba(176,90,45,.10); --goldB:rgba(176,90,45,.16); --goldC:rgba(176,90,45,.22);
+  --info:#4a7f9c; --infoA:rgba(74,127,156,.12);
   --okA:rgba(61,132,104,.12); --okB:rgba(61,132,104,.18); --okC:rgba(61,132,104,.30);
   --rad:26px; --scale:1.08;
 }
@@ -55,6 +57,7 @@
   --tint:rgba(255,255,255,.08); --sunk:rgba(0,0,0,.18);
   --sh1:rgba(0,0,0,.34); --sh2:rgba(0,0,0,.22); --sheen:rgba(255,255,255,.12);
   --goldA:rgba(224,188,138,.10); --goldB:rgba(224,188,138,.16); --goldC:rgba(224,188,138,.22);
+  --info:#8fc0d8; --infoA:rgba(143,192,216,.14);
   --okA:rgba(126,196,164,.12); --okB:rgba(126,196,164,.18); --okC:rgba(126,196,164,.30);
   --rad:20px; --scale:1;
 }
@@ -317,6 +320,32 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 @keyframes pop2{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .pline{position:absolute;right:39px;top:56px;bottom:-6px;width:4px;background:var(--line);border-radius:4px}
 .pnode.done .pline{background:var(--ok)}
+
+/* ===== 📄 خريطة مقاطع السورة ===== */
+.pmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:7px;margin-top:10px}
+.pchip{position:relative;border:2px solid var(--line);border-radius:13px;background:var(--card);
+  padding:9px 4px 8px;text-align:center;cursor:pointer;transition:.14s;-webkit-tap-highlight-color:transparent}
+.pchip:hover{transform:translateY(-3px);border-color:var(--gold)}
+.pchip:active{transform:translateY(1px) scale(.98)}
+.pchip b{display:block;font-size:.9rem;line-height:1.2}
+.pchip small{display:block;font-size:.63rem;color:var(--muted);margin-top:1px}
+.pchip .ps{font-size:.66rem;letter-spacing:1px;color:var(--gold);margin-top:2px;min-height:.9em}
+/* 🟢 اتقنه فعلًا */
+.pchip.earned{border-color:var(--ok);background:var(--okA)}
+.pchip.earned b{color:var(--ok)}
+/* 🔵 قال إنه حافظه — مش متأكدين */
+.pchip.memo{border-color:var(--info);background:var(--infoA);border-style:dashed}
+.pchip.memo b{color:var(--info)}
+/* المقطع الجاي */
+.pchip.next{box-shadow:0 0 0 3px var(--glow);border-color:var(--gold)}
+.pchip.pick{border-color:var(--gold);background:var(--goldB)}
+.pbar{display:flex;height:11px;border-radius:99px;overflow:hidden;background:var(--tint);margin:8px 0 4px}
+.pbar i{display:block;height:100%}
+.pbar .e{background:var(--ok)}
+.pbar .m{background:var(--info)}
+.plegend{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:.72rem;color:var(--muted);margin-top:8px}
+.plegend span{display:inline-flex;align-items:center;gap:4px}
+.plegend i{width:11px;height:11px;border-radius:4px;display:inline-block}
 
 /* ===== 🏠 زر البيت العائم — يظهر في أي شاشة مفيهاش طريق للرئيسية ===== */
 .homeFab{position:fixed;top:calc(12px + env(safe-area-inset-top));left:12px;z-index:45;
@@ -1490,7 +1519,7 @@ function saveP(){ if(!P) return; const ps=allProfiles(); const i=ps.findIndex(x=
   if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); backupProfile(); }
 function newProfile(name, emoji){
   return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', char:'boy', age:'mid', diff:'normal', theme:curTheme(),
-    stars:{}, sstars:{}, streak:0, lastPlay:'', daily:'', mistakes:[],
+    stars:{}, sstars:{}, memo:{}, streak:0, lastPlay:'', daily:'', mistakes:[],
     stats:{c:0, w:0, per:{}}, badges:[], created:Date.now() };
 }
 function activateProfile(p){
@@ -1511,9 +1540,9 @@ function bootProfile(){
 const RCHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function makeCode(){ return Array.from({length:6},()=>RCHARS[Math.floor(RNG()*RCHARS.length)]).join(''); }
 function packProfile(p){
-  return { name:p.name, emoji:p.emoji, char:p.char||'boy', age:p.age||'mid', diff:p.diff, theme:p.theme||'night', stars:p.stars, sstars:p.sstars,
+  return { name:p.name, emoji:p.emoji, char:p.char||'boy', age:p.age||'mid', diff:p.diff, theme:p.theme||'garden', stars:p.stars, sstars:p.sstars,
     streak:p.streak, lastPlay:p.lastPlay, daily:p.daily, mistakes:(p.mistakes||[]).slice(-80),
-    stats:p.stats, badges:p.badges, jdone:p.jdone||{}, revs:p.revs||0, at:Date.now() };
+    stats:p.stats, badges:p.badges, jdone:p.jdone||{}, revs:p.revs||0, memo:p.memo||{}, at:Date.now() };
 }
 let backupT=null;
 function backupProfile(){
@@ -1542,7 +1571,7 @@ async function restoreByCode(code){
   if(!s.exists()) throw new Error('notfound');
   const d = s.val();
   const p = newProfile(d.name||'لاعب', d.emoji||'🙂');
-  Object.assign(p, { code:c, char:d.char||'boy', age:d.age||'mid', diff:d.diff||'normal', theme:d.theme||'night', stars:d.stars||{}, sstars:d.sstars||{},
+  Object.assign(p, { code:c, char:d.char||'boy', age:d.age||'mid', diff:d.diff||'normal', theme:d.theme||'garden', stars:d.stars||{}, sstars:d.sstars||{}, memo:d.memo||{},
     streak:d.streak||0, lastPlay:d.lastPlay||'', daily:d.daily||'', mistakes:d.mistakes||[],
     stats:d.stats||{c:0,w:0,per:{}}, badges:d.badges||[], jdone:d.jdone||{}, revs:d.revs||0, migrated:true });
   const ps = allProfiles().filter(x=>x.code!==c); ps.push(p); saveAll(ps);
@@ -2277,6 +2306,29 @@ function myLevel(){
 
 /* ============ 🧠 الجلسة الذكية ============
    زرار واحد يبني حصة متوازنة: أخطاء الطفل أولًا، ثم موضعه الحالي، ثم مراجعة. */
+/* يختار مقطع قديم يستاهل المراجعة: الأزرق (معلن ومش متأكدين منه) له الأولوية،
+   وبعده مقطع أتقنه بقاله فترة. بيشتغل على السور اللي عنده فيها تقدّم فعلي. */
+function pickOldPortion(){
+  if(!P) return null;
+  const sns = new Set();
+  Object.keys(P.memo || {}).forEach(k => sns.add(+k));
+  Object.keys(P.sstars || {}).forEach(k => { const m = /^sur-(\d+)-/.exec(k); if(m) sns.add(+m[1]); });
+  const blue = [], green = [];
+  sns.forEach(sn => {
+    if(!QURAN[sn]) return;
+    const pts = surahPortions(sn);
+    if(pts.length <= 1) return;                       /* السور القصيرة ليها مسارها */
+    pts.forEach(pt => {
+      const st = portionState(sn, pt);
+      if(st === 'memo') blue.push({sn, from:pt.from, to:pt.to});
+      else if(st === 'earned') green.push({sn, from:pt.from, to:pt.to});
+    });
+  });
+  if(blue.length)  return rnd(blue);                  /* الأولوية: أكّد اللي بيدّعيه */
+  if(green.length) return rnd(green);
+  return null;
+}
+
 function smartSession(){
   const chal = [], seen = new Set();
   const push = (c, eid, m) => {
@@ -2293,6 +2345,10 @@ function smartSession(){
   const done = masteredSurahs().filter(x => x !== sn);
   if(done.length){ const r = rnd(done), er = surahEntry(r);
     genSolo(er, r).slice(0,2).forEach(c => push(c, er.id)); }
+  /* ٤) 🔵 مقطع من سورة طويلة بيحفظها — يشمل اللي أعلن إنه حافظه من قبل */
+  const oldPt = pickOldPortion();
+  if(oldPt){ const eo = surahEntry(oldPt.sn, oldPt.from, oldPt.to);
+    genSolo(eo, oldPt.sn).slice(0,3).forEach(c => push(c, eo.id)); }
   return { sn, chal: shuffle(chal) };
 }
 function startSmart(){
@@ -2559,7 +2615,7 @@ async function screenHalaqa(hid){
   const v = hs.val()||{}, mv = ms.val()||{};
   const k = weekKey();
   const studs = Object.entries(mv).map(([uid,m])=>({uid, name:m.name||'—',
-    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0})).sort((a,b)=>b.pts-a.pts);
+    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0, memo:m.memo||null})).sort((a,b)=>b.pts-a.pts);
   app.innerHTML = `
   <div class="hdr"><h2>🏫 ${esc(v.name||'')}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade center">
@@ -2584,8 +2640,10 @@ async function screenHalaqa(hid){
   <div class="card fade">
     <div class="hdr" style="margin:0"><h3 style="margin:0">👦 الطلاب (${studs.length})</h3>
       <button class="btn ghost sm" id="lb">🏆 ترتيب الأسبوع</button></div>
-    ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>آخر نشاط</th></tr>
+    ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>المحفوظ</th><th>آخر نشاط</th></tr>
       ${studs.map(s=>`<tr><td>${esc(s.name)}</td><td><b>${s.pts}</b></td>
+        <td><button class="btn ghost sm memoEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
+          style="padding:4px 9px;font-size:.76rem">${memoLabel(s.memo)} ✏️</button></td>
         <td class="muted" style="font-size:.8rem">${ago(s.last)}</td></tr>`).join('')}</table>`
       :'<p class="muted center">لسه محدش انضم — ابعت الرابط فوق</p>'}
   </div>
@@ -2595,6 +2653,8 @@ async function screenHalaqa(hid){
   </div>`;
   $('#bk').onclick=$('#bk2').onclick=()=>{ Snd.click(); screenHome(); };
   $('#lb').onclick=()=>{ Snd.click(); screenLeaderboard(hid); };
+  app.querySelectorAll('.memoEd').forEach(b=>b.onclick=()=>{ Snd.click();
+    teacherMemoDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).memo||null); });
   $('#cp').onclick=()=>{ navigator.clipboard?.writeText(halLink(hid)); Snd.correct(); toast('📋 اتنسخ!'); };
   $('#wa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent('انضم لحلقة '+(v.name||'')+' في لعبة رحلة القرآن:\n'+halLink(hid)),'_blank'); };
   let items = ((v.hw||{}).items||[]).slice();
@@ -2818,6 +2878,151 @@ async function shareCard(o){
     <button class="btn" id="shc">تمام</button>`;
   document.body.appendChild(d);
   d.querySelector('#shc').onclick=()=>{ d.remove(); URL.revokeObjectURL(url); };
+}
+
+/* ============== 📄 مقاطع الحفظ = صفحات المصحف ==============
+   PAGES[i] = أول آية في الصفحة (i+1) على هيئة [رقم السورة، رقم الآية].
+   المقطع = جزء السورة اللي في صفحة واحدة — ده اللي المعلم والطفل بيتكلموا
+   بيه فعلًا («احفظ صفحة»). السور القصيرة تفضل مقطع واحد زي ما هي. */
+const PAGES=[[1,1],[2,1],[2,6],[2,17],[2,25],[2,30],[2,38],[2,49],[2,58],[2,62],[2,70],[2,77],[2,84],[2,89],[2,94],[2,102],[2,106],[2,113],[2,120],[2,127],[2,135],[2,142],[2,146],[2,154],[2,164],[2,170],[2,177],[2,182],[2,187],[2,191],[2,197],[2,203],[2,211],[2,216],[2,220],[2,225],[2,231],[2,234],[2,238],[2,246],[2,249],[2,253],[2,257],[2,260],[2,265],[2,270],[2,275],[2,282],[2,283],[3,1],[3,10],[3,16],[3,23],[3,30],[3,38],[3,46],[3,53],[3,62],[3,71],[3,78],[3,84],[3,92],[3,101],[3,109],[3,116],[3,122],[3,133],[3,141],[3,149],[3,154],[3,158],[3,166],[3,174],[3,181],[3,187],[3,195],[4,1],[4,7],[4,12],[4,15],[4,20],[4,24],[4,27],[4,34],[4,38],[4,45],[4,52],[4,60],[4,66],[4,75],[4,80],[4,87],[4,92],[4,95],[4,102],[4,106],[4,114],[4,122],[4,128],[4,135],[4,141],[4,148],[4,155],[4,163],[4,171],[4,176],[5,3],[5,6],[5,10],[5,14],[5,18],[5,24],[5,32],[5,37],[5,42],[5,46],[5,51],[5,58],[5,65],[5,71],[5,77],[5,83],[5,90],[5,96],[5,104],[5,109],[5,114],[6,1],[6,9],[6,19],[6,28],[6,36],[6,45],[6,53],[6,60],[6,69],[6,74],[6,82],[6,91],[6,95],[6,102],[6,111],[6,119],[6,125],[6,132],[6,138],[6,143],[6,147],[6,152],[6,158],[7,1],[7,12],[7,23],[7,31],[7,38],[7,44],[7,52],[7,58],[7,68],[7,74],[7,82],[7,88],[7,96],[7,105],[7,121],[7,131],[7,138],[7,144],[7,150],[7,156],[7,160],[7,164],[7,171],[7,179],[7,188],[7,196],[8,1],[8,9],[8,17],[8,26],[8,34],[8,41],[8,46],[8,53],[8,62],[8,70],[9,1],[9,7],[9,14],[9,21],[9,27],[9,32],[9,37],[9,41],[9,48],[9,55],[9,62],[9,69],[9,73],[9,80],[9,87],[9,94],[9,100],[9,107],[9,112],[9,118],[9,123],[10,1],[10,7],[10,15],[10,21],[10,26],[10,34],[10,43],[10,54],[10,62],[10,71],[10,79],[10,89],[10,98],[10,107],[11,6],[11,13],[11,20],[11,29],[11,38],[11,46],[11,54],[11,63],[11,72],[11,82],[11,89],[11,98],[11,109],[11,118],[12,5],[12,15],[12,23],[12,31],[12,38],[12,44],[12,53],[12,64],[12,70],[12,79],[12,87],[12,96],[12,104],[13,1],[13,6],[13,14],[13,19],[13,29],[13,35],[13,43],[14,6],[14,11],[14,19],[14,25],[14,34],[14,43],[15,1],[15,16],[15,32],[15,52],[15,71],[15,91],[16,7],[16,15],[16,27],[16,35],[16,43],[16,55],[16,65],[16,73],[16,80],[16,88],[16,94],[16,103],[16,111],[16,119],[17,1],[17,8],[17,18],[17,28],[17,39],[17,50],[17,59],[17,67],[17,76],[17,87],[17,97],[17,105],[18,5],[18,16],[18,21],[18,28],[18,35],[18,46],[18,54],[18,62],[18,75],[18,84],[18,98],[19,1],[19,12],[19,26],[19,39],[19,52],[19,65],[19,77],[19,96],[20,13],[20,38],[20,52],[20,65],[20,77],[20,88],[20,99],[20,114],[20,126],[21,1],[21,11],[21,25],[21,36],[21,45],[21,58],[21,73],[21,82],[21,91],[21,102],[22,1],[22,6],[22,16],[22,24],[22,31],[22,39],[22,47],[22,56],[22,65],[22,73],[23,1],[23,18],[23,28],[23,43],[23,60],[23,75],[23,90],[23,105],[24,1],[24,11],[24,21],[24,28],[24,32],[24,37],[24,44],[24,54],[24,59],[24,62],[25,3],[25,12],[25,21],[25,33],[25,44],[25,56],[25,68],[26,1],[26,20],[26,40],[26,61],[26,84],[26,112],[26,137],[26,160],[26,184],[26,207],[27,1],[27,14],[27,23],[27,36],[27,45],[27,56],[27,64],[27,77],[27,89],[28,6],[28,14],[28,22],[28,29],[28,36],[28,44],[28,51],[28,60],[28,71],[28,78],[28,85],[29,7],[29,15],[29,24],[29,31],[29,39],[29,46],[29,53],[29,64],[30,6],[30,16],[30,25],[30,33],[30,42],[30,51],[31,1],[31,12],[31,20],[31,29],[32,1],[32,12],[32,21],[33,1],[33,7],[33,16],[33,23],[33,31],[33,36],[33,44],[33,51],[33,55],[33,63],[34,1],[34,8],[34,15],[34,23],[34,32],[34,40],[34,49],[35,4],[35,12],[35,19],[35,31],[35,39],[35,45],[36,13],[36,28],[36,41],[36,55],[36,71],[37,1],[37,25],[37,52],[37,77],[37,103],[37,127],[37,154],[38,1],[38,17],[38,27],[38,43],[38,62],[38,84],[39,6],[39,11],[39,22],[39,32],[39,41],[39,48],[39,57],[39,68],[39,75],[40,8],[40,17],[40,26],[40,34],[40,41],[40,50],[40,59],[40,67],[40,78],[41,1],[41,12],[41,21],[41,30],[41,39],[41,47],[42,1],[42,11],[42,16],[42,23],[42,32],[42,45],[42,52],[43,11],[43,23],[43,34],[43,48],[43,61],[43,74],[44,1],[44,19],[44,40],[45,1],[45,14],[45,23],[45,33],[46,6],[46,15],[46,21],[46,29],[47,1],[47,12],[47,20],[47,30],[48,1],[48,10],[48,16],[48,24],[48,29],[49,5],[49,12],[50,1],[50,16],[50,36],[51,7],[51,31],[51,52],[52,15],[52,32],[53,1],[53,27],[53,45],[54,7],[54,28],[54,50],[55,17],[55,41],[55,68],[56,17],[56,51],[56,77],[57,4],[57,12],[57,19],[57,25],[58,1],[58,7],[58,12],[58,22],[59,4],[59,10],[59,17],[60,1],[60,6],[60,12],[61,6],[62,1],[62,9],[63,5],[64,1],[64,10],[65,1],[65,6],[66,1],[66,8],[67,1],[67,13],[67,27],[68,16],[68,43],[69,9],[69,35],[70,11],[70,40],[71,11],[72,1],[72,14],[73,1],[73,20],[74,18],[74,48],[75,20],[76,6],[76,26],[77,20],[78,1],[78,31],[79,16],[80,1],[81,1],[82,1],[83,7],[83,35],[85,1],[86,1],[87,16],[89,1],[89,24],[91,1],[92,15],[95,1],[97,1],[98,8],[100,10],[103,1],[106,1],[109,1],[112,1]];
+function pageOfAyah(sn, a){
+  let lo = 0, hi = PAGES.length - 1, ans = 0;
+  while(lo <= hi){ const m = (lo + hi) >> 1, s = PAGES[m][0], y = PAGES[m][1];
+    if(s < sn || (s === sn && y <= a)){ ans = m; lo = m + 1; } else hi = m - 1; }
+  return ans + 1;
+}
+const PORTC = {};
+/* مقاطع السورة: [{from, to, pg}] */
+function surahPortions(sn){
+  if(PORTC[sn]) return PORTC[sn];
+  const N = QURAN[sn].ay.length, starts = [1];
+  for(let i = 0; i < PAGES.length; i++){
+    const s = PAGES[i][0], a = PAGES[i][1];
+    if(s > sn) break;
+    if(s === sn && a > 1 && a <= N) starts.push(a);
+  }
+  const out = [];
+  for(let i = 0; i < starts.length; i++){
+    const from = starts[i], to = (i + 1 < starts.length ? starts[i + 1] - 1 : N);
+    if(to >= from) out.push({ from: from, to: to, pg: pageOfAyah(sn, from) });
+  }
+  return (PORTC[sn] = out);
+}
+/* معرّف السورة/المدى — لازم يطابق اللي بيبنيه surahEntry بالظبط */
+function eidOf(sn, from, to){
+  const N = QURAN[sn].ay.length;
+  return 'sur-' + sn + ((from > 1 || to < N) ? '-' + from + '-' + to : '');
+}
+/* ⭐ نجوم مقطع بعينه (اللي اتلعب فعلًا) */
+function portionStars(sn, from, to){
+  if(!P) return 0;
+  const o = P.sstars[eidOf(sn, from, to)];
+  return (o && o[sn]) || 0;
+}
+/* 🔵 «حافظها من قبل» — الطالب أو معلمه بيعلنها، ومش بتدي نجوم */
+const memoUpTo = sn => (P && P.memo && P.memo[sn]) || 0;
+function setMemo(sn, upTo){
+  if(!P) return;
+  P.memo = P.memo || {};
+  const N = QURAN[sn].ay.length;
+  upTo = Math.max(0, Math.min(N, upTo | 0));
+  if(upTo) P.memo[sn] = upTo; else delete P.memo[sn];
+  saveP(); if(typeof cloudSync === 'function') cloudSync();
+}
+/* حالة المقطع: مُتقن (لعبه) / معلن (قال إنه حافظه) / جديد */
+function portionState(sn, pt){
+  if(portionStars(sn, pt.from, pt.to) > 0) return 'earned';
+  if(memoUpTo(sn) >= pt.to) return 'memo';
+  return 'new';
+}
+/* 📊 تقدّم السورة كلها */
+function surProgress(sn){
+  const pts = surahPortions(sn), N = QURAN[sn].ay.length;
+  let earned = 0, memo = 0, ayEarned = 0, ayMemo = 0, stars = 0;
+  pts.forEach(function(pt){
+    const st = portionState(sn, pt), len = pt.to - pt.from + 1;
+    if(st === 'earned'){ earned++; ayEarned += len; stars += portionStars(sn, pt.from, pt.to); }
+    else if(st === 'memo'){ memo++; ayMemo += len; }
+  });
+  const covered = ayEarned + ayMemo;
+  return { total: pts.length, earned: earned, memo: memo, ayEarned: ayEarned, ayMemo: ayMemo,
+           N: N, covered: covered, pct: Math.round(covered / N * 100),
+           avg: earned ? stars / earned : 0,
+           next: pts.find(function(pt){ return portionState(sn, pt) === 'new'; }) || null };
+}
+/* نجوم السورة في القوائم: القصيرة زي ما هي، والطويلة متوسط المُتقن مرجّحًا بالتغطية */
+function surStarsAgg(sn){
+  const pts = surahPortions(sn);
+  if(pts.length <= 1) return surStars(sn);
+  const g = surProgress(sn);
+  if(!g.earned) return 0;
+  const s = g.avg * (g.ayEarned / g.N);
+  return s >= 2.4 ? 3 : s >= 1.2 ? 2 : s > 0 ? 1 : 0;
+}
+
+/* 🧑‍🏫 المعلم بيحدد الطالب حافظ لحد فين — بيتخزن في عضوية الحلقة والطالب بيقراه */
+const memoLabel = m => {
+  if(!m || !m.sn || !m.to) return 'حدّد';
+  const nm = (QURAN[m.sn]||{}).nm || m.sn;
+  return nm + ' ' + m.to;
+};
+function teacherMemoDialog(hid, uid, name, cur){
+  const d = document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:18px';
+  const sn0 = (cur && cur.sn) || 2, to0 = (cur && cur.to) || '';
+  d.innerHTML = `<div class="card" style="margin:0;max-width:400px;width:100%;animation:pop .25s ease">
+    <h3 style="margin:0 0 2px">🔵 محفوظ ${esc(name)}</h3>
+    <p class="muted" style="font-size:.82rem;margin:0 0 12px">اللي حافظه <b>قبل</b> ما يستخدم اللعبة —
+      هيظهرله أزرق في خريطته، ولمّا يراجعه يبقى أخضر.</p>
+    <label class="muted" style="font-size:.8rem">السورة</label>
+    <select id="tmS" style="width:100%">${Array.from({length:114},(_,i)=>i+1).map(sn=>
+      `<option value="${sn}" ${sn===sn0?'selected':''}>${sn}. ${esc(QURAN[sn].nm)}</option>`).join('')}</select>
+    <label class="muted" style="font-size:.8rem;display:block;margin-top:8px">حافظ لحد آية</label>
+    <input type="number" id="tmA" min="0" value="${to0}" placeholder="مثال: 100" style="width:100%;text-align:center">
+    <p class="muted" style="font-size:.75rem;margin:6px 0 0" id="tmInfo"></p>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button class="btn" id="tmOk">💾 حفظ</button>
+      ${cur?'<button class="btn ghost" id="tmDel">🗑️ امسح</button>':''}
+      <button class="btn ghost" id="tmX">إلغاء</button>
+    </div></div>`;
+  document.body.appendChild(d);
+  const S = d.querySelector('#tmS'), A = d.querySelector('#tmA'), I = d.querySelector('#tmInfo');
+  const info = () => { const sn=+S.value, N=QURAN[sn].ay.length, a=Math.min(N, +A.value||0);
+    A.max = N;
+    I.textContent = a ? ('يعني ' + a + ' من ' + N + ' آية — ' + Math.round(a/N*100) + '٪ من السورة')
+                      : ('السورة فيها ' + N + ' آية'); };
+  S.onchange = A.oninput = info; info();
+  const close = () => d.remove();
+  d.querySelector('#tmX').onclick = () => { Snd.click(); close(); };
+  d.onclick = e => { if(e.target===d) close(); };
+  if(d.querySelector('#tmDel')) d.querySelector('#tmDel').onclick = async () => {
+    Snd.click(); await memRef(hid).child(uid).child('memo').remove().catch(()=>{});
+    close(); toast('اتمسح'); screenHalaqa(hid); };
+  d.querySelector('#tmOk').onclick = async () => {
+    const sn = +S.value, a = Math.max(0, Math.min(QURAN[sn].ay.length, +A.value||0));
+    if(!a) return toast('اكتب رقم الآية');
+    Snd.correct();
+    await memRef(hid).child(uid).child('memo').set({ sn: sn, to: a, at: Date.now() }).catch(()=>{});
+    close(); toast('🔵 اتسجّل — هيظهر عند الطالب'); screenHalaqa(hid);
+  };
+}
+/* الطالب: يسحب اللي معلمه حدده ويدمجه مع اللي سجّله بنفسه (الأكبر يكسب) */
+async function pullTeacherMemo(){
+  if(!fbReady || !P || !fbUser) return false;
+  let changed = false;
+  const list = P.halaqas || [];
+  for(const x of list){
+    try{
+      const s = await memRef(x.hid).child(fbUser.uid).child('memo').once('value');
+      const m = s.val();
+      if(m && m.sn && m.to){
+        P.memo = P.memo || {};
+        if((P.memo[m.sn]||0) < m.to){ P.memo[m.sn] = m.to; saveP(); changed = true; }
+      }
+    }catch(e){}
+  }
+  return changed;
 }
 
 /* ---------- 🏠 زر البيت العائم ---------- */
@@ -3103,9 +3308,27 @@ function screenListen(){
   <div class="hdr">
     <div class="row" style="gap:6px">
       <button class="btn ghost sm" id="lHome">🏠</button>
-      <span class="pill">🎧 ${esc(Q.nm)}</span>
+      <button class="btn ghost sm" id="lPick">🎧 ${esc(Q.nm)} ✏️</button>
     </div>
     <span class="pill" id="lPos">${LSN.i} / ${b}</span>
+  </div>
+  <div class="card fade" id="lRange" hidden style="padding:12px">
+    <h3 style="margin:0 0 8px;font-size:1rem">🎯 تسمع إيه بالظبط؟</h3>
+    <div class="row" style="justify-content:flex-start;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="muted" style="font-size:.82rem">السورة</span>
+      <select id="lSur" style="margin:0;flex:1;min-width:150px">${Array.from({length:114},(_,i)=>i+1).map(x=>
+        `<option value="${x}" ${x===sn?'selected':''}>${x}. ${esc(QURAN[x].nm)}</option>`).join('')}</select>
+    </div>
+    <div class="row" style="justify-content:flex-start;align-items:center;gap:8px;margin-top:8px">
+      <span class="muted" style="font-size:.82rem">من آية</span>
+      <input type="number" id="lF" min="1" value="${a}" style="width:80px;margin:0;text-align:center">
+      <span class="muted" style="font-size:.82rem">إلى</span>
+      <input type="number" id="lT" min="1" value="${b}" style="width:80px;margin:0;text-align:center">
+    </div>
+    <div class="row" style="justify-content:flex-start;margin-top:9px;flex-wrap:wrap" id="lChips"></div>
+    <div class="center" style="margin-top:10px">
+      <button class="btn sm" id="lGo">✅ يلا نسمع</button>
+    </div>
   </div>
   <div class="card fade" style="padding:12px 10px">
     <div class="lisWrap" id="lWrap">
@@ -3134,6 +3357,31 @@ function screenListen(){
   <div class="center"><button class="btn ghost sm" id="lTas">🎤 جاهز أسمّعها</button></div>`;
 
   $('#lHome').onclick = () => { Snd.click(); stopListen(); screenHome(); };
+  /* ✏️ تغيير السورة أو المدى من غير ما تخرج */
+  $('#lPick').onclick = () => { Snd.click(); pauseListen();
+    const box = $('#lRange'); box.hidden = !box.hidden;
+    if(!box.hidden) box.scrollIntoView({block:'nearest', behavior:'smooth'}); };
+  const lChips = () => {
+    const s = +$('#lSur').value, N = QURAN[s].ay.length;
+    $('#lF').max = N; $('#lT').max = N;
+    const pts = surahPortions(s);
+    const opts = [['السورة كاملة', 1, N]];
+    if(pts.length > 1) pts.forEach(pt => opts.push(['ص ' + pt.pg + ' (' + pt.from + '–' + pt.to + ')', pt.from, pt.to]));
+    else if(N > 12) opts.push(['أول ١٠', 1, 10], ['آخر ١٠', N - 9, N]);
+    $('#lChips').innerHTML = opts.slice(0, 13).map(o =>
+      `<button class="btn ghost sm lc" data-f="${o[1]}" data-t="${o[2]}"
+        style="padding:5px 10px;font-size:.76rem">${esc(o[0])}</button>`).join('');
+    app.querySelectorAll('.lc').forEach(c => c.onclick = () => { Snd.click();
+      $('#lF').value = c.dataset.f; $('#lT').value = c.dataset.t; });
+  };
+  $('#lSur').onchange = () => { const s=+$('#lSur').value;
+    $('#lF').value = 1; $('#lT').value = QURAN[s].ay.length; lChips(); };
+  lChips();
+  $('#lGo').onclick = () => { Snd.click();
+    const s = +$('#lSur').value, N = QURAN[s].ay.length;
+    let f = Math.max(1, Math.min(N, +$('#lF').value || 1));
+    let t = Math.max(f, Math.min(N, +$('#lT').value || N));
+    stopListen(); startListen(s, f, t); };
   $('#lPlay').onclick = () => { Snd.click(); LSN.playing ? pauseListen() : playListen(); };
   $('#lPrev').onclick = () => { Snd.click(); gotoAyah(Math.max(LSN.a, LSN.i-1)); };
   $('#lNext').onclick = () => { Snd.click(); gotoAyah(Math.min(LSN.b, LSN.i+1)); };
@@ -3386,7 +3634,7 @@ const surStars = sn => (P && P.sstars['sur-'+sn] ? (P.sstars['sur-'+sn][sn]||0) 
 const surPartial = sn => !!(P && Object.keys(P.sstars).some(k=>k.indexOf('sur-'+sn+'-')===0));
 function screenSurahs(){
   stopTimer();
-  const done = Array.from({length:114},(_,i)=>i+1).filter(sn=>surStars(sn)>0).length;
+  const done = Array.from({length:114},(_,i)=>i+1).filter(sn=>surStarsAgg(sn)>0).length;
   app.innerHTML = `
   <div class="hdr">
     <h2>📖 اختر سورة</h2>
@@ -3406,7 +3654,9 @@ function screenSurahs(){
         ${a?artSVG(sn,40):`<div style="height:40px;line-height:40px;font-size:1.1rem;opacity:.55">${sn}</div>`}
         <div style="font-weight:700;font-size:.98rem">${esc(Q.nm)}</div>
         <div class="muted" style="font-size:.7rem">${esc(Q.p)} · ${Q.ay.length} آية</div>
-        <div class="st">${'★'.repeat(st)}${'☆'.repeat(3-st)}${surPartial(sn)?' <span title="لعبت مدى منها" style="font-size:.7rem">🔖</span>':''}</div>
+        <div class="st">${surahPortions(sn).length>1 && surProgress(sn).covered
+          ? `<span style="font-size:.72rem;color:var(--gold)">${surProgress(sn).pct}%</span>`
+          : `${'★'.repeat(st)}${'☆'.repeat(3-st)}`}</div>
       </div>`;}).join('')}
   </div>
   <p class="muted center" id="noRes" hidden>مفيش نتيجة للبحث ده</p>`;
@@ -3419,10 +3669,36 @@ function screenSurahs(){
       d.style.display = ok?'':'none'; if(ok) n++; });
     $('#noRes').hidden = n>0; };
 }
+/* قائمة صغيرة عند الضغط على مقطع */
+function portionMenu(sn, from, to){
+  const s = portionStars(sn, from, to);
+  const d = document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;'
+    +'background:rgba(0,0,0,.6);backdrop-filter:blur(2px);padding:0';
+  d.innerHTML = `<div class="card" style="margin:0;width:100%;max-width:440px;border-radius:22px 22px 0 0;
+    animation:pop .25s ease;text-align:center">
+    <h3 style="margin:0 0 2px">📄 صفحة ${pageOfAyah(sn,from)} — سورة ${esc(QURAN[sn].nm)}</h3>
+    <p class="muted" style="margin:0 0 10px;font-size:.85rem">الآيات ${from} – ${to}
+      ${s?` · ${'★'.repeat(s)}${'☆'.repeat(3-s)}`:''}</p>
+    <div class="row" style="justify-content:center">
+      <button class="btn" id="pmPlay">▶️ ${s?'راجعها':'العبها'}</button>
+      <button class="btn ghost" id="pmLis">🎧 اسمعها</button>
+    </div>
+    <div class="center" style="margin-top:8px"><button class="btn ghost sm" id="pmX">إلغاء</button></div>
+  </div>`;
+  document.body.appendChild(d);
+  const close = () => d.remove();
+  d.querySelector('#pmPlay').onclick=()=>{ Snd.click(); close(); startSurah(sn, from, to); };
+  d.querySelector('#pmLis').onclick =()=>{ Snd.click(); close(); startListen(sn, from, to); };
+  d.querySelector('#pmX').onclick   =()=>{ Snd.click(); close(); };
+  d.onclick = e => { if(e.target===d) close(); };
+}
+
 function screenSurahOpts(sn){
   stopTimer();
-  const Q=QURAN[sn], N=Q.ay.length, st=surStars(sn);
+  const Q=QURAN[sn], N=Q.ay.length, st=surStarsAgg(sn);
   const TJ = topicJourney(sn);
+  const PTS = surahPortions(sn), PG = surProgress(sn);
   const chips = N>12 ? [['أول ١٠',1,10],['آخر ١٠',N-9,N],['النصف الأول',1,Math.ceil(N/2)],['النصف الثاني',Math.ceil(N/2)+1,N]] : [];
   app.innerHTML = `
   <div class="hdr"><h2>📖 سورة ${esc(Q.nm)}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
@@ -3460,6 +3736,36 @@ function screenSurahOpts(sn){
       <button class="btn ghost" id="goTas">🎤 سمّع المدى</button>
     </div>
   </div>
+  ${PTS.length>1?`<div class="card fade">
+    <div class="hdr" style="margin:0 0 4px">
+      <h3 style="margin:0">📄 خريطة حفظك</h3>
+      <span class="pill">${PG.covered} / ${PG.N} آية · ${PG.pct}%</span>
+    </div>
+    <div class="pbar">
+      <i class="e" style="width:${Math.round(PG.ayEarned/PG.N*100)}%"></i>
+      <i class="m" style="width:${Math.round(PG.ayMemo/PG.N*100)}%"></i>
+    </div>
+    <p class="muted" style="font-size:.78rem;margin:2px 0 0" id="mapHint">
+      دوس على أي صفحة تلعبها أو تراجعها ${PG.memo?'— والأزرق ده اللي قلت إنك حافظه، راجعه يبقى أخضر ✅':''}</p>
+    <div class="pmap" id="pmap">
+      ${PTS.map((pt,i)=>{ const stt=portionState(sn,pt), s=portionStars(sn,pt.from,pt.to);
+        const isNext = PG.next && pt.from===PG.next.from;
+        return `<div class="pchip ${stt==='earned'?'earned':stt==='memo'?'memo':''} ${isNext?'next':''}"
+          data-i="${i}" data-f="${pt.from}" data-t="${pt.to}">
+          <b>ص ${pt.pg}</b>
+          <small>${pt.from}–${pt.to}</small>
+          <div class="ps">${stt==='earned'?('★'.repeat(s)+'☆'.repeat(3-s)):stt==='memo'?'🔵':''}</div>
+        </div>`;}).join('')}
+    </div>
+    <div class="plegend">
+      <span><i style="background:var(--ok)"></i> أتقنتها</span>
+      <span><i style="background:var(--info)"></i> حافظها من قبل</span>
+      <span><i style="background:var(--line)"></i> لسه</span>
+    </div>
+    <div class="center" style="margin-top:10px">
+      <button class="btn ghost sm" id="memoBtn">🔵 ${PG.memo?'عدّل اللي حافظه من قبل':'أنا حافظ منها من قبل'}</button>
+    </div>
+  </div>`:''}
   <div class="card fade">
     <h3 class="center">📖 نص السورة</h3>
     <div class="qbox" id="txt">${Q.ay.map((t,i)=>
@@ -3480,6 +3786,31 @@ function screenSurahOpts(sn){
   $('#tas').onclick=()=>{ Snd.click(); startTasmee(sn); };
   $('#lis').onclick=()=>{ Snd.click(); startListen(sn); };
   if($('#tj')) $('#tj').onclick=()=>{ Snd.click(); newGame(TJ, [P.name]); screenMap(); };
+  /* خريطة المقاطع */
+  let memoMode = false;
+  const pchips = [...app.querySelectorAll('.pchip')];
+  pchips.forEach(c=>c.onclick=()=>{
+    const f=+c.dataset.f, t=+c.dataset.t;
+    if(memoMode){                                   /* وضع الإعلان: دوس على آخر صفحة حافظها */
+      Snd.star(); setMemo(sn, t); screenSurahOpts(sn);
+      toast('🔵 اتسجّل إنك حافظ لحد آية '+t); return;
+    }
+    Snd.click(); portionMenu(sn, f, t);
+  });
+  if($('#memoBtn')) $('#memoBtn').onclick=()=>{
+    Snd.click(); memoMode = !memoMode;
+    $('#memoBtn').textContent = memoMode ? '✖️ إلغاء' : '🔵 عدّل اللي حافظه من قبل';
+    $('#mapHint').innerHTML = memoMode
+      ? '<b style="color:var(--gold)">دوس على آخر صفحة إنت حافظها</b> — وكل اللي قبلها هيتسجّل إنك حافظه'
+      : 'دوس على أي صفحة تلعبها أو تراجعها';
+    pchips.forEach(c=>c.classList.toggle('pick', memoMode));
+    if(!memoMode) return;
+    if(memoUpTo(sn)) { const cl=document.createElement('div'); cl.className='center';
+      cl.style.marginTop='8px';
+      cl.innerHTML='<button class="btn ghost sm" id="memoClr">🗑️ امسح اللي مسجّل</button>';
+      $('#memoBtn').parentElement.appendChild(cl);
+      $('#memoClr').onclick=()=>{ Snd.click(); setMemo(sn,0); screenSurahOpts(sn); toast('اتمسح'); }; }
+  };
   $('#goTas').onclick=()=>{ Snd.click(); const [a,b]=refresh(); startTasmee(sn,a,b); };
   $('#goLis').onclick=()=>{ Snd.click(); const [a,b]=refresh(); startListen(sn,a,b); };
   $('#go').onclick=()=>{ Snd.click(); const [a,b]=refresh(); startSurah(sn,a,b); };
@@ -3971,6 +4302,23 @@ function screenMap(){
   if($('#fin')) $('#fin').onclick=()=>screenFinal();
 }
 
+/* مدى الاستماع للمرحلة الحالية — لو آياتها كلها من سورة واحدة */
+function stageListenRange(){
+  if(!G || !G.surah) return null;
+  const st = curStage(); if(!st) return null;
+  let list = null;
+  if(G.solo) list = surahAyat(G.surah, G.solo);
+  else if(st.slice) list = G.surah.ayat.slice(st.slice[0], st.slice[1]);
+  if(!list || !list.length) return null;
+  /* آيات الرحلات المجمّعة معرّفها سورة×1000+آية، والمفردة رقم الآية مباشرة */
+  const nums = list.map(x => x.n);
+  const sns = new Set(nums.map(v => v > 1000 ? Math.floor(v / 1000) : (G.surah.number || G.solo)));
+  if(sns.size !== 1) return null;                 /* يعدّي أكتر من سورة — مش مدعوم دلوقتي */
+  const sn = [...sns][0];
+  const ays = nums.map(v => v > 1000 ? v % 1000 : v);
+  return { sn: sn, from: Math.min(...ays), to: Math.max(...ays) };
+}
+
 function screenStory(){
   const st=curStage(), solo=!!st.solo, sn=G.solo;
   const I = solo ? (G.surah.info[sn]||{}) : null;
@@ -3984,6 +4332,8 @@ function screenStory(){
         : (st.range?`الآيات ${st.range[0]} – ${st.range[1]}`
         : (st.slice?`${st.slice[1]-st.slice[0]} آية`:(st.surahs||[]).length+' سور'))}</p>
     ${st.story.map(p=>`<p>${esc(p)}</p>`).join('')}
+    ${stageListenRange() ? `<div class="center" style="margin-top:6px">
+      <button class="btn ghost sm" id="stLis">🎧 اسمع آيات ${solo?'السورة':'الربع'} الأول</button></div>` : ''}
   </div>
   ${solo?`<div class="card fade">
       <h3 class="center">📖 اقرأ السورة الأول</h3>
@@ -4001,6 +4351,8 @@ function screenStory(){
         <span style="font-size:.95rem">${esc(J.ab||'')}</span></p>`;}).join('')}</div>`:'')}
   <div class="center"><button class="btn" id="go">ابدأ التحديات (${G.chal.length}) ▶</button></div>`;
   $('#bk').onclick=()=>{Snd.click(); solo ? (G.surah.single?screenSurahs():screenPicker()) : screenMap();};
+  if($('#stLis')) $('#stLis').onclick=()=>{ Snd.click();
+    const r = stageListenRange(); if(r) startListen(r.sn, r.from, r.to); };
   $('#go').onclick=()=>{Snd.click();screenPlay();};
 }
 
@@ -5069,6 +5421,7 @@ if(FIREBASE_CONFIG) fbInit().then(async ok=>{ if(!ok) return;
   await tryPendingHal();
   watchHalaqas();
   screenHome();   /* نعيد الرسم بعد التعرف على الحساب والحلقات */
+  setTimeout(function(){ pullTeacherMemo().then(function(ch){ if(ch) screenHome(); }); }, 1800);
 });
 screenHome();
 </script>
