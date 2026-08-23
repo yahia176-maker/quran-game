@@ -2101,7 +2101,13 @@ function screenProfiles(){
     <div class="seg" id="agRow">
       ${AGES.map((a,i)=>`<button class="btn ${i===1?'':'ghost'} sm" data-ag="${a.k}">${a.em} ${a.nm}</button>`).join('')}
     </div>
-    <div class="center" style="margin-top:6px"><button class="btn" id="mk">يلا بينا 🚀</button></div>
+    <h3 style="margin-top:14px;font-size:1rem">إنت مين؟</h3>
+    <div class="seg" id="roleRow">
+      <button class="btn sm" data-role="student">👦 طالب</button>
+      <button class="btn ghost sm" data-role="teacher">🧑‍🏫 معلم</button>
+    </div>
+    <p class="muted" id="roleHint" style="font-size:.78rem;margin:6px 0 0">هتحفظ وتلعب وتدخل حلقتك.</p>
+    <div class="center" style="margin-top:8px"><button class="btn" id="mk">يلا بينا 🚀</button></div>
   </div>
   <div class="card fade center" style="padding:12px">
     <span class="muted" style="font-size:.85rem">لعبت قبل كده على جهاز تاني ومعاك كود الاستعادة؟</span>
@@ -2111,12 +2117,17 @@ function screenProfiles(){
       <button class="btn sm" id="rcGo">استرجاع</button>
     </div>
   </div>`;
-  let ch='boy', ageK='mid';
+  let ch='boy', ageK='mid', newRole='student';
   app.querySelectorAll('#chRow button').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); ch=b.dataset.c;
     app.querySelectorAll('#chRow button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
   app.querySelectorAll('#agRow button').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); ageK=b.dataset.ag;
     app.querySelectorAll('#agRow button').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost');
     applyTheme((AGES.find(a=>a.k===ageK)||{}).th || 'night'); });
+  app.querySelectorAll('#roleRow button').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); newRole=b.dataset.role;
+    app.querySelectorAll('#roleRow button').forEach(x=>x.classList.add('ghost')); b.classList.remove('ghost');
+    const hint=$('#roleHint'); if(hint) hint.innerHTML = newRole==='teacher'
+      ? '📧 المعلم بيدير حلقات — محتاج تسجيل بإيميل.'
+      : 'هتحفظ وتلعب وتدخل حلقتك.'; });
   app.querySelectorAll('[data-p]').forEach(d=>d.onclick=()=>{ Snd.init(); Snd.click();
     activateProfile(allProfiles().find(x=>x.id===d.dataset.p)); screenHome(); });
   $('#mk').onclick=()=>{ Snd.init();
@@ -2125,8 +2136,9 @@ function screenProfiles(){
     const p=newProfile(name, CHARS[ch].em); p.char=ch; p.age=ageK; p.theme=th;
     const ps2=allProfiles(); ps2.push(p); saveAll(ps2);
     activateProfile(p); Snd.win();
-    /* ملف جديد لازم يختار طالب/معلم بنفسه — مايورّثش دور الملف اللي قبله */
-    setRole(''); screenRole(); };
+    /* الدور اتحدد على الفورمة. المعلم بيعدّي على بوابة الإيميل. */
+    if(newRole==='teacher') return becomeTeacher(() => screenHome());
+    setRole('student'); screenHome(); };
   $('#rcBtn').onclick=()=>{ Snd.init(); Snd.click(); $('#rcForm').hidden=!$('#rcForm').hidden; };
   $('#rcGo').onclick=async()=>{ Snd.init(); Snd.click();
     const c=($('#rcCode').value||'').trim();
