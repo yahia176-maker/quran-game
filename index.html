@@ -321,6 +321,32 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .pline{position:absolute;right:39px;top:56px;bottom:-6px;width:4px;background:var(--line);border-radius:4px}
 .pnode.done .pline{background:var(--ok)}
 
+/* ===== 🛡️ لوحة المالك ===== */
+.otabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.otab{border:2px solid var(--line);border-radius:12px;background:var(--card);padding:7px 14px;
+  font-size:.86rem;font-weight:700;cursor:pointer;color:var(--muted);transition:.14s}
+.otab.on{border-color:var(--gold);color:var(--gold);background:var(--goldA)}
+.okpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin-bottom:12px}
+.okpi .k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.okpi .k b{display:block;font-size:1.5rem;line-height:1.2;color:var(--gold)}
+.okpi .k span{font-size:.74rem;color:var(--muted)}
+.okpi .k .d{font-size:.68rem;margin-top:2px}
+.up{color:var(--ok)} .dn{color:var(--bad)}
+.spark{display:flex;align-items:flex-end;gap:2px;height:46px;margin:8px 0 2px}
+.spark i{flex:1;background:var(--gold2);border-radius:2px 2px 0 0;min-height:2px;opacity:.85}
+.spark i.hi{background:var(--gold)}
+.meter{height:9px;background:var(--tint);border-radius:99px;overflow:hidden;margin:5px 0}
+.meter i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.meter.warn i{background:var(--gold)} .meter.bad i{background:var(--bad)}
+.orow{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);
+  border-radius:12px;margin-bottom:6px;background:var(--card)}
+.orow .g{flex:1;min-width:0}
+.orow b{display:block;font-size:.92rem}
+.orow small{color:var(--muted);font-size:.74rem}
+.flag{font-size:.7rem;padding:2px 8px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.flag.bad{color:var(--bad);border-color:var(--bad)}
+.flag.ok{color:var(--ok);border-color:var(--ok)}
+
 /* ===== 📷 الصورة الشخصية ===== */
 .ava{border-radius:50%;object-fit:cover;display:block;border:3px solid var(--gold);
   box-shadow:0 4px 12px var(--sh2);background:var(--card)}
@@ -1530,7 +1556,7 @@ let P = null;   // الملف الشخصي النشط
 function allProfiles(){ try{ return JSON.parse(localStorage.getItem(PKEY)||'[]'); }catch(e){ return []; } }
 function saveAll(ps){ try{ localStorage.setItem(PKEY, JSON.stringify(ps)); }catch(e){} }
 function saveP(){ if(!P) return; const ps=allProfiles(); const i=ps.findIndex(x=>x.id===P.id);
-  if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); backupProfile(); }
+  if(i>=0) ps[i]=P; else ps.push(P); saveAll(ps); cloudSync(); backupProfile(); indexUser(); }
 function newProfile(name, emoji){
   return { id:'p'+Date.now()+Math.floor(RNG()*999), name:name, emoji:emoji||'🙂', char:'boy', age:'mid', diff:'normal', theme:curTheme(),
     stars:{}, sstars:{}, memo:{}, img:null, avatar:'char', focus:0, streak:0, lastPlay:'', daily:'', mistakes:[],
@@ -2778,97 +2804,374 @@ async function screenHalaqa(hid){
 /* ---------- 🛡️ لوحة المالك (تظهر لإيميل المالك وحده) ---------- */
 const ago = t => { if(!t) return '—'; const d=Math.floor((Date.now()-t)/86400000);
   return d<=0?'النهارده':d===1?'إمبارح':d<30?`من ${d} يوم`:`من ${Math.floor(d/30)} شهر`; };
+/* ============== 🛡️ بيانات لوحة المالك ==============
+   بتتقري مرة واحدة وتتخزّن — البحث بيشتغل على المخزون مش بيعيد التحميل. */
+let OWN = null;
+async function ownerLoad(force){
+  if(OWN && !force) return OWN;
+  const db = firebase.database();
+  const get = p => db.ref(p).once('value').then(s => s.val() || {}).catch(() => null);
+  const [idxU, idxT, hals, users] = await Promise.all([
+    get('index/users'), get('index/teachers'), get('halaqas'), get('users')
+  ]);
+  if(idxU === null && users === null) throw new Error('permission');
+
+  /* ١) المعلمون — من users (فيه بيانات المسابقات) */
+  const teachers = [], allQz = [], studentMap = {};
+  let totalQz = 0;
+  Object.entries(users || {}).forEach(([uid, u]) => {
+    if(!u || !u.teacher) return;
+    const qz = Object.values(u.quizzes || {});
+    totalQz += qz.length;
+    const roster = u.roster || {}, studs = new Set();
+    qz.forEach(z => {
+      allQz.push(Object.assign({}, z, { tName: u.teacher.name, uid: uid }));
+      (z.players || []).forEach(p => {
+        if(p.h) return;
+        const key = p.uid ? (p.uid + '_' + (p.pid || 'x')) : ('n_' + p.name);
+        const nm = (roster[key] && roster[key].nm) || p.name;
+        studs.add(nm);
+        const S = studentMap[nm] = studentMap[nm] ||
+          { n:0, score:0, c:0, w:0, teachers:new Set(), last:0 };
+        S.n++; S.score += p.score||0; S.c += p.c||0; S.w += p.w||0;
+        S.teachers.add(u.teacher.name); S.last = Math.max(S.last, z.t||0);
+      });
+    });
+    teachers.push({ uid: uid, name: u.teacher.name || '—',
+      email: (idxT[uid]||{}).email || '—',
+      quizzes: qz.length, quizStudents: studs.size,
+      seen: Math.max((idxT[uid]||{}).seen||0, ((u.profile||{}).updated)||0,
+                     ...qz.map(z => z.t||0)) });
+  });
+
+  /* ٢) الحلقات الحقيقية — من halaqas مش من قايمة أسماء قديمة */
+  const halaqas = Object.entries(hals || {}).map(([hid, v]) => ({
+    hid: hid, name: v.name || '—', tname: v.tname || '—', t: v.t || '',
+    created: v.created || 0, live: !!v.live,
+    hw: (v.hw && v.hw.items) ? v.hw.items.length : 0,
+    hwTitle: (v.hw && v.hw.t) || ''
+  })).sort((a, b) => b.created - a.created);
+  const halByT = {};
+  halaqas.forEach(x => { halByT[x.t] = (halByT[x.t] || 0) + 1; });
+  teachers.forEach(t => { t.halaqas = halByT[t.uid] || 0; });
+
+  /* ٣) كل المستخدمين — من الفهرس الخفيف (بيشمل اللي بيلعب لوحده) */
+  const players = Object.entries(idxU || {}).map(([uid, g]) => ({
+    uid: uid, name: g.n || '—', last: g.t || 0, stars: g.s || 0,
+    streak: g.k || 0, role: g.r || 'student', halaqas: g.h || 0,
+    c: g.c || 0, w: g.w || 0, hasImg: !!g.im, created: g.cr || 0,
+    acc: (g.c + g.w) ? Math.round(g.c / (g.c + g.w) * 100) : 0
+  })).sort((a, b) => b.last - a.last);
+
+  allQz.sort((a, b) => (b.t||0) - (a.t||0));
+  teachers.sort((a, b) => b.quizzes - a.quizzes || b.halaqas - a.halaqas);
+  OWN = { teachers, halaqas, players, allQz, totalQz,
+          quizStudents: Object.keys(studentMap).length,
+          studentMap, at: Date.now(), indexed: Object.keys(idxU || {}).length };
+  return OWN;
+}
+
+const DAY = 864e5;
+let OTAB = 'now';
 async function screenOwner(sub){
   stopTimer();
-  app.innerHTML='<div class="card fade center"><p>⏳ بجمّع بيانات النظام...</p></div>';
+  app.innerHTML = '<div class="card fade center"><p>⏳ بجمّع بيانات النظام...</p></div>';
   if(!(await fbInit()) || !isOwner()){ toast('الشاشة دي لمالك اللعبة فقط'); return screenHome(); }
-  let users={}, idx={}, err='';
-  try{
-    users = (await firebase.database().ref('users').once('value')).val() || {};
-    idx   = (await firebase.database().ref('index/teachers').once('value')).val() || {};
-  }catch(e){ err = e.message||'permission'; }
-  if(err) return app.innerHTML = `
-    <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" onclick="screenHome()">🏠</button></div>
-    <div class="card fade"><h3>⚠️ القواعد لسه محتاجة تحديث</h3>
-      <p>عشان اللوحة تشتغل لازم تلصق قواعد الأمان الجديدة في Firebase مرة واحدة — الخطوات في شاشة <b>المساعدة</b> تحت عنوان «لوحة المالك».</p>
-      <p class="muted" style="font-size:.8rem">التفاصيل التقنية: ${esc(err)}</p></div>`;
-  /* تجميع */
-  const teachers=[]; let totalQz=0, totalGrp=0; const allQz=[]; const studentMap={};
-  Object.entries(users).forEach(([uid,u])=>{
-    if(!u || !u.teacher) return;
-    const qz = Object.values(u.quizzes||{});
-    totalQz += qz.length;
-    totalGrp += (u.teacher.groups||[]).length;
-    const roster = u.roster||{};
-    const studs = new Set();
-    qz.forEach(z=>{ allQz.push({...z, tName:u.teacher.name, uid});
-      (z.players||[]).forEach(p=>{ if(p.h) return;
-        const key = p.uid?(p.uid+'_'+(p.pid||'x')):('n_'+p.name);
-        const nm = (roster[key]&&roster[key].nm) || p.name;
-        studs.add(nm);
-        const S = studentMap[nm] = studentMap[nm] || {n:0,score:0,c:0,w:0,teachers:new Set(),last:0};
-        S.n++; S.score+=p.score||0; S.c+=p.c||0; S.w+=p.w||0; S.teachers.add(u.teacher.name);
-        S.last=Math.max(S.last, z.t||0); }); });
-    teachers.push({ uid, name:u.teacher.name||'—', email:(idx[uid]||{}).email||((u.profile||{}).email)||'—',
-      groups:(u.teacher.groups||[]).length, quizzes:qz.length, students:studs.size,
-      seen:Math.max((idx[uid]||{}).seen||0, (u.profile||{}).updated||0, ...qz.map(z=>z.t||0)) });
-  });
-  teachers.sort((a,b)=> b.quizzes-a.quizzes || b.students-a.students);
-  allQz.sort((a,b)=>b.t-a.t);
-  const students = Object.entries(studentMap).map(([nm,s])=>({nm,...s,
-    avg:Math.round(s.score/s.n), acc:(s.c+s.w)?Math.round(s.c/(s.c+s.w)*100):0,
-    teachers:[...s.teachers]})).sort((a,b)=>b.n-a.n);
+  let D;
+  try{ D = await ownerLoad(); }
+  catch(e){ return app.innerHTML = `
+    <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+    <div class="card fade"><h3>⚠️ القواعد محتاجة تحديث</h3>
+      <p>عشان اللوحة تقرا الحلقات وفهرس المستخدمين، الصق قواعد الأمان الجديدة في Firebase مرة واحدة —
+        موجودة في <b>⚙️ ← الشرح الكامل</b>.</p>
+      <p class="muted" style="font-size:.8rem">${esc(e.message||'')}</p></div>`,
+    ($('#hm').onclick = () => screenHome()); }
+
+  const now = Date.now();
+  const act = d => D.players.filter(p => now - p.last < d * DAY).length;
+  const nw  = d => D.players.filter(p => p.created && now - p.created < d * DAY).length;
+  const back = D.players.filter(p => p.created && p.last - p.created > 2 * DAY).length;
+  const retention = D.players.length ? Math.round(back / D.players.length * 100) : 0;
+  const teachersLive = D.teachers.filter(t => now - t.seen < 14 * DAY).length;
+
+  /* رسم نشاط آخر ٣٠ يوم من آخر ظهور لكل مستخدم */
+  const bars = new Array(30).fill(0);
+  D.players.forEach(p => { const d = Math.floor((now - p.last) / DAY);
+    if(d >= 0 && d < 30) bars[29 - d]++; });
+  const mx = Math.max(1, ...bars);
+
+  /* تنبيهات تستاهل انتباهك */
+  const alerts = [];
+  D.teachers.forEach(t => { if(!t.halaqas) alerts.push(
+    { t:'معلم من غير حلقات', s:t.name + ' — سجّل وعمره ما عمل حلقة', k:'bad' }); });
+  D.halaqas.forEach(x => { if(x.created && now - x.created > 30*DAY && !x.hw) alerts.push(
+    { t:'حلقة بايتة', s:x.name + ' — بقالها شهر من غير واجب', k:'' }); });
+  const noIndex = D.teachers.length && !D.indexed;
+  if(noIndex) alerts.push({ t:'الفهرس فاضي', s:'المستخدمين هيظهروا أول ما يفتحوا اللعبة بعد التحديث', k:'' });
+
   const q = (sub||'').trim(), nq = norm(q);
-  /* nq فاضي = البحث بحروف لاتينية (إيميل) فنطابق الإيميل فقط */
-  const fT = q? teachers.filter(t=>(nq && norm(t.name).includes(nq)) || t.email.toLowerCase().includes(q.toLowerCase())) : teachers;
-  const fS = (q && nq)? students.filter(s=>norm(s.nm).includes(nq)) : [];
+  const hit = (s) => !q || (nq && norm(s||'').includes(nq)) || (s||'').toLowerCase().includes(q.toLowerCase());
+
+  const kpi = (v, lbl, sub2, cls) => `<div class="k"><b>${v}</b><span>${lbl}</span>
+    ${sub2?`<div class="d ${cls||'muted'}">${sub2}</div>`:''}</div>`;
+
+  const TABS = [['now','📊 النبض'],['ppl','👦 الناس'],['hal','🏫 الحلقات'],
+                ['qz','🏆 المسابقات'],['tools','🧰 أدوات']];
+
+  let body = '';
+  if(OTAB === 'now'){
+    body = `
+    <div class="okpi">
+      ${kpi(act(1), 'نشط النهاردة', act(1)?'':'محدش لسه')}
+      ${kpi(act(7), 'نشط الأسبوع', nw(7)+' جديد', nw(7)?'up':'muted')}
+      ${kpi(D.players.length, 'كل المستخدمين', D.indexed?'':'الفهرس بيتبني')}
+      ${kpi(retention+'%', 'بيرجعوا تاني', retention>=40?'كويس':'محتاج شغل', retention>=40?'up':'dn')}
+    </div>
+    <div class="okpi">
+      ${kpi(D.teachers.length, 'معلم', teachersLive+' نشط', teachersLive?'up':'muted')}
+      ${kpi(D.halaqas.length, 'حلقة', D.halaqas.filter(x=>x.hw).length+' فيها واجب')}
+      ${kpi(D.totalQz, 'مسابقة')}
+      ${kpi(D.players.filter(p=>p.streak>=3).length, 'سلسلة ٣+ أيام', 'بيلعبوا بانتظام')}
+    </div>
+    <div class="card fade">
+      <h3>📈 النشاط — آخر ٣٠ يوم</h3>
+      <div class="spark">${bars.map((v,i)=>`<i class="${i>=23?'hi':''}"
+        style="height:${Math.round(v/mx*100)}%" title="${v}"></i>`).join('')}</div>
+      <div class="row" style="justify-content:space-between"><span class="muted" style="font-size:.72rem">من ٣٠ يوم</span>
+        <span class="muted" style="font-size:.72rem">النهاردة</span></div>
+      <p class="muted" style="font-size:.78rem;margin:8px 0 0">كل عمود = عدد اللي كان آخر ظهور ليهم في اليوم ده.</p>
+    </div>
+    ${alerts.length?`<div class="card fade">
+      <h3>⚠️ محتاج انتباهك (${alerts.length})</h3>
+      ${alerts.slice(0,8).map(a=>`<div class="orow"><div class="g">
+        <b>${esc(a.t)}</b><small>${esc(a.s)}</small></div>
+        <span class="flag ${a.k}">${a.k==='bad'?'مهم':'للعلم'}</span></div>`).join('')}
+    </div>`:`<div class="card fade center"><p class="muted" style="margin:0">✅ مفيش حاجة محتاجة انتباهك</p></div>`}`;
+  }
+
+  if(OTAB === 'ppl'){
+    const fp = D.players.filter(p => hit(p.name));
+    body = `
+    <div class="card fade" style="padding:12px">
+      <input type="text" id="oq" placeholder="🔎 ابحث بالاسم..." value="${esc(q)}" style="margin:0">
+      <p class="muted" style="font-size:.76rem;margin:8px 0 0">${fp.length} من ${D.players.length} —
+        بيشمل اللي بيلعبوا لوحدهم من غير حلقة.</p>
+    </div>
+    <div class="card fade">
+      ${fp.length?fp.slice(0,60).map(p=>`<div class="orow">
+        <div class="g"><b>${esc(p.name)} ${p.role==='teacher'?'🧑‍🏫':''}</b>
+          <small>⭐ ${p.stars} · 🔥 ${p.streak} · دقة ${p.acc}% ·
+            ${p.halaqas?p.halaqas+' حلقة':'لوحده'} · ${ago(p.last)}</small></div>
+        ${p.hasImg?'<span class="flag">📷</span>':''}
+        <button class="btn ghost sm pOpen" data-u="${esc(p.uid)}" style="padding:4px 10px">فتح</button>
+      </div>`).join(''):'<p class="muted center">مفيش نتيجة</p>'}
+      ${fp.length>60?`<p class="muted center" style="font-size:.78rem">وفيه ${fp.length-60} كمان — دوّر بالاسم</p>`:''}
+    </div>`;
+  }
+
+  if(OTAB === 'hal'){
+    const fh = D.halaqas.filter(x => hit(x.name) || hit(x.tname));
+    body = `
+    <div class="card fade" style="padding:12px">
+      <input type="text" id="oq" placeholder="🔎 ابحث باسم الحلقة أو المعلم..." value="${esc(q)}" style="margin:0">
+    </div>
+    <div class="card fade">
+      <h3>🏫 الحلقات (${fh.length})</h3>
+      ${fh.length?fh.map(x=>`<div class="orow">
+        <div class="g"><b>${esc(x.name)} ${x.live?'<span class="flag ok">⚡ مسابقة شغالة</span>':''}</b>
+          <small>🧑‍🏫 ${esc(x.tname)} · ${x.hw?('📋 '+esc(x.hwTitle||'واجب')+' ('+x.hw+' سورة)'):'مفيش واجب'}
+            · اتعملت ${ago(x.created)}</small></div>
+        <button class="btn ghost sm hOpen" data-h="${esc(x.hid)}" style="padding:4px 10px">فتح</button>
+      </div>`).join(''):'<p class="muted center">مفيش حلقات</p>'}
+    </div>`;
+  }
+
+  if(OTAB === 'qz'){
+    body = `<div class="card fade">
+      <h3>🏆 آخر المسابقات (${D.allQz.length})</h3>
+      ${D.allQz.length?`<table><tr><th>التاريخ</th><th>المعلم</th><th>الحلقة</th><th>المحتوى</th><th>طلاب</th></tr>
+        ${D.allQz.slice(0,20).map(z=>`<tr><td class="muted" style="font-size:.8rem">${fmtDate(z.t)}</td>
+          <td>${esc(z.tName||'—')}</td><td>${esc(z.grp||'—')}</td>
+          <td class="muted" style="font-size:.8rem">${esc(z.title||'—')}</td>
+          <td>${(z.players||[]).filter(p=>!p.h).length}</td></tr>`).join('')}
+      </table>`:'<p class="muted center">مفيش مسابقات لسه</p>'}
+    </div>
+    <div class="card fade">
+      <h3>🧑‍🏫 المعلمون — بالنشاط</h3>
+      <table><tr><th>#</th><th>المعلم</th><th>حلقات</th><th>مسابقات</th><th>آخر نشاط</th></tr>
+        ${D.teachers.map((t,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td>
+          <td>${esc(t.name)}<br><span class="muted" style="font-size:.72rem;direction:ltr;display:inline-block">${esc(t.email)}</span></td>
+          <td>${t.halaqas}</td><td><b>${t.quizzes}</b></td>
+          <td class="muted" style="font-size:.8rem">${ago(t.seen)}</td></tr>`).join('')}
+      </table>
+    </div>`;
+  }
+
+  if(OTAB === 'tools'){
+    /* تقدير الاستهلاك: الفهرس + الملفات + الصور */
+    const imgs = D.players.filter(p => p.hasImg).length;
+    const estKB = D.players.length * 15 + imgs * 6 + D.halaqas.length * 1;
+    const pctDB = Math.min(100, estKB / (1024 * 1024) * 100);
+    body = `
+    <div class="card fade">
+      <h3>📊 استهلاك الباقة المجانية</h3>
+      <p style="font-size:.88rem;margin:0 0 4px">التخزين المقدّر: <b>${(estKB/1024).toFixed(1)} ميجا</b> من ١٠٢٤</p>
+      <div class="meter ${pctDB>80?'bad':pctDB>50?'warn':''}"><i style="width:${Math.max(1,pctDB)}%"></i></div>
+      <p class="muted" style="font-size:.78rem;margin:6px 0 0">
+        ${imgs} صورة مرفوعة · ${D.players.length} ملف مستخدم.
+        ${pctDB<20?'مساحة أكتر من كفاية.':'ابدأ راقب الصور.'}</p>
+    </div>
+    <div class="card fade">
+      <h3>📣 الإعلان العام</h3>
+      <p class="muted" style="font-size:.82rem;margin:0 0 8px">رسالة تظهر شريط لكل المستخدمين.</p>
+      <button class="btn sm" id="ann">📣 اكتب إعلان</button>
+    </div>
+    <div class="card fade">
+      <h3>📥 نسخة احتياطية</h3>
+      <p class="muted" style="font-size:.82rem;margin:0 0 8px">تنزّل كل بيانات النظام ملف JSON — احفظه كل فترة.</p>
+      <button class="btn ghost sm" id="exp">📥 نزّل نسخة</button>
+    </div>
+    <div class="card fade">
+      <h3>🔄 تحديث البيانات</h3>
+      <p class="muted" style="font-size:.82rem;margin:0 0 8px">اللوحة بتحمّل مرة واحدة وتشتغل من المخزون —
+        دوس هنا عشان تجيب أحدث بيانات.</p>
+      <p class="muted" style="font-size:.76rem;margin:0 0 8px">آخر تحميل: ${ago(D.at)}</p>
+      <button class="btn ghost sm" id="rl">🔄 حدّث</button>
+    </div>`;
+  }
+
   app.innerHTML = `
-  <div class="hdr"><h2>🛡️ لوحة المالك</h2>
-    <div class="row" style="gap:6px">
-      <button class="btn ghost sm" id="ann">📣 إعلان</button>
-      <button class="btn ghost sm" id="hm">🏠</button>
-    </div></div>
-  <div class="grid fade" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">
-    ${[['🧑‍🏫',teachers.length,'معلم'],['👦',students.length,'طالب'],['🏆',totalQz,'مسابقة'],['👥',totalGrp,'حلقة']]
-      .map(x=>`<div class="stage" style="cursor:default"><span class="em">${x[0]}</span>
-        <div style="font-weight:800;font-size:1.4rem">${x[1]}</div>
-        <div class="muted" style="font-size:.78rem">${x[2]}</div></div>`).join('')}
-  </div>
-  <div class="card fade" style="padding:12px">
-    <input type="text" id="oq" placeholder="🔎 ابحث عن معلم (اسم/إيميل) أو طالب بالاسم..." value="${esc(q)}" style="margin:0">
-  </div>
-  ${q&&fS.length?`<div class="card fade">
-    <h3>👦 نتائج الطلاب (${fS.length})</h3>
-    <table><tr><th>الطالب</th><th>مسابقات</th><th>متوسط</th><th>الدقة</th><th>عند</th><th>آخر نشاط</th></tr>
-      ${fS.map(s=>`<tr><td>${esc(s.nm)}</td><td>${s.n}</td><td><b>${s.avg}</b></td>
-        <td><b style="color:${s.acc>=70?'var(--ok)':'var(--bad)'}">${s.acc}%</b></td>
-        <td class="muted" style="font-size:.8rem">${esc(s.teachers.join('، '))}</td>
-        <td class="muted" style="font-size:.8rem">${ago(s.last)}</td></tr>`).join('')}
-    </table></div>`:''}
-  <div class="card fade">
-    <h3>🧑‍🏫 المعلمون — مرتبون بالنشاط ${q?`<span class="muted" style="font-size:.8rem">(${fT.length} نتيجة)</span>`:''}</h3>
-    ${fT.length?`<table><tr><th>#</th><th>المعلم</th><th>حلقات</th><th>مسابقات</th><th>طلاب</th><th>آخر نشاط</th></tr>
-      ${fT.map((t,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td>
-        <td>${esc(t.name)}<br><span class="muted" style="font-size:.72rem;direction:ltr;display:inline-block">${esc(t.email)}</span></td>
-        <td>${t.groups}</td><td><b>${t.quizzes}</b></td><td>${t.students}</td>
-        <td class="muted" style="font-size:.8rem">${ago(t.seen)}</td></tr>`).join('')}
-    </table>`:'<p class="muted center">مفيش نتيجة</p>'}
-  </div>
-  <div class="card fade">
-    <h3>🏆 آخر المسابقات</h3>
-    ${allQz.length?`<table><tr><th>التاريخ</th><th>المعلم</th><th>الحلقة</th><th>المحتوى</th><th>طلاب</th></tr>
-      ${allQz.slice(0,12).map(z=>`<tr><td class="muted" style="font-size:.8rem">${fmtDate(z.t)}</td>
-        <td>${esc(z.tName||'—')}</td><td>${esc(z.grp||'—')}</td>
-        <td class="muted" style="font-size:.8rem">${esc(z.title||'—')}</td>
-        <td>${(z.players||[]).filter(p=>!p.h).length}</td></tr>`).join('')}
-    </table>`:'<p class="muted center">مفيش مسابقات لسه</p>'}
-  </div>
+  <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="otabs">${TABS.map(t=>`<button class="otab ${OTAB===t[0]?'on':''}" data-t="${t[0]}">${t[1]}</button>`).join('')}</div>
+  ${body}
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
-  $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
-  $('#ann').onclick=()=>{ Snd.click(); screenAnn(); };
-  let tmr; $('#oq').oninput=e=>{ clearTimeout(tmr); const v=e.target.value;
-    tmr=setTimeout(()=>{ screenOwner(v); setTimeout(()=>{const i=$('#oq'); if(i){i.focus(); i.setSelectionRange(v.length,v.length);} },30); }, 450); };
+
+  $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
+  app.querySelectorAll('.otab').forEach(b => b.onclick = () => { Snd.click();
+    OTAB = b.dataset.t; screenOwner(''); });
+  if($('#ann')) $('#ann').onclick = () => { Snd.click(); screenAnn(); };
+  if($('#rl'))  $('#rl').onclick  = async () => { Snd.click(); toast('⏳ بحدّث...');
+    await ownerLoad(true); screenOwner(sub); };
+  if($('#exp')) $('#exp').onclick = () => { Snd.click(); ownerExport(); };
+  app.querySelectorAll('.pOpen').forEach(b => b.onclick = () => { Snd.click(); ownerUser(b.dataset.u); });
+  app.querySelectorAll('.hOpen').forEach(b => b.onclick = () => { Snd.click(); ownerHalaqa(b.dataset.h); });
+  if($('#oq')){ let tmr; $('#oq').oninput = e => { clearTimeout(tmr); const v = e.target.value;
+    tmr = setTimeout(() => { screenOwner(v);
+      setTimeout(() => { const i = $('#oq'); if(i){ i.focus(); i.setSelectionRange(v.length, v.length); } }, 30);
+    }, 300); }; }
 }
+
+/* 👦 صفحة مستخدم — الملف الكامل بيتحمّل هنا بس */
+async function ownerUser(uid){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
+  const s = await firebase.database().ref('users/' + uid).once('value').catch(() => null);
+  const u = (s && s.val()) || {};
+  const pr = u.profile || {};
+  const g = (OWN && OWN.players.find(x => x.uid === uid)) || {};
+  const surs = Object.keys(pr.sstars || {}).length;
+  app.innerHTML = `
+  <div class="hdr"><h2>👦 ${esc(pr.name || g.name || '—')}</h2>
+    <button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade center">
+    ${pr.img ? `<img class="ava" src="${esc(pr.img)}" style="width:88px;height:88px;margin:0 auto">` : '<div style="font-size:3rem">🙂</div>'}
+    <p class="muted" style="margin:6px 0 0;font-size:.82rem;direction:ltr">${esc(uid)}</p>
+  </div>
+  <div class="okpi">
+    <div class="k"><b>${g.stars||0}</b><span>نجمة</span></div>
+    <div class="k"><b>${g.streak||0}</b><span>سلسلة</span></div>
+    <div class="k"><b>${g.acc||0}%</b><span>دقة</span></div>
+    <div class="k"><b>${surs}</b><span>سورة/مقطع</span></div>
+  </div>
+  <div class="card fade">
+    <h3>تفاصيل</h3>
+    <table>
+      <tr><td>آخر نشاط</td><td>${ago(g.last||0)}</td></tr>
+      <tr><td>اتسجّل</td><td>${g.created?fmtDate(g.created):'—'}</td></tr>
+      <tr><td>إجابات</td><td>✔ ${g.c||0} · ✘ ${g.w||0}</td></tr>
+      <tr><td>حلقات</td><td>${g.halaqas||0}</td></tr>
+      <tr><td>معلم؟</td><td>${u.teacher?('نعم — '+esc(u.teacher.name||'')):'لا'}</td></tr>
+      <tr><td>محفوظ سابقًا</td><td>${Object.entries(pr.memo||{}).map(([k,v])=>esc((QURAN[k]||{}).nm||k)+' '+v).join('، ')||'—'}</td></tr>
+    </table>
+  </div>
+  ${pr.img?`<div class="card fade center">
+    <h3>📷 الصورة</h3>
+    <p class="muted" style="font-size:.8rem;margin:0 0 8px">لو مش مناسبة، شيلها من هنا — وهتتشال من حلقاته كمان.</p>
+    <button class="btn ghost sm" id="rmImg" style="border-color:var(--bad);color:var(--bad)">🗑️ شيل الصورة</button>
+  </div>`:''}
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenOwner(''); };
+  if($('#rmImg')) $('#rmImg').onclick = async () => { Snd.click();
+    await firebase.database().ref('users/'+uid+'/profile/img').remove().catch(()=>{});
+    const hs = await firebase.database().ref('halaqas').once('value').catch(()=>null);
+    const all = (hs && hs.val()) || {};
+    for(const hid of Object.keys(all)){
+      await firebase.database().ref('members/'+hid+'/'+uid)
+        .update({ img: null, imgX: true }).catch(()=>{});
+    }
+    toast('🗑️ اتشالت من كل مكان'); ownerUser(uid); };
+}
+
+/* 🏫 صفحة حلقة — أعضاؤها بيتحمّلوا هنا بس */
+async function ownerHalaqa(hid){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
+  const [hs, ms] = await Promise.all([
+    firebase.database().ref('halaqas/'+hid).once('value').catch(()=>null),
+    firebase.database().ref('members/'+hid).once('value').catch(()=>null)]);
+  const v = (hs && hs.val()) || {}, mv = (ms && ms.val()) || {};
+  const k = weekKey();
+  const mem = Object.entries(mv).map(([uid,m])=>({uid, name:m.name||'—',
+    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0, img:!!m.img,
+    memo:m.memo||null})).sort((a,b)=>b.pts-a.pts);
+  app.innerHTML = `
+  <div class="hdr"><h2>🏫 ${esc(v.name||'—')}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="okpi">
+    <div class="k"><b>${mem.length}</b><span>عضو</span></div>
+    <div class="k"><b>${mem.filter(x=>Date.now()-x.last<7*864e5).length}</b><span>نشط الأسبوع</span></div>
+    <div class="k"><b>${(v.hw&&v.hw.items)?v.hw.items.length:0}</b><span>سورة واجب</span></div>
+    <div class="k"><b>${mem.filter(x=>x.img).length}</b><span>صورة</span></div>
+  </div>
+  <div class="card fade">
+    <h3>تفاصيل</h3>
+    <table>
+      <tr><td>المعلم</td><td>${esc(v.tname||'—')}</td></tr>
+      <tr><td>الكود</td><td style="direction:ltr">${esc(hid)}</td></tr>
+      <tr><td>اتعملت</td><td>${v.created?fmtDate(v.created):'—'}</td></tr>
+      <tr><td>الواجب</td><td>${esc((v.hw&&v.hw.t)||'—')}</td></tr>
+      <tr><td>مسابقة شغالة</td><td>${v.live?'⚡ نعم':'لا'}</td></tr>
+    </table>
+  </div>
+  <div class="card fade">
+    <h3>👦 الأعضاء</h3>
+    ${mem.length?mem.map(m=>`<div class="orow"><div class="g">
+      <b>${esc(m.name)}</b><small>🏅 ${m.pts} نقطة الأسبوع · ${ago(m.last)}
+        ${m.memo?(' · 🔵 '+esc((QURAN[m.memo.sn]||{}).nm||'')+' '+m.memo.to):''}</small></div>
+      ${m.img?`<button class="btn ghost sm rmM" data-u="${esc(m.uid)}" style="padding:4px 9px">🗑️ صورة</button>`:''}
+    </div>`).join(''):'<p class="muted center">مفيش أعضاء</p>'}
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenOwner(''); };
+  app.querySelectorAll('.rmM').forEach(b => b.onclick = async () => { Snd.click();
+    await firebase.database().ref('members/'+hid+'/'+b.dataset.u)
+      .update({ img:null, imgX:true }).catch(()=>{});
+    toast('🗑️ اتشالت'); ownerHalaqa(hid); });
+}
+
+/* 📥 نسخة احتياطية */
+function ownerExport(){
+  if(!OWN) return;
+  const data = { at: new Date().toISOString(), teachers: OWN.teachers,
+    halaqas: OWN.halaqas, players: OWN.players, quizzes: OWN.allQz.slice(0,200) };
+  const blob = new Blob([JSON.stringify(data, null, 1)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'quran-game-backup.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  Snd.correct(); toast('📥 اتنزّلت');
+}
+
 function screenAnn(){
   const cur = ANN||{};
   app.innerHTML = `
@@ -3418,6 +3721,24 @@ function askExit2(title, body, okTxt, cb){
   d.querySelector('#k2y').onclick = () => { Snd.click(); close(true); };
   d.querySelector('#k2n').onclick = () => { Snd.click(); close(false); };
   d.onclick = e => { if(e.target === d) close(false); };
+}
+
+/* ============== 📇 فهرس خفيف لكل المستخدمين ==============
+   لوحة المالك كانت بتجرّ ملفات المستخدمين كاملة (١٥ كيلوبايت للواحد) مع كل
+   ضغطة بحث. الفهرس ده سطر صغير لكل مستخدم (~٨٠ بايت) — اللوحة تقراه بدل
+   الملفات، وما تفتحش الملف الكامل غير لما تدخل على مستخدم بعينه. */
+let idxT = null;
+function indexUser(){
+  if(!fbReady || !fbUser || !P) return;
+  clearTimeout(idxT);
+  idxT = setTimeout(() => {
+    const g = { n: (P.name || '').slice(0, 40), t: Date.now(),
+                s: totalStars(), k: P.streak || 0, r: myRole() || 'student',
+                h: (P.halaqas || []).length, c: (P.stats && P.stats.c) || 0,
+                w: (P.stats && P.stats.w) || 0, im: P.avatar === 'img' ? 1 : 0,
+                cr: P.created || 0 };
+    firebase.database().ref('index/users/' + fbUser.uid).update(g).catch(() => {});
+  }, 2000);
 }
 
 /* ---------- 🏠 زر البيت العائم ---------- */
@@ -4487,7 +4808,11 @@ function screenHelp(){
     "config": {
       ".read": true,
       ".write": "auth.token.email === 'yahia176@gmail.com'",
-      "ann": { "txt": { ".validate": "newData.isString() && newData.val().length <= 500" } }
+      "ann": {
+        "txt": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        }
+      }
     },
     "rooms": {
       "$c": {
@@ -4495,10 +4820,18 @@ function screenHelp(){
         ".write": "auth != null && $c.length === 5",
         "players": {
           "$u": {
-            "name":  { ".validate": "newData.isString() && newData.val().length <= 40" },
-            "emoji": { ".validate": "newData.isString() && newData.val().length <= 16" },
-            "char":  { ".validate": "newData.isString() && newData.val().length <= 16" },
-            "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" }
+            "name": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "emoji": {
+              ".validate": "newData.isString() && newData.val().length <= 16"
+            },
+            "char": {
+              ".validate": "newData.isString() && newData.val().length <= 16"
+            },
+            "score": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+            }
           }
         }
       }
@@ -4507,40 +4840,75 @@ function screenHelp(){
       "$code": {
         ".read": "auth != null",
         ".write": "auth != null && $code.length === 6 && (!data.exists() || data.child('o').val() === auth.uid) && newData.child('o').val() === auth.uid",
-        "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "img":  { ".validate": "newData.isString() && newData.val().length <= 30000" }
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "img": {
+          ".validate": "newData.isString() && newData.val().length <= 30000"
+        }
       }
     },
     "halaqas": {
       "$h": {
         ".read": "auth != null",
         ".write": "auth != null && $h.length === 5 && ((!data.exists() && auth.token.email != null && newData.child('t').val() === auth.uid) || (data.exists() && data.child('t').val() === auth.uid))",
-        "name":  { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "tname": { ".validate": "newData.isString() && newData.val().length <= 40" }
-      }
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "tname": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        }
+      },
+      ".read": "auth.token.email === 'yahia176@gmail.com'"
     },
     "members": {
       "$h": {
         ".read": "auth != null",
         "$u": {
           ".write": "auth != null && (auth.uid === $u || root.child('halaqas').child($h).child('t').val() === auth.uid)",
-          "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "char": { ".validate": "newData.isString() && newData.val().length <= 16" },
-          "img":  { ".validate": "newData.isString() && newData.val().length <= 30000 && newData.val().beginsWith('data:image/')" },
-          "imgX": { ".validate": "newData.isBoolean()" },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "char": {
+            ".validate": "newData.isString() && newData.val().length <= 16"
+          },
+          "img": {
+            ".validate": "newData.isString() && newData.val().length <= 30000 && newData.val().beginsWith('data:image/')"
+          },
+          "imgX": {
+            ".validate": "newData.isBoolean()"
+          },
           "memo": {
-            "sn": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 114" },
-            "to": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 300" }
+            "sn": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 114"
+            },
+            "to": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 300"
+            }
           },
           "wk": {
-            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)" }
+            "p": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)"
+            }
           }
         }
       }
     },
     "index": {
       ".read": "auth.token.email === 'yahia176@gmail.com'",
-      "teachers": { "$u": { ".write": "auth != null && auth.uid === $u" } }
+      "teachers": {
+        "$u": {
+          ".write": "auth != null && auth.uid === $u"
+        }
+      },
+      "users": {
+        "$u": {
+          ".write": "auth != null && auth.uid === $u",
+          "n": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          }
+        }
+      }
     },
     "users": {
       ".read": "auth.token.email === 'yahia176@gmail.com'",
