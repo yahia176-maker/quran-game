@@ -5075,8 +5075,10 @@ async function ownerBackup(){
   return { v: 1, at: Date.now(), users, halaqas, centers, index, config, members, fails: fails };
 }
 async function ownerRestore(data, onStep){
-  if(!data || data.v !== 1) throw new Error('bad');
   const parts = ['config','centers','halaqas','members','index','users'];
+  /* بنقبل أي ملف فيه أقسام النظام — سواء نسختنا أو تصدير خام من Firebase */
+  if(!data || typeof data !== 'object' || !parts.some(k => k in data))
+    throw new Error('الملف مافيهوش بيانات النظام');
   const done = [], skip = [], fail = [];
   for(const k of parts){
     if(data[k] === undefined || data[k] === null){ skip.push(k); if(onStep) onStep(k,'فاضي'); continue; }
