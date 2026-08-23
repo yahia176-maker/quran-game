@@ -2122,14 +2122,16 @@ function screenRole(){
     <div class="door" id="rStudent"><span class="em">👦</span>
       <b>طالب</b><span>أحفظ وألعب وأدخل حلقتي</span></div>
     <div class="door" id="rTeacher"><span class="em">🧑‍🏫</span>
-      <b>معلم</b><span>أدير حلقاتي وأتابع طلابي</span></div>
+      <b>معلم</b><span>أدير حلقاتي وأتابع طلابي<br>📧 محتاج إيميل</span></div>
   </div>
   <p class="muted center" style="font-size:.8rem">تقدر تغيّرها في أي وقت من ⚙️</p>`;
   const pick = (el, role) => {
     Snd.init(); Snd.star();
     el.classList.add('picked');
     app.querySelectorAll('.door').forEach(d=>{ if(d!==el) d.style.opacity='.45'; });
-    setTimeout(()=>{ Snd.win(); setRole(role); screenHome(); }, 340);
+    setTimeout(()=>{ Snd.win();
+      if(role === 'teacher') return becomeTeacher(() => screenHome());
+      setRole(role); screenHome(); }, 340);
   };
   $('#rStudent').onclick=e=>pick(e.currentTarget,'student');
   $('#rTeacher').onclick=e=>pick(e.currentTarget,'teacher');
@@ -2419,7 +2421,9 @@ function screenSettings(){
   $('#sndChk').onchange=e=>{ Snd.on=e.target.checked; if(Snd.on){Snd.init();Snd.click();} };
   app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); applyTheme(b.dataset.th); screenSettings(); });
   app.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); setDiff(b.dataset.d); screenSettings(); });
-  $('#swRole').onclick=()=>{ Snd.click(); setRole(myRole()==='teacher'?'student':'teacher'); screenHome(); };
+  $('#swRole').onclick=()=>{ Snd.click();
+    if(myRole()==='teacher'){ setRole('student'); return screenHome(); }
+    becomeTeacher(() => screenHome()); };
   if($('#skGo')) $('#skGo').onclick=async()=>{ Snd.click();
     const em=($('#skEmail').value||'').trim(), pw=$('#skPass').value||'';
     if(!em||!pw) return toast('اكتب الإيميل وكلمة السر');
@@ -3002,12 +3006,35 @@ async function ownerLoad(force){
   halaqas.forEach(x => { halByT[x.t] = (halByT[x.t] || 0) + 1; });
   teachers.forEach(t => { t.halaqas = halByT[t.uid] || 0; });
 
-  /* ٣) كل المستخدمين — من الفهرس الخفيف (بيشمل اللي بيلعب لوحده) */
-  const players = Object.entries(idxU || {}).map(([uid, g]) => ({
+  /* ٣) كل المستخدمين — الفهرس الخفيف أولًا، وبعدين أي حد موجود في users
+     ومش في الفهرس. الفهرس بيتكتب لما الشخص يلعب، فاللي سجّل قبل ما الفهرس
+     يتعمل كان بيختفي من اللوحة خالص — دلوقتي بنبنيه من بياناته الأصلية. */
+  const starsOf = pr => { let s = 0;
+    Object.values((pr && pr.sstars) || {}).forEach(o =>
+      Object.values(o || {}).forEach(v => s += v || 0));
+    Object.values((pr && pr.stars) || {}).forEach(a =>
+      (a || []).forEach(v => s += v || 0));
+    return s; };
+  const pmap = {};
+  Object.entries(idxU || {}).forEach(([uid, g]) => { pmap[uid] = {
     uid: uid, name: g.n || '—', last: g.t || 0, stars: g.s || 0,
     streak: g.k || 0, role: g.r || 'student', halaqas: g.h || 0,
-    c: g.c || 0, w: g.w || 0, hasImg: !!g.im, created: g.cr || 0,
-    acc: (g.c + g.w) ? Math.round(g.c / (g.c + g.w) * 100) : 0
+    c: g.c || 0, w: g.w || 0, hasImg: !!g.im, created: g.cr || 0 }; });
+  let unindexed = 0;
+  Object.entries(users || {}).forEach(([uid, u]) => {
+    if(pmap[uid] || !u) return;
+    unindexed++;
+    const pr = u.profile || {}, st = pr.stats || {};
+    pmap[uid] = { uid: uid, name: pr.name || u.name || '—',
+      last: pr.updated || pr.at || u.updated || 0,
+      stars: starsOf(pr), streak: pr.streak || u.streak || 0,
+      role: u.teacher ? 'teacher' : 'student',
+      halaqas: 0, noIdx: true,
+      c: st.c || u.correct || 0, w: st.w || u.wrong || 0,
+      hasImg: pr.avatar === 'img' || !!pr.img, created: pr.created || 0 };
+  });
+  const players = Object.values(pmap).map(p => Object.assign(p, {
+    acc: (p.c + p.w) ? Math.round(p.c / (p.c + p.w) * 100) : 0
   })).sort((a, b) => b.last - a.last);
 
   allQz.sort((a, b) => (b.t||0) - (a.t||0));
@@ -3028,7 +3055,7 @@ async function ownerLoad(force){
     extra: a.x || '', at: a.at || 0
   })).sort((a, b) => b.at - a.at);
   OWN = { teachers, halaqas, players, allQz, totalQz, centers, reports, audits,
-          quizStudents: Object.keys(studentMap).length,
+          quizStudents: Object.keys(studentMap).length, unindexed: unindexed,
           studentMap, at: Date.now(), indexed: Object.keys(idxU || {}).length };
   return OWN;
 }
@@ -3073,8 +3100,6 @@ async function screenOwner(sub){
     else if(dd !== null && dd <= 14) alerts.push({ t:'اشتراك قرب يخلص', s:c.name+' — باقي '+dd+' يوم', k:'bad' }); });
   (D.reports||[]).filter(r=>!r.done).slice(0,3).forEach(r =>
     alerts.push({ t:'🆘 بلاغ جديد', s:r.name+': '+r.txt.slice(0,50), k:'bad' }));
-  const noIndex = D.teachers.length && !D.indexed;
-  if(noIndex) alerts.push({ t:'الفهرس فاضي', s:'المستخدمين هيظهروا أول ما يفتحوا اللعبة بعد التحديث', k:'' });
 
   const q = (sub||'').trim(), nq = norm(q);
   const hit = (s) => !q || (nq && norm(s||'').includes(nq)) || (s||'').toLowerCase().includes(q.toLowerCase());
@@ -3093,7 +3118,7 @@ async function screenOwner(sub){
     <div class="okpi">
       ${kpi(act(1), 'نشط النهاردة', act(1)?'':'محدش لسه')}
       ${kpi(act(7), 'نشط الأسبوع', nw(7)+' جديد', nw(7)?'up':'muted')}
-      ${kpi(D.players.length, 'كل المستخدمين', D.indexed?'':'الفهرس بيتبني')}
+      ${kpi(D.players.length, 'كل المستخدمين', D.unindexed?D.unindexed+' مختصر':'')}
       ${kpi(retention+'%', 'بيرجعوا تاني', retention>=40?'كويس':'محتاج شغل', retention>=40?'up':'dn')}
     </div>
     <div class="okpi">
@@ -3142,13 +3167,14 @@ async function screenOwner(sub){
     <div class="card fade" style="padding:12px">
       <input type="text" id="oq" placeholder="🔎 ابحث بالاسم..." value="${esc(q)}" style="margin:0">
       <p class="muted" style="font-size:.76rem;margin:8px 0 0">${fp.length} من ${D.players.length} —
-        بيشمل اللي بيلعبوا لوحدهم من غير حلقة.</p>
+        بيشمل اللي بيلعبوا لوحدهم من غير حلقة.${D.unindexed?'<br>منهم <b>'+D.unindexed+
+        '</b> لسه مافتحوش النسخة الجديدة، فبياناتهم مختصرة لحد ما يدخلوا.':''}</p>
     </div>
     <div class="card fade">
       ${fp.length?fp.slice(0,60).map(p=>`<div class="orow">
         <div class="g"><b>${esc(p.name)} ${p.role==='teacher'?'🧑‍🏫':''}</b>
           <small>⭐ ${p.stars} · 🔥 ${p.streak} · دقة ${p.acc}% ·
-            ${p.halaqas?p.halaqas+' حلقة':'لوحده'} · ${ago(p.last)}</small></div>
+            ${p.halaqas?p.halaqas+' حلقة':(p.noIdx?'حلقاته غير معروفة':'لوحده')} · ${ago(p.last)}</small></div>
         ${p.hasImg?'<span class="flag">📷</span>':''}
         <button class="btn ghost sm pOpen" data-u="${esc(p.uid)}" style="padding:4px 10px">فتح</button>
       </div>`).join(''):'<p class="muted center">مفيش نتيجة</p>'}
@@ -3258,8 +3284,12 @@ async function screenOwner(sub){
       </div>
     </div>`:''}
     <div class="card fade">
-      <h3>📣 الإعلان العام</h3>
-      <p class="muted" style="font-size:.82rem;margin:0 0 8px">رسالة تظهر شريط لكل المستخدمين.</p>
+      <h3>📣 الإعلانات</h3>
+      <p class="muted" style="font-size:.82rem;margin:0 0 8px">شريط رسالة — تختار يوصل لمين:
+        كل الناس، الطلاب، المعلمين، أو مديري المراكز.</p>
+      ${(function(){ const on = ANN_CH.filter(c=>ANNS[c.k]&&ANNS[c.k].on&&ANNS[c.k].txt);
+        return on.length ? '<p style="font-size:.85rem;margin:0 0 8px">شغّال دلوقتي: <b>'
+          + on.map(c=>c.nm).join('، ') + '</b></p>' : ''; })()}
       <button class="btn sm" id="ann">📣 اكتب إعلان</button>
     </div>
     <div class="card fade">
@@ -3687,22 +3717,50 @@ function ownerExport(){
   Snd.correct(); toast('📥 اتنزّلت');
 }
 
+let ANN_PICK = 'all';
 function screenAnn(){
-  const cur = ANN||{};
+  const cur = ANNS[ANN_PICK] || {};
   app.innerHTML = `
   <div class="hdr"><h2>📣 رسالة إعلان</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade">
-    <p>الرسالة دي بتظهر شريط لكل اللاعبين لحد ما يقفلوها. سيبها فاضية أو اقفلها عشان تختفي.</p>
+    <h3>مين يشوفها؟</h3>
+    <div class="otabs" style="margin-bottom:4px">
+      ${ANN_CH.map(c=>`<button class="otab achip ${ANN_PICK===c.k?'on':''}" data-a="${c.k}">${c.nm}</button>`).join('')}
+    </div>
+    <p class="muted" style="font-size:.8rem;margin:6px 0 0">
+      ${ANN_PICK==='all' ? 'هتوصل لأي حد يفتح اللعبة، حتى من غير تسجيل.'
+        : ANN_PICK==='students' ? 'لأي حد داخل اللعبة.'
+        : ANN_PICK==='teachers' ? '🔒 حسابات المعلمين بس — القواعد بتمنع أي حد تاني يقراها.'
+        : '🔒 مديري المراكز بس — القواعد بتمنع أي حد تاني يقراها.'}
+    </p>
+  </div>
+  <div class="card fade">
+    <p>الرسالة بتظهر شريط لحد ما يقفلها. كل فئة ليها رسالتها لوحدها.</p>
     <input type="text" id="atxt" maxlength="120" placeholder="مثال: مسابقة رمضان تبدأ الجمعة إن شاء الله 🌙" value="${esc(cur.txt||'')}">
     <label class="switch" style="margin-top:8px"><input type="checkbox" id="aon" ${cur.on?'checked':''}> تفعيل الإعلان</label>
+  </div>
+  <div class="card fade">
+    <h3>الإعلانات الشغالة دلوقتي</h3>
+    ${ANN_CH.filter(c=>ANNS[c.k]&&ANNS[c.k].on&&ANNS[c.k].txt).map(c=>
+      `<div class="orow"><div class="g"><b>${c.nm}</b><small>${esc(ANNS[c.k].txt)}</small></div></div>`
+    ).join('') || '<p class="muted" style="margin:0">مفيش إعلان شغال</p>'}
   </div>
   <div class="center row">
     <button class="btn" id="save">💾 حفظ ونشر</button>
     <button class="btn ghost" id="bk2">رجوع</button>
   </div>`;
   $('#bk').onclick=$('#bk2').onclick=()=>{ Snd.click(); screenOwner(); };
+  app.querySelectorAll('.achip').forEach(b => b.onclick = () => {
+    Snd.click(); ANN_PICK = b.dataset.a; screenAnn(); });
   $('#save').onclick=async()=>{ Snd.click();
-    try{ await firebase.database().ref('config/ann').set({txt:($('#atxt').value||'').trim(), on:$('#aon').checked, at:Date.now()});
+    const rec = { txt:($('#atxt').value||'').trim(), on:$('#aon').checked, at:Date.now() };
+    try{
+      await firebase.database().ref('ann/' + ANN_PICK).set(rec);
+      /* «كل الناس» بتتكتب كمان في المكان القديم عشان الأجهزة اللي لسه
+         شغالة بنسخة محفوظة قديمة تفضل تشوفها */
+      if(ANN_PICK === 'all')
+        await firebase.database().ref('config/ann').set(rec).catch(()=>{});
+      audit('ann', ANN_PICK, rec.on ? 'شغّال' : 'مقفول');
       Snd.correct(); toast('📣 اتنشر'); screenOwner(); }
     catch(e){ toast('⚠️ مش قادر أحفظ — راجع قواعد Firebase'); } };
 }
@@ -4500,9 +4558,13 @@ function screenCenterEdit(cid, C){
   draw();
 }
 /* 📢 إيه الجديد — يظهر مرة واحدة لكل إصدار */
-const APP_VER = 18;
+const APP_VER = 19;
 const NEWS = [
-  { v: 18, t: 'التحديث الأخير', items: [
+  { v: 19, t: 'التحديث الأخير', items: [
+    '📣 الإعلانات بقت لفئات — كل واحد يشوف اللي يخصه بس',
+    '🧑‍🏫 شاشة المعلم بقت محتاجة إيميل — الأطفال مايدخلوهاش بالغلط'
+  ]},
+  { v: 18, t: 'قبلها', items: [
     '🛡️ درع السلسلة — غياب يوم واحد مابقاش يكسر سلسلتك',
     '📅 المعلم يحدد مواعيد الحلقة، والطلاب يتفكّروا يوم الحلقة',
     '👻 المعلم يشوف الطلاب اللي غابوا ويفكّرهم بضغطة واتساب',
@@ -4511,7 +4573,7 @@ const NEWS = [
     '🏢 المراكز: لوجو وبيانات تواصل، ونقل الحلقة بين المعلمين',
     '🆘 زر «بلّغ عن مشكلة» — رأيك بيوصلنا فورًا'
   ]},
-  { v: 17, t: 'قبلها', items: [
+  { v: 17, t: 'وقبلها', items: [
     '📄 خريطة حفظك بصفحات المصحف — والمراجعة بقت ضغطة',
     '🔵 «أنا حافظ من قبل» للطلاب اللي جم حافظين',
     '🎧 استماع كامل بتكرار الآية وتشغيل بدون إنترنت',
@@ -4738,6 +4800,7 @@ async function screenCenter(){
   if(!cid) return screenHome();
   app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
   if(!(await fbInit())) return;
+  markMgr(cid);
   const C = await centerLoad(cid);
   C.code = await centerJoinCode(cid).catch(()=>cid);
   if(C.paused) return (app.innerHTML = `
@@ -4928,6 +4991,14 @@ function xferDialog(cid, hid, halName, oldUid, list){
 
 /* ---------- 🏢 إدارة المركز: كود جديد / تعليق / إعادة تسمية ---------- */
 /* الاستلام بقى محاولة كتابة — القواعد بتتحقق من الإيميل، فمش محتاجين نقرا mgrEmail */
+/* 🏢 علامة «أنا مدير» — القواعد مش بتقدر تلف على كل المراكز تدوّر
+   على مدير، فبنسيبله علامة في index/mgrs عشان قناة إعلان المديرين
+   تتحقق منها. بتتكتب لوحدها كل ما المدير يفتح لوحته، فالمراكز القديمة
+   بتتصلّح من غير أي تدخّل. */
+async function markMgr(cid){
+  if(!fbReady || !fbUser || !cid) return;
+  try{ await firebase.database().ref('index/mgrs/' + fbUser.uid).set(cid); }catch(e){}
+}
 async function claimCenter2(code){
   const cid = (code||'').trim().toUpperCase();
   if(cid.length !== 5) throw new Error('bad');
@@ -4938,6 +5009,7 @@ async function claimCenter2(code){
   try{
     await centerRef(cid).update({ mgr: fbUser.uid, mgrName: (P && P.name) || my });
   }catch(e){ throw new Error('notyours'); }
+  await markMgr(cid);
   if(P){ P.mgrCid = cid; saveP(); }
   return { name: s.val() };
 }
@@ -7098,7 +7170,31 @@ function authMsg(e){
 /* تأمين حساب المعلم بإيميل وكلمة سر:
    الأول بنحاول ترقية الهوية الحالية نفسها (أنضف طريق)، ولو حماية Firebase
    الجديدة رفضت الترقية بدون تحقق إيميل — بننشئ الحساب وننقل كل البيانات إليه */
+/* 🧑‍🏫 بوابة المعلم.
+   القواعد أصلًا مابتسمحش لحساب مجهول يعمل حلقة (لازم إيميل)، فالزرار
+   القديم كان بيوَدّي الطفل لشاشة مالهاش لازمة ويسجّله «معلم» في اللوحة
+   وفي إعلانات المعلمين. دلوقتي الدور مابيتغيّرش غير بعد الإيميل. */
+let WANT_TEACHER = false;
+function becomeTeacher(after){
+  const done = after || (() => screenHome());
+  if(fbReady && fbUser && !fbUser.isAnonymous){ setRole('teacher'); return done(); }
+  askExit2('إنت معلم فعلًا؟',
+    'شاشة المعلم للناس اللي <b>بتدرّس فعلًا</b> — بتعمل حلقات وواجبات ومسابقات.<br><br>' +
+    'عشان تبقى معلم لازم <b>تسجّل بإيميل وكلمة سر</b>. ده اللي بيخلي حلقاتك ملكك ' +
+    'ومحدش ياخدها — ومن غيره مش هتعرف تعمل حلقة أصلًا.<br><br>' +
+    '<b>لو إنت طالب بتحفظ، الشاشة دي مش هتفيدك في حاجة.</b>',
+    '📧 أنا معلم — سجّلني',
+    ok => {
+      if(!ok){ setRole('student'); return done(); }
+      WANT_TEACHER = true; screenAccount();
+    });
+}
 async function linkTeacherEmail(email, pass){
+  const r = await linkEmailRaw(email, pass);
+  if(WANT_TEACHER){ WANT_TEACHER = false; setRole('teacher'); toast('🧑‍🏫 بقيت معلم'); }
+  return r;
+}
+async function linkEmailRaw(email, pass){
   const cred = firebase.auth.EmailAuthProvider.credential(email, pass);
   try{
     await firebase.auth().currentUser.linkWithCredential(cred);
@@ -7139,17 +7235,45 @@ function indexTeacher(t, extra){
 }
 /* ===== الإعلان العام ===== */
 let ANN = null;
+/* 📣 الإعلانات — أربع قنوات منفصلة.
+   مهم: الفلترة مش على الشاشة، هي في قواعد Firebase نفسها. قناة المعلمين
+   مابتتقريش غير من حساب معلم، وقناة المديرين من مدير بس — يعني حتى لو
+   حد فتح الكود مش هيوصل للنص. الشاشة بتحاول تقرا الأربعة والسيرفر بيرفض
+   اللي مش من حقها، فالرفض هنا حاجة طبيعية مش خطأ. */
+const ANN_CH = [
+  { k:'all',      nm:'🌍 كل الناس' },
+  { k:'students', nm:'👦 الطلاب' },
+  { k:'teachers', nm:'🧑‍🏫 المعلمين' },
+  { k:'mgrs',     nm:'🏢 مديري المراكز' }
+];
+let ANNS = {};
 function watchAnnouncement(){
   if(!fbReady) return;
-  firebase.database().ref('config/ann').on('value', s=>{ ANN = s.val(); paintAnn(); });
+  ANN_CH.forEach(c => {
+    try{ firebase.database().ref('ann/' + c.k).on('value',
+      s => { ANNS[c.k] = s.val(); paintAnn(); },
+      () => { ANNS[c.k] = null; });        /* مرفوض = مش بتاعي، عادي */
+    }catch(e){}
+  });
+  /* الأجهزة اللي لسه شغالة بنسخة قديمة محفوظة عندها بتقرا المكان القديم */
+  try{ firebase.database().ref('config/ann').on('value', s => { ANN = s.val(); }); }catch(e){}
 }
 function paintAnn(){
   const old = document.getElementById('annBar'); if(old) old.remove();
-  if(!ANN || !ANN.on || !ANN.txt) return;
-  if(localStorage.getItem(LS+'_annseen') === String(ANN.at)) return;
+  /* أحدث إعلان غير مقروء من القنوات اللي من حقي أقراها */
+  let best = null;
+  ANN_CH.forEach(c => {
+    const a = ANNS[c.k];
+    if(!a || !a.on || !a.txt) return;
+    if(localStorage.getItem(LS+'_annseen_' + c.k) === String(a.at)) return;
+    if(!best || (a.at||0) > (best.a.at||0)) best = { c:c.k, a:a };
+  });
+  if(!best) return;
   const d = document.createElement('div'); d.id='annBar'; d.className='annbar';
-  d.innerHTML = `<span>📣 ${esc(ANN.txt)}</span><button title="إخفاء">✕</button>`;
-  d.querySelector('button').onclick = ()=>{ localStorage.setItem(LS+'_annseen', String(ANN.at)); d.remove(); };
+  d.innerHTML = `<span>📣 ${esc(best.a.txt)}</span><button title="إخفاء">✕</button>`;
+  d.querySelector('button').onclick = ()=>{
+    localStorage.setItem(LS+'_annseen_' + best.c, String(best.a.at));
+    d.remove(); paintAnn(); };                /* يبان اللي بعده لو فيه */
   document.body.appendChild(d);
 }
 /* مزامنة الملف الشخصي سحابيًا (حساب بسيط مرتبط بالجهاز) */
