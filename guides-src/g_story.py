@@ -3,7 +3,7 @@
 import io, os
 from _base import page, URL
 
-UPDATED = '٢٣ أغسطس ٢٠٢٦ (تحديث ٧)'
+UPDATED = '٢٣ أغسطس ٢٠٢٦ (تحديث ٨)'
 
 BODY = """
 <div class="cover">
@@ -243,6 +243,7 @@ BODY = """
   <span class="chip">سباق الدقيقة</span><span class="chip">صور شخصية</span>
   <span class="chip">٣ ثيمات</span><span class="chip">يشتغل بدون نت</span>
   <span class="chip">لوحة مالك</span><span class="chip">قواعد حماية مُختبَرة</span>
+  <span class="chip">تفسير المختصر ١١٤ سورة</span><span class="chip">دليل لكل دور</span>
 </div>
 
 <h2>اللي لسه مفتوح</h2>
