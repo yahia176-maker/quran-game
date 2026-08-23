@@ -3931,21 +3931,6 @@ async function ownerCreateCenter(name, email){
   await codeRef(code).set(cid).catch(()=>{});
   return { cid: cid, code: code };
 }
-/* 🧑‍💼 المدير بيستلم مركزه بالكود (لازم يكون داخل بالإيميل اللي المالك حدده) */
-async function claimCenter(code){
-  const cid = (code||'').trim().toUpperCase();
-  if(cid.length !== 5) throw new Error('bad');
-  const s = await centerRef(cid).once('value');
-  const v = s.val();
-  if(!v) throw new Error('notfound');
-  const my = ((fbUser && fbUser.email) || '').toLowerCase();
-  if(!my) throw new Error('needemail');
-  if(v.mgr && v.mgr !== fbUser.uid) throw new Error('taken');
-  if((v.mgrEmail||'') !== my) throw new Error('notyours');
-  await centerRef(cid).update({ mgr: fbUser.uid, mgrName: (P && P.name) || my });
-  if(P){ P.mgrCid = cid; saveP(); }
-  return v;
-}
 const myCenter = () => (P && P.mgrCid) || '';
 
 /* 🧑‍🏫 المعلم بينضم لمركز بالكود */
