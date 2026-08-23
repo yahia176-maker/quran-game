@@ -4939,6 +4939,8 @@ async function screenCenter(){
       <button class="btn ghost sm chOpen" data-h="${esc(x.hid)}" style="padding:4px 10px">فتح</button>
     </div>`).join('') : '<p class="muted center">مفيش حلقات لسه</p>'}
   </div>
+  ${location.protocol.startsWith('http')?`<div class="center" style="margin-top:6px">
+    <a class="btn ghost sm" href="guide-manager.html" target="_blank" style="text-decoration:none">📖 دليل مدير المركز (يُطبع)</a></div>`:''}
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
   $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
   $('#cCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(C.code);

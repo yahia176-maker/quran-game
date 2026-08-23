@@ -1,6 +1,6 @@
 /* رحلة القرآن — Service Worker: يفتح بدون إنترنت بعد أول زيارة */
-const C = 'qg-v29';
-const CORE = ['./', 'index.html', 'guide.html', 'guide-child.html', 'guide-quick.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+const C = 'qg-v30';
+const CORE = ['./', 'index.html', 'guide.html', 'guide-child.html', 'guide-quick.html', 'guide-manager.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });
