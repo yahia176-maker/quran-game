@@ -3318,6 +3318,8 @@ async function screenOwner(sub){
     await ownerLoad(true); screenOwner(sub); };
   if($('#exp')) $('#exp').onclick = async () => { Snd.click(); toast('⏳ بجهّز...');
     const d = await ownerBackup();
+    if(d.fails && d.fails.length){ Snd.wrong();
+      toast('⚠️ مقدرناش نقرا: ' + d.fails.join('، ') + ' — حدّث القواعد'); }
     dlJSON(d, 'quran-game-backup-' + new Date().toISOString().slice(0,10) + '.json');
     try{ localStorage.setItem(LS+'_bk', String(Date.now())); }catch(e){}
     Snd.correct(); toast('📥 اتنزّلت'); screenOwner(sub); };
@@ -3540,9 +3542,13 @@ function ownerImport(){
         '♻️ استرجع', async ok => {
           if(!ok) return;
           toast('⏳ بسترجع...');
-          try{ await ownerRestore(data, (k, st) => toast(k + ': ' + st));
-            Snd.win(); toast('✅ اترجّعت'); await ownerLoad(true); screenOwner(''); }
-          catch(e){ Snd.wrong(); toast('⚠️ فشل الاسترجاع'); }
+          try{
+            const r = await ownerRestore(data);
+            if(r.fail.length){ Snd.wrong();
+              toast('⚠️ فشل في: ' + r.fail.join('، ') + ' — القواعد محتاجة تحديث'); }
+            else { Snd.win(); toast('✅ اترجّع: ' + r.done.join('، ')); }
+            await ownerLoad(true); screenOwner('');
+          }catch(e){ Snd.wrong(); toast('⚠️ ' + (e.message||'فشل الاسترجاع')); }
         });
     };
     fr.readAsText(f);
@@ -5047,21 +5053,25 @@ async function dismissMsg(){
 
 /* 💾 نسخة احتياطية خام قابلة للاسترجاع */
 async function ownerBackup(){
-  const get = p => dbr(p).once('value').then(s => s.val()).catch(() => null);
+  const fails = [];
+  const get = async p => { try{ const s = await dbr(p).once('value'); return s.val(); }
+    catch(e){ fails.push(p); return undefined; } };   /* undefined = فشل، null = فاضي */
   const [users, halaqas, centers, index, config, members] = await Promise.all([
     get('users'), get('halaqas'), get('centers'), get('index'), get('config'), get('members')
   ]);
-  return { v: 1, at: Date.now(), users, halaqas, centers, index, config, members };
+  return { v: 1, at: Date.now(), users, halaqas, centers, index, config, members, fails: fails };
 }
 async function ownerRestore(data, onStep){
   if(!data || data.v !== 1) throw new Error('bad');
   const parts = ['config','centers','halaqas','members','index','users'];
+  const done = [], skip = [], fail = [];
   for(const k of parts){
-    if(data[k] == null){ if(onStep) onStep(k, 'تخطّي'); continue; }
-    await dbr(k).set(data[k]);
-    if(onStep) onStep(k, 'تم');
+    if(data[k] === undefined || data[k] === null){ skip.push(k); if(onStep) onStep(k,'فاضي'); continue; }
+    try{ await dbr(k).set(data[k]); done.push(k); if(onStep) onStep(k, 'تم'); }
+    catch(e){ fail.push(k); if(onStep) onStep(k, 'فشل'); }
   }
-  audit('restore', 'كل النظام', new Date(data.at).toLocaleString('ar-EG'));
+  audit('restore', done.join(','), fail.length ? ('فشل: ' + fail.join(',')) : 'تمام');
+  return { done, skip, fail };
 }
 
 /* 📅 اشتراك المركز */
@@ -6202,7 +6212,8 @@ function screenHelp(){
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 14)"
         }
       },
-      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "members": {
       "$h": {
@@ -6239,7 +6250,8 @@ function screenHelp(){
           }
         }
       },
-      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "index": {
       ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
@@ -6286,14 +6298,16 @@ function screenHelp(){
           ".write": "auth != null && ((auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || (newData.exists() && root.child('centers').child(newData.val()).child('mgr').val() === auth.uid) || (!newData.exists() && root.child('centers').child(data.val()).child('mgr').val() === auth.uid))",
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
         }
-      }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "users": {
       ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
       "$u": {
         ".read": "auth != null && (auth.uid === $u || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
         ".write": "auth != null && auth.uid === $u"
-      }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "centers": {
       "$c": {
@@ -6352,7 +6366,9 @@ function screenHelp(){
           ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
         }
-      }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "reports": {
       ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",

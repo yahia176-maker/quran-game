@@ -63,7 +63,8 @@
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 14)"
         }
       },
-      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "members": {
       "$h": {
@@ -100,7 +101,8 @@
           }
         }
       },
-      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "index": {
       ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
@@ -147,14 +149,16 @@
           ".write": "auth != null && ((auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || (newData.exists() && root.child('centers').child(newData.val()).child('mgr').val() === auth.uid) || (!newData.exists() && root.child('centers').child(data.val()).child('mgr').val() === auth.uid))",
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
         }
-      }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "users": {
       ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
       "$u": {
         ".read": "auth != null && (auth.uid === $u || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
         ".write": "auth != null && auth.uid === $u"
-      }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "centers": {
       "$c": {
@@ -213,7 +217,9 @@
           ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
         }
-      }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
     },
     "reports": {
       ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
