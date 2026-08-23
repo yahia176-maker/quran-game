@@ -2718,11 +2718,41 @@ async function screenTeacherHome(){
       <div class="muted" style="font-size:.74rem">متابعة مستوى الطلاب</div></div>
     <div class="stage" id="tPlay"><span class="em">📖</span><b>ألعب أنا</b>
       <div class="muted" style="font-size:.74rem">جرّب اللعبة كطالب</div></div>
+    ${myCenter()?`<div class="stage" id="tCtr" style="border-color:var(--gold)">
+      <span class="em">🏢</span><b>مركزي</b>
+      <div class="muted" style="font-size:.74rem">متابعة المعلمين</div></div>`:''}
+  </div>
+  <div class="card fade" style="padding:12px">
+    <h3 style="margin:0 0 6px;font-size:1rem">🏢 المركز</h3>
+    ${(P&&P.cid)?`<p style="font-size:.88rem;margin:0">إنت في مركز — مديره بيشوف نشاطك وحلقاتك.
+      <span class="muted" style="direction:ltr;display:inline-block">${esc(P.cid)}</span></p>
+      <div class="center" style="margin-top:8px"><button class="btn ghost sm" id="ctrOut">🚪 اخرج من المركز</button></div>`
+    :`<p class="muted" style="font-size:.84rem;margin:0 0 8px">لو بتشتغل في مركز أو أكاديمية،
+        اكتب كود المركز عشان مديرك يتابع معاك.</p>
+      <div class="row" style="justify-content:flex-start">
+        <input type="text" id="ctrCode" maxlength="5" placeholder="كود المركز"
+          style="text-align:center;letter-spacing:5px;direction:ltr;margin:0;max-width:150px">
+        <button class="btn sm" id="ctrGo">انضم</button>
+      </div>`}
+    ${(!myCenter()&&fbUser&&!fbUser.isAnonymous)?`<div class="center" style="margin-top:8px">
+      <button class="btn ghost sm" id="ctrClaim">🏢 أنا مدير مركز — استلم مركزي</button></div>`:''}
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
   if($('#whoBtn')) $('#whoBtn').onclick=()=>{ Snd.click(); screenAccount(); };
   $('#tRep').onclick=()=>{ Snd.click(); screenGroups(); };
   $('#tPlay').onclick=()=>{ Snd.click(); screenPickHub(); };
+  if($('#tCtr')) $('#tCtr').onclick=()=>{ Snd.click(); screenCenter(); };
+  if($('#ctrGo')) $('#ctrGo').onclick=async()=>{ Snd.click();
+    try{ const v=await joinCenter($('#ctrCode').value); Snd.win();
+      toast('🏢 انضممت لمركز '+v.name); screenTeacherHome(); }
+    catch(e){ Snd.wrong(); toast(e.message==='notfound'?'❌ مفيش مركز بالكود ده':'⚠️ محتاج إنترنت'); } };
+  if($('#ctrOut')) $('#ctrOut').onclick=()=>{ Snd.click();
+    askExit2('تخرج من المركز؟','مديرك مش هيشوف حلقاتك بعد كده. حلقاتك وطلابك هيفضلوا زي ما هم.',
+      '🚪 اخرج', async ok=>{ if(!ok) return;
+        const cid=P.cid; await cidxRef(cid).child('teachers').child(fbUser.uid).remove().catch(()=>{});
+        P.cid=''; saveP(); const t=await loadTeacher(); if(t){ t.cid=''; await saveTeacher(t); }
+        toast('خرجت من المركز'); screenTeacherHome(); }); };
+  if($('#ctrClaim')) $('#ctrClaim').onclick=()=>{ Snd.click(); screenClaimCenter(); };
   app.querySelectorAll('.hcard').forEach(b=>b.onclick=()=>{ Snd.click(); screenHalaqa(b.dataset.h); });
   $('#addh').onclick=async()=>{ const nm=($('#nh').value||'').trim(); if(!nm) return toast('اكتب اسم الحلقة');
     if(fbUser && fbUser.isAnonymous){ Snd.wrong();
@@ -2730,6 +2760,7 @@ async function screenTeacherHome(){
     Snd.click(); const hid=newHid();
     await halRef(hid).set({ t:fbUser.uid, tname:t.name, name:nm, created:Date.now() });
     t.hal=(t.hal||[]).concat(hid); t.groups=(t.groups||[]).concat(nm); await saveTeacher(t);
+    if(t.cid) mirrorHalaqa(t.cid, hid);
     Snd.win(); toast('🎉 اتعملت — ابعت رابطها لطلابك'); screenHalaqa(hid); };
 }
 
@@ -2811,8 +2842,9 @@ async function ownerLoad(force){
   if(OWN && !force) return OWN;
   const db = firebase.database();
   const get = p => db.ref(p).once('value').then(s => s.val() || {}).catch(() => null);
-  const [idxU, idxT, hals, users] = await Promise.all([
-    get('index/users'), get('index/teachers'), get('halaqas'), get('users')
+  const [idxU, idxT, hals, users, ctrs, cidx] = await Promise.all([
+    get('index/users'), get('index/teachers'), get('halaqas'), get('users'),
+    get('centers'), get('index/centers')
   ]);
   if(idxU === null && users === null) throw new Error('permission');
 
@@ -2865,7 +2897,13 @@ async function ownerLoad(force){
 
   allQz.sort((a, b) => (b.t||0) - (a.t||0));
   teachers.sort((a, b) => b.quizzes - a.quizzes || b.halaqas - a.halaqas);
-  OWN = { teachers, halaqas, players, allQz, totalQz,
+  const centers = Object.entries(ctrs || {}).map(([cid, v]) => ({
+    cid: cid, name: v.name || '—', mgr: v.mgr || '', mgrEmail: v.mgrEmail || '',
+    created: v.created || 0,
+    teachers: Object.keys(((cidx||{})[cid]||{}).teachers || {}).length,
+    halaqas:  Object.keys(((cidx||{})[cid]||{}).halaqas  || {}).length
+  })).sort((a, b) => b.created - a.created);
+  OWN = { teachers, halaqas, players, allQz, totalQz, centers,
           quizStudents: Object.keys(studentMap).length,
           studentMap, at: Date.now(), indexed: Object.keys(idxU || {}).length };
   return OWN;
@@ -2916,7 +2954,7 @@ async function screenOwner(sub){
     ${sub2?`<div class="d ${cls||'muted'}">${sub2}</div>`:''}</div>`;
 
   const TABS = [['now','📊 النبض'],['ppl','👦 الناس'],['hal','🏫 الحلقات'],
-                ['qz','🏆 المسابقات'],['tools','🧰 أدوات']];
+                ['ctr','🏢 المراكز'],['qz','🏆 المسابقات'],['tools','🧰 أدوات']];
 
   let body = '';
   if(OTAB === 'now'){
@@ -2983,6 +3021,29 @@ async function screenOwner(sub){
             · اتعملت ${ago(x.created)}</small></div>
         <button class="btn ghost sm hOpen" data-h="${esc(x.hid)}" style="padding:4px 10px">فتح</button>
       </div>`).join(''):'<p class="muted center">مفيش حلقات</p>'}
+    </div>`;
+  }
+
+  if(OTAB === 'ctr'){
+    const cs = D.centers || [];
+    body = `
+    <div class="card fade">
+      <h3>➕ مركز جديد</h3>
+      <p class="muted" style="font-size:.82rem;margin:0 0 8px">اكتب اسم المركز وإيميل مديره —
+        هيطلعلك كود، ابعتهوله وهو يستلم مركزه بنفسه.</p>
+      <input type="text" id="ncName" maxlength="40" placeholder="اسم المركز">
+      <input type="email" id="ncMail" placeholder="إيميل المدير" style="direction:ltr">
+      <div class="center" style="margin-top:8px"><button class="btn sm" id="ncGo">➕ اعمل المركز</button></div>
+    </div>
+    <div class="card fade">
+      <h3>🏢 المراكز (${cs.length})</h3>
+      ${cs.length ? cs.map(c=>`<div class="orow">
+        <div class="g"><b>${esc(c.name)} ${c.mgr?'':'<span class="flag">لسه ما اتستلمش</span>'}</b>
+          <small style="direction:ltr;display:inline-block">${esc(c.mgrEmail||'—')}</small>
+          <small>${c.teachers} معلم · ${c.halaqas} حلقة · كود <b style="direction:ltr;display:inline-block">${esc(c.cid)}</b></small></div>
+        <button class="btn ghost sm cDel" data-c="${esc(c.cid)}" data-n="${esc(c.name)}"
+          style="padding:4px 8px;border-color:var(--bad);color:var(--bad)">✕</button>
+      </div>`).join('') : '<p class="muted center">مفيش مراكز — اعمل أول واحد فوق</p>'}
     </div>`;
   }
 
@@ -3053,6 +3114,19 @@ async function screenOwner(sub){
   if($('#rl'))  $('#rl').onclick  = async () => { Snd.click(); toast('⏳ بحدّث...');
     await ownerLoad(true); screenOwner(sub); };
   if($('#exp')) $('#exp').onclick = () => { Snd.click(); ownerExport(); };
+  if($('#ncGo')) $('#ncGo').onclick = async () => { Snd.click();
+    const nm = ($('#ncName').value||'').trim(), em = ($('#ncMail').value||'').trim();
+    if(!nm || !em) return toast('اكتب الاسم والإيميل');
+    const cid = await ownerCreateCenter(nm, em);
+    Snd.win(); toast('🏢 اتعمل — الكود ' + cid);
+    await ownerLoad(true); screenOwner(''); };
+  app.querySelectorAll('.cDel').forEach(b => b.onclick = () => { Snd.click();
+    askExit2('تمسح مركز ' + b.dataset.n + '؟',
+      'المعلمين وحلقاتهم هيفضلوا شغالين — بس المدير مش هيشوفهم.', '🗑️ امسح', async ok => {
+        if(!ok) return;
+        await firebase.database().ref('centers/'+b.dataset.c).remove().catch(()=>{});
+        await firebase.database().ref('index/centers/'+b.dataset.c).remove().catch(()=>{});
+        toast('اتمسح'); await ownerLoad(true); screenOwner(''); }); });
   app.querySelectorAll('.pOpen').forEach(b => b.onclick = () => { Snd.click(); ownerUser(b.dataset.u); });
   app.querySelectorAll('.hOpen').forEach(b => b.onclick = () => { Snd.click(); ownerHalaqa(b.dataset.h); });
   if($('#oq')){ let tmr; $('#oq').oninput = e => { clearTimeout(tmr); const v = e.target.value;
@@ -3739,6 +3813,244 @@ function indexUser(){
                 cr: P.created || 0 };
     firebase.database().ref('index/users/' + fbUser.uid).update(g).catch(() => {});
   }, 2000);
+}
+
+/* ============== 🏢 المراكز ==============
+   مالك ← مدير مركز ← معلمين ← طلاب.
+   المركز = كود من ٥ حروف (هو نفسه كود الانضمام).
+   المالك بيعمل المركز ويحدد إيميل المدير؛ المدير بيستلمه بالكود من حسابه.
+   المعلم بينضم بالكود — زي ما الطالب بينضم للحلقة بالظبط.
+   المدير بيقرا مرآة خفيفة (index/centers/{cid}) — مش بيقرا users خالص. */
+const centerRef = c => firebase.database().ref('centers/' + c);
+const cidxRef   = c => firebase.database().ref('index/centers/' + c);
+const newCid = () => Array.from({length:5},
+  () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(RNG()*32)]).join('');
+
+/* 🛡️ المالك بيعمل مركز */
+async function ownerCreateCenter(name, email){
+  const cid = newCid();
+  await centerRef(cid).set({ name: name, mgrEmail: (email||'').trim().toLowerCase(),
+    mgr: '', mgrName: '', created: Date.now() });
+  return cid;
+}
+/* 🧑‍💼 المدير بيستلم مركزه بالكود (لازم يكون داخل بالإيميل اللي المالك حدده) */
+async function claimCenter(code){
+  const cid = (code||'').trim().toUpperCase();
+  if(cid.length !== 5) throw new Error('bad');
+  const s = await centerRef(cid).once('value');
+  const v = s.val();
+  if(!v) throw new Error('notfound');
+  const my = ((fbUser && fbUser.email) || '').toLowerCase();
+  if(!my) throw new Error('needemail');
+  if(v.mgr && v.mgr !== fbUser.uid) throw new Error('taken');
+  if((v.mgrEmail||'') !== my) throw new Error('notyours');
+  await centerRef(cid).update({ mgr: fbUser.uid, mgrName: (P && P.name) || my });
+  if(P){ P.mgrCid = cid; saveP(); }
+  return v;
+}
+const myCenter = () => (P && P.mgrCid) || '';
+
+/* 🧑‍🏫 المعلم بينضم لمركز بالكود */
+async function joinCenter(code){
+  const cid = (code||'').trim().toUpperCase();
+  if(cid.length !== 5) throw new Error('bad');
+  const s = await centerRef(cid).once('value');
+  const v = s.val();
+  if(!v) throw new Error('notfound');
+  const t = await loadTeacher();
+  await cidxRef(cid).child('teachers').child(fbUser.uid).update({
+    n: (t && t.name) || (P && P.name) || '—', e: (fbUser.email||''), at: Date.now(), seen: Date.now() });
+  if(P){ P.cid = cid; saveP(); }
+  if(t){ t.cid = cid; await saveTeacher(t); }
+  /* حلقاته الحالية تتعرض للمدير كمان */
+  for(const hid of ((t && t.hal) || [])) mirrorHalaqa(cid, hid);
+  return v;
+}
+/* مرآة الحلقة عند المركز — عشان المدير يعرف حلقات معلميه من غير ما يقرا كل الحلقات */
+async function mirrorHalaqa(cid, hid){
+  if(!cid || !hid || !fbUser) return;
+  try{
+    const s = await halRef(hid).once('value');
+    const v = s.val() || {};
+    await cidxRef(cid).child('halaqas').child(hid).update({
+      n: v.name || '—', tn: v.tname || '', t: fbUser.uid, at: v.created || Date.now() });
+  }catch(e){}
+}
+/* المعلم يتأكد إنه لسه في المركز (المدير ممكن يكون شاله) */
+async function checkCenter(){
+  const cid = (P && P.cid) || '';
+  if(!cid || !fbReady || !fbUser) return false;
+  try{
+    const s = await cidxRef(cid).child('teachers').child(fbUser.uid).once('value');
+    if(!s.exists()){
+      P.cid = ''; saveP();
+      const t = await loadTeacher(); if(t){ t.cid = ''; await saveTeacher(t); }
+      toast('🏢 اتشلت من المركز');
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+/* 📊 بيانات لوحة المدير */
+async function centerLoad(cid){
+  const [cs, ts, hs] = await Promise.all([
+    centerRef(cid).once('value').catch(()=>null),
+    cidxRef(cid).child('teachers').once('value').catch(()=>null),
+    cidxRef(cid).child('halaqas').once('value').catch(()=>null)]);
+  const v = (cs && cs.val()) || {};
+  const tv = (ts && ts.val()) || {}, hv = (hs && hs.val()) || {};
+  const teachers = Object.entries(tv).map(([uid,x]) => ({
+    uid: uid, name: x.n || '—', email: x.e || '—', seen: x.seen || x.at || 0, at: x.at || 0,
+    halaqas: Object.values(hv).filter(y => y.t === uid).length }))
+    .sort((a,b) => b.seen - a.seen);
+  const halaqas = Object.entries(hv).map(([hid,x]) => ({
+    hid: hid, name: x.n || '—', tname: x.tn || '', t: x.t || '', created: x.at || 0 }))
+    .sort((a,b) => b.created - a.created);
+  return { cid: cid, name: v.name || '—', teachers: teachers, halaqas: halaqas };
+}
+
+/* استلام المركز بالكود */
+function screenClaimCenter(){
+  stopTimer();
+  app.innerHTML = `
+  <div class="hdr"><h2>🏢 استلام مركز</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade">
+    <p style="font-size:.9rem;margin:0 0 4px">لو صاحب اللعبة عملك مركز، هيبعتلك <b>كود من ٥ حروف</b>.</p>
+    <p class="muted" style="font-size:.8rem;margin:0 0 10px">لازم تكون داخل بنفس الإيميل اللي اتحدد لك.</p>
+    <input type="text" id="clCode" maxlength="5" placeholder="كود المركز"
+      style="text-align:center;letter-spacing:6px;direction:ltr;font-size:1.3rem">
+    <div class="center" style="margin-top:8px"><button class="btn" id="clGo">استلم</button></div>
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenHome(); };
+  $('#clGo').onclick = async () => { Snd.click();
+    try{ const v = await claimCenter($('#clCode').value); Snd.win();
+      toast('🏢 استلمت مركز ' + v.name); screenCenter(); }
+    catch(e){ Snd.wrong();
+      toast(e.message==='notfound' ? '❌ مفيش مركز بالكود ده'
+          : e.message==='notyours'  ? '⚠️ المركز ده مش متسجل على إيميلك'
+          : e.message==='taken'     ? '⚠️ المركز ده مستلمه حد تاني'
+          : e.message==='needemail' ? '⚠️ أمّن حسابك بإيميل الأول'
+          : '⚠️ محتاج إنترنت'); } };
+}
+
+/* ---------- 🏢 لوحة مدير المركز ---------- */
+async function screenCenter(){
+  stopTimer();
+  const cid = myCenter();
+  if(!cid) return screenHome();
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
+  if(!(await fbInit())) return;
+  const C = await centerLoad(cid);
+  const now = Date.now(), D = 864e5;
+  const live = C.teachers.filter(t => now - t.seen < 14 * D).length;
+  app.innerHTML = `
+  <div class="hdr"><h2>🏢 ${esc(C.name)}</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="okpi">
+    <div class="k"><b>${C.teachers.length}</b><span>معلم</span>
+      <div class="d ${live?'up':'muted'}">${live} نشط</div></div>
+    <div class="k"><b>${C.halaqas.length}</b><span>حلقة</span></div>
+    <div class="k"><b>${C.teachers.filter(t=>!t.halaqas).length}</b><span>من غير حلقات</span></div>
+  </div>
+  <div class="card fade center" style="padding:12px">
+    <p class="muted" style="margin:0 0 6px;font-size:.84rem">كود المركز — ابعته لمعلميك عشان ينضموا</p>
+    <div class="codebox" style="font-size:1.6rem;letter-spacing:7px;padding:7px 16px;display:inline-block">${esc(cid)}</div>
+    <div class="row" style="justify-content:center;margin-top:9px">
+      <button class="btn ghost sm" id="cCopy">📋 انسخ</button>
+      <button class="btn ghost sm" id="cWa">💬 واتساب</button>
+    </div>
+  </div>
+  <div class="card fade">
+    <h3>🧑‍🏫 معلمو المركز</h3>
+    ${C.teachers.length ? C.teachers.map(t=>`<div class="orow">
+      <div class="g"><b>${esc(t.name)}</b>
+        <small style="direction:ltr;display:inline-block">${esc(t.email)}</small>
+        <small>${t.halaqas} حلقة · ${ago(t.seen)}</small></div>
+      <button class="btn ghost sm tOpen" data-u="${esc(t.uid)}" data-n="${esc(t.name)}" style="padding:4px 10px">فتح</button>
+      <button class="btn ghost sm tDel" data-u="${esc(t.uid)}" data-n="${esc(t.name)}"
+        style="padding:4px 8px;border-color:var(--bad);color:var(--bad)">✕</button>
+    </div>`).join('') : '<p class="muted center">لسه محدش انضم — ابعت الكود فوق</p>'}
+  </div>
+  <div class="card fade">
+    <h3>🏫 حلقات المركز</h3>
+    ${C.halaqas.length ? C.halaqas.map(x=>`<div class="orow">
+      <div class="g"><b>${esc(x.name)}</b><small>🧑‍🏫 ${esc(x.tname)} · ${ago(x.created)}</small></div>
+      <button class="btn ghost sm chOpen" data-h="${esc(x.hid)}" style="padding:4px 10px">فتح</button>
+    </div>`).join('') : '<p class="muted center">مفيش حلقات لسه</p>'}
+  </div>
+  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
+  $('#cCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(cid);
+    Snd.correct(); toast('📋 اتنسخ'); };
+  $('#cWa').onclick = () => { window.open('https://wa.me/?text=' + encodeURIComponent(
+    'انضم لمركز ' + C.name + ' في لعبة رحلة القرآن — كود المركز: ' + cid + '\n' +
+    location.origin + location.pathname), '_blank'); };
+  app.querySelectorAll('.tOpen').forEach(b => b.onclick = () => { Snd.click();
+    screenCenterTeacher(cid, b.dataset.u, b.dataset.n); });
+  app.querySelectorAll('.chOpen').forEach(b => b.onclick = () => { Snd.click();
+    screenCenterHalaqa(cid, b.dataset.h); });
+  app.querySelectorAll('.tDel').forEach(b => b.onclick = () => { Snd.click();
+    askExit2('تشيل ' + b.dataset.n + ' من المركز؟',
+      'حلقاته وطلابه هيفضلوا شغالين عنده عادي — إنت بس مش هتشوفهم.', '✕ شيله', async ok => {
+        if(!ok) return;
+        await cidxRef(cid).child('teachers').child(b.dataset.u).remove().catch(()=>{});
+        toast('اتشال'); screenCenter(); }); });
+}
+/* معلم بعينه جوّه المركز */
+async function screenCenterTeacher(cid, uid, name){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
+  const C = await centerLoad(cid);
+  const hals = C.halaqas.filter(x => x.t === uid);
+  const t = C.teachers.find(x => x.uid === uid) || {};
+  app.innerHTML = `
+  <div class="hdr"><h2>🧑‍🏫 ${esc(name)}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade center">
+    <p class="muted" style="margin:0;font-size:.84rem;direction:ltr">${esc(t.email||'')}</p>
+    <p class="muted" style="margin:4px 0 0;font-size:.82rem">${hals.length} حلقة · آخر نشاط ${ago(t.seen||0)}</p>
+  </div>
+  <div class="card fade">
+    <h3>🏫 حلقاته</h3>
+    ${hals.length ? hals.map(x=>`<div class="orow">
+      <div class="g"><b>${esc(x.name)}</b><small>${ago(x.created)}</small></div>
+      <button class="btn ghost sm chOpen" data-h="${esc(x.hid)}" style="padding:4px 10px">فتح</button>
+    </div>`).join('') : '<p class="muted center">مفيش حلقات</p>'}
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenCenter(); };
+  app.querySelectorAll('.chOpen').forEach(b => b.onclick = () => { Snd.click();
+    screenCenterHalaqa(cid, b.dataset.h); });
+}
+/* حلقة جوّه المركز — أداء طلابها */
+async function screenCenterHalaqa(cid, hid){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
+  const [hs, ms] = await Promise.all([
+    halRef(hid).once('value').catch(()=>null), memRef(hid).once('value').catch(()=>null)]);
+  const v = (hs && hs.val()) || {}, mv = (ms && ms.val()) || {};
+  const k = weekKey(), now = Date.now();
+  const mem = Object.entries(mv).map(([uid,m])=>({ uid: uid, name: m.name||'—',
+    pts: (m.wk && m.wk.k===k) ? (m.wk.p||0) : 0, last: m.last||0,
+    memo: m.memo||null })).sort((a,b)=>b.pts-a.pts);
+  const活 = mem.filter(x => now - x.last < 7*864e5).length;
+  app.innerHTML = `
+  <div class="hdr"><h2>🏫 ${esc(v.name||'—')}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="okpi">
+    <div class="k"><b>${mem.length}</b><span>طالب</span></div>
+    <div class="k"><b>${活}</b><span>نشط الأسبوع</span></div>
+    <div class="k"><b>${(v.hw&&v.hw.items)?v.hw.items.length:0}</b><span>سورة واجب</span></div>
+  </div>
+  <div class="card fade">
+    <h3>👦 الطلاب — بنقاط الأسبوع</h3>
+    ${mem.length ? `<table><tr><th>#</th><th>الطالب</th><th>نقاط الأسبوع</th><th>محفوظ</th><th>آخر نشاط</th></tr>
+      ${mem.map((m,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(m.name)}</td>
+        <td><b>${m.pts}</b></td>
+        <td class="muted" style="font-size:.78rem">${m.memo?esc((QURAN[m.memo.sn]||{}).nm||'')+' '+m.memo.to:'—'}</td>
+        <td class="muted" style="font-size:.78rem">${ago(m.last)}</td></tr>`).join('')}
+    </table>` : '<p class="muted center">مفيش طلاب</p>'}
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenCenter(); };
 }
 
 /* ---------- 🏠 زر البيت العائم ---------- */
@@ -4908,6 +5220,30 @@ function screenHelp(){
             ".validate": "newData.isString() && newData.val().length <= 40"
           }
         }
+      },
+      "centers": {
+        "$c": {
+          ".read": "auth != null && (root.child('centers').child($c).child('mgr').val() === auth.uid || auth.token.email === 'yahia176@gmail.com')",
+          "teachers": {
+            "$u": {
+              ".write": "auth != null && (auth.uid === $u || root.child('centers').child($c).child('mgr').val() === auth.uid || auth.token.email === 'yahia176@gmail.com')",
+              "n": {
+                ".validate": "newData.isString() && newData.val().length <= 40"
+              },
+              "e": {
+                ".validate": "newData.isString() && newData.val().length <= 80"
+              }
+            }
+          },
+          "halaqas": {
+            "$h": {
+              ".write": "auth != null && (newData.child('t').val() === auth.uid || !newData.exists() || root.child('centers').child($c).child('mgr').val() === auth.uid || auth.token.email === 'yahia176@gmail.com')",
+              "n": {
+                ".validate": "newData.isString() && newData.val().length <= 40"
+              }
+            }
+          }
+        }
       }
     },
     "users": {
@@ -4915,6 +5251,21 @@ function screenHelp(){
       "$u": {
         ".read": "auth != null && (auth.uid === $u || auth.token.email === 'yahia176@gmail.com')",
         ".write": "auth != null && auth.uid === $u"
+      }
+    },
+    "centers": {
+      "$c": {
+        ".read": "auth != null",
+        ".write": "auth.token.email === 'yahia176@gmail.com' || (data.exists() && (data.child('mgr').val() === auth.uid || data.child('mgrEmail').val() === auth.token.email))",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "mgrEmail": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "mgrName": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        }
       }
     }
   }
@@ -5596,8 +5947,11 @@ async function teacherResetPass(email){
 function indexTeacher(t, extra){
   if(!fbReady || !fbUser || fbUser.isAnonymous) return;
   const d = Object.assign({ name:t.name||'', email:fbUser.email||'',
-    groups:(t.groups||[]).length, seen:Date.now() }, extra||{});
+    groups:(t.groups||[]).length, seen:Date.now(), cid:t.cid||'' }, extra||{});
   firebase.database().ref('index/teachers/'+fbUser.uid).update(d).catch(()=>{});
+  if(t.cid) cidxRef(t.cid).child('teachers').child(fbUser.uid)
+    .update({ n:t.name||'', e:fbUser.email||'', seen:Date.now(),
+              q:Object.keys(t.qz||{}).length }).catch(()=>{});
 }
 /* ===== الإعلان العام ===== */
 let ANN = null;
@@ -6194,9 +6548,9 @@ if(FIREBASE_CONFIG) fbInit().then(async ok=>{ if(!ok) return;
   watchHalaqas();
   screenHome();   /* نعيد الرسم بعد التعرف على الحساب والحلقات */
   setTimeout(function(){
-    Promise.all([pullTeacherMemo(), checkImgRemoved()]).then(function(r){
+    Promise.all([pullTeacherMemo(), checkImgRemoved(), checkCenter()]).then(function(r){
       pushHalaqaImg();
-      if(r[0] || r[1]) screenHome();
+      if(r[0] || r[1] || r[2]) screenHome();
     });
   }, 1800);
 });
