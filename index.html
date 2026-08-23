@@ -2305,8 +2305,12 @@ function screenStudentHome(){
   </div>
   <div class="center fade" style="margin-top:12px">
     <button class="btn ghost sm" id="mLis">🎧 اسمع سورة ${esc(QURAN[sn].nm)} الأول</button>
+  </div>
+  <div class="center fade" style="margin-top:14px;opacity:.85">
+    <button class="btn ghost sm" id="beT" style="font-size:.82rem">🧑‍🏫 إنت معلم؟ ادخل من هنا</button>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
+  if($('#beT')) $('#beT').onclick=()=>{ Snd.click(); becomeTeacher(() => screenHome()); };
   $('#whoBtn').onclick=()=>{ Snd.click(); screenAccount(); };
   $('#goPlay').onclick=()=>{ Snd.init(); Snd.click();
     if(FP) startSurah(sn, FP.from, FP.to); else startSmart(); };
