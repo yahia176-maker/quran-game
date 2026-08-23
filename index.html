@@ -2124,7 +2124,9 @@ function screenProfiles(){
     const th=(AGES.find(a=>a.k===ageK)||{}).th || 'night';
     const p=newProfile(name, CHARS[ch].em); p.char=ch; p.age=ageK; p.theme=th;
     const ps2=allProfiles(); ps2.push(p); saveAll(ps2);
-    activateProfile(p); Snd.win(); screenHome(); };
+    activateProfile(p); Snd.win();
+    /* ملف جديد لازم يختار طالب/معلم بنفسه — مايورّثش دور الملف اللي قبله */
+    setRole(''); screenRole(); };
   $('#rcBtn').onclick=()=>{ Snd.init(); Snd.click(); $('#rcForm').hidden=!$('#rcForm').hidden; };
   $('#rcGo').onclick=async()=>{ Snd.init(); Snd.click();
     const c=($('#rcCode').value||'').trim();
