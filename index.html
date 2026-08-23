@@ -1806,6 +1806,35 @@ function autoNext(entry, list){
   }
   return null;
 }
+/* «أكمل الآية»: نعرض بداية الآية والطفل يختار نهايتها الصحيحة.
+   نص بحت — بيختبر الحفظ داخل الآية، صفر افتراض عن المعنى.
+   بيستخدم عارض الاختيارات نفسه: البداية في نص السؤال، وماحطّينا show
+   عشان الآية الكاملة ماتظهرش وتكشف الإجابة. */
+function autoTail(entry, list){
+  const cand = list.filter(a => a.t.split(' ').filter(x=>!isMark(x)).length >= 6);
+  if(!cand.length) return null;
+  const cutAt = tk => { const wi = tk.map((x,i)=>i).filter(i=>!isMark(tk[i]));
+    return wi[Math.floor(wi.length*0.55)] || Math.floor(tk.length/2); };
+  for(let t=0; t<12; t++){
+    const a = rnd(cand), tk = a.t.split(' ');
+    const cut = cutAt(tk);
+    const head = tk.slice(0, cut).join(' ').trim();
+    const tail = tk.slice(cut).join(' ').trim();
+    if(!head || !tail || norm(tail).length < 4) continue;
+    /* البدائل: نهايات آيات تانية في نفس المقطع */
+    const others = list.filter(x => x.n !== a.n).map(x => {
+      const xt = x.t.split(' '); return xt.slice(cutAt(xt)).join(' ').trim(); })
+      .filter(s => s && norm(s) !== norm(tail) && norm(s).length >= 4);
+    const dis = [];
+    for(const s of shuffle(others)){ if(!dis.some(d=>norm(d)===norm(s))){ dis.push(s);
+      if(dis.length === Math.min(3, DIFF.dis)) break; } }
+    if(dis.length < 2) continue;
+    const opts = shuffle([tail, ...dis]);
+    return { type:'mcq', q:'أكمل الآية: «' + head + ' …»', options:opts,
+             answer:opts.indexOf(tail), explain:'التكملة كما في المصحف:\n' + a.t };
+  }
+  return null;
+}
 function autoWhichSurah(entry, stage){
   const names = stage.surahs.map(sn => (entry.info[sn]||{}).nm || ('سورة '+sn));
   if(names.length<3) return null;
@@ -1860,6 +1889,11 @@ function genSlice(entry, stage){
     const x = autoNext(entry, list); if(!x) break;
     if(seenN.has(x.show)) continue; seenN.add(x.show); out.push(x);
   }
+  const seenT = new Set();
+  for(let t=0; t<16 && seenT.size<2; t++){
+    const x = autoTail(entry, list); if(!x) break;
+    if(seenT.has(x.q)) continue; seenT.add(x.q); out.push(x);
+  }
   const seenP = new Set();
   for(let t=0; t<18 && seenP.size<3; t++){
     const x = (t%2===0 ? autoBuild(entry,list) : autoOdd(entry,list)); if(!x) continue;
@@ -1885,6 +1919,12 @@ function genSolo(entry, sn){
   for(let i=0; i+4<=mix.length && i<8; i+=4)
     out.push({type:'match', pairs:mix.slice(i,i+4), explain:`كلمات من سورة ${I.nm||''} بمعانيها.`});
   if(list.length>=4){ const x = autoNext(entry, list); if(x) out.push(x); }
+  /* «أكمل الآية» — أهم إضافة للسور غير المنسّقة عشان الجلسة ماتبقاش نحيفة */
+  const seenT = new Set();
+  for(let t=0; t<14 && seenT.size<2; t++){
+    const x = autoTail(entry, list); if(!x) break;
+    if(seenT.has(x.q)) continue; seenT.add(x.q); out.push(x);
+  }
   const seenP=new Set();
   for(let t=0; t<14 && seenP.size<2; t++){
     const x = (t%2===0 ? autoBuild(entry,list) : autoOdd(entry,list)); if(!x) continue;
