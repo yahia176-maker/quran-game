@@ -7130,17 +7130,26 @@ const OWNER_EMAIL = 'yahia176@gmail.com';
 /* 🔑 مالك احتياطي: إيميل تاني له نفس الصلاحية — عشان النظام مايقفش
    لو حصل حاجة للحساب الأساسي. بيتحدد من config/owners (المالك الأساسي بس
    هو اللي يكتب فيه، والقواعد بتعرف الاتنين). */
-let OWNERS2 = [];
+let OWNERS2 = [];        /* القايمة الكاملة — المالك الأساسي بس هو اللي يقراها */
+let AM_OWNER2 = false;   /* أنا مالك احتياطي؟ — كل واحد يتأكد من مفتاحه هو بس */
 function watchOwners(){
-  if(!fbReady) return;
-  try{ firebase.database().ref('config/owners').on('value', s => {
-    OWNERS2 = Object.keys(s.val() || {}).map(k => k.replace(/,/g, '.').toLowerCase());
-  }); }catch(e){}
+  if(!fbReady || !fbUser || fbUser.isAnonymous) return;
+  const email = (fbUser.email || '').toLowerCase();
+  const key = email.replace(/\./g, ',');
+  /* التأكد من مفتاحي أنا — مسموح لأي حساب مسجّل، ومابيكشفش قايمة حد */
+  try{ firebase.database().ref('config/owners/' + key).on('value',
+    s => { AM_OWNER2 = s.exists(); }, () => {}); }catch(e){}
+  /* القايمة الكاملة لإدارة الملّاك الاحتياطيين — المالك الأساسي بس */
+  if(email === OWNER_EMAIL){
+    try{ firebase.database().ref('config/owners').on('value',
+      s => { OWNERS2 = Object.keys(s.val() || {}).map(k => k.replace(/,/g, '.').toLowerCase()); },
+      () => {}); }catch(e){}
+  }
 }
 const isOwner = () => {
   if(!fbUser || fbUser.isAnonymous) return false;
   const e = (fbUser.email||'').toLowerCase();
-  return e === OWNER_EMAIL || OWNERS2.indexOf(e) >= 0;
+  return e === OWNER_EMAIL || AM_OWNER2;
 };
 const isMainOwner = () => !!(fbUser && !fbUser.isAnonymous
   && (fbUser.email||'').toLowerCase() === OWNER_EMAIL);
