@@ -52,6 +52,9 @@
         },
         "tname": {
           ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "cid": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
         }
       },
       ".read": "auth.token.email === 'yahia176@gmail.com'"
@@ -85,6 +88,9 @@
             "p": {
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)"
             }
+          },
+          "off": {
+            ".validate": "newData.isBoolean()"
           }
         }
       }
@@ -127,6 +133,13 @@
             }
           }
         }
+      },
+      "codes": {
+        "$code": {
+          ".read": "auth != null",
+          ".write": "auth != null && (auth.token.email === 'yahia176@gmail.com' || (newData.exists() && root.child('centers').child(newData.val()).child('mgr').val() === auth.uid) || (!newData.exists() && root.child('centers').child(data.val()).child('mgr').val() === auth.uid))",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
+        }
       }
     },
     "users": {
@@ -138,16 +151,53 @@
     },
     "centers": {
       "$c": {
-        ".read": "auth != null",
         ".write": "auth.token.email === 'yahia176@gmail.com' || (data.exists() && (data.child('mgr').val() === auth.uid || data.child('mgrEmail').val() === auth.token.email))",
         "name": {
+          ".read": "auth != null",
           ".validate": "newData.isString() && newData.val().length <= 40"
         },
         "mgrEmail": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'",
           ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "mgr": {
+          ".write": "auth.token.email === 'yahia176@gmail.com' || root.child('centers').child($c).child('mgrEmail').val() === auth.token.email"
+        },
+        "paused": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'"
         },
         "mgrName": {
           ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "created": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'"
+        },
+        "code": {
+          ".validate": "newData.isString() && newData.val().length === 5"
+        },
+        "logo": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40000 && newData.val().beginsWith('data:image/'))"
+        },
+        "about": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
+        },
+        "phone": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 20)"
+        },
+        "wa": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 20)"
+        },
+        "site": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 120)"
+        },
+        "addr": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
         }
       }
     }

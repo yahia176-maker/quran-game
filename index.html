@@ -2354,7 +2354,10 @@ function screenSettings(){
       <b style="direction:ltr;display:inline-block;letter-spacing:2px;color:var(--gold)">${esc(P.code)}</b></p>`:''}
     ${myRole()==='teacher' && fbReady ? (fbUser && !fbUser.isAnonymous ? `
       <p style="font-size:.88rem;margin-top:10px">🔐 حسابك مؤمّن بالإيميل: <b style="direction:ltr;display:inline-block">${esc(fbUser.email||'')}</b></p>
-      <button class="btn ghost sm" id="sklgout">🚪 تسجيل خروج من الجهاز ده</button>` : `
+      <div class="row" style="justify-content:flex-start">
+        <button class="btn ghost sm" id="skmail">📧 غيّر الإيميل</button>
+        <button class="btn ghost sm" id="sklgout">🚪 تسجيل خروج من الجهاز ده</button>
+      </div>` : `
       <p style="font-size:.88rem;margin-top:10px">🔒 حسابك كمعلم مربوط بالجهاز ده بس — أمّنه بإيميل وكلمة سر عشان يفتح من أي جهاز، وعشان تقدر تعمل حلقات.</p>
       <div class="row" style="justify-content:flex-start">
         <input type="email" id="skEmail" placeholder="الإيميل" style="direction:ltr;flex:1;min-width:170px;margin:0">
@@ -2382,6 +2385,7 @@ function screenSettings(){
     try{ await linkTeacherEmail(em, pw); Snd.correct();
       toast('🔐 اتأمّن! افتح حسابك من أي جهاز بنفس الإيميل'); screenSettings(); }
     catch(e){ toast('⚠️ '+authMsg(e)); } };
+  if($('#skmail')) $('#skmail').onclick=()=>{ Snd.click(); screenChangeEmail(); };
   if($('#sklgout')) $('#sklgout').onclick=async()=>{ Snd.click();
     if(!confirm('تسجل خروج من الجهاز ده؟ (بياناتك محفوظة في حسابك)')) return;
     await teacherLogout(); toast('🚪 خرجت — الجهاز رجع هوية جديدة'); screenHome(); };
@@ -2575,6 +2579,13 @@ function watchHalaqas(){
       const rec = (P.halaqas||[]).find(y=>y.hid===x.hid); if(!rec) return;
       const wasLive = rec.live;
       rec.name = v.name; rec.tname = v.tname||''; rec.live = (v.live&&v.live.code)||null; rec.hw = v.hw||null;
+      if(v.cid && rec.cid !== v.cid){ rec.cid = v.cid; saveP();
+        centerRef(v.cid).child('logo').once('value').then(ls=>{
+          const lg = ls.val() || '';
+          if(rec.logo !== lg){ rec.logo = lg; saveP();
+            if(document.getElementById('halList')) screenMyHalaqas(); }
+        }).catch(()=>{}); }
+      else if(!v.cid && rec.cid){ rec.cid = null; rec.logo = ''; saveP(); }
       if(rec.live && !wasLive && myRole()!=='teacher'){ Snd.star(); toast('⚡ مسابقة بدأت في '+rec.name); }
       if(document.getElementById('goPlay') || document.getElementById('halList')) screenHome();
     });
@@ -2583,7 +2594,7 @@ function watchHalaqas(){
 /* نقاط الأسبوع داخل الحلقة */
 function addWeeklyPoints(pts){
   if(!fbReady || !P || !pts) return;
-  (P.halaqas||[]).forEach(x=>{
+  (P.halaqas||[]).filter(x=>!x.off).forEach(x=>{
     const ref = memRef(x.hid).child(fbUser.uid);
     ref.child('wk').transaction(w=>{
       const k = weekKey();
@@ -2602,8 +2613,11 @@ async function screenMyHalaqas(){
   <div id="halList">${list.length? list.map(x=>`
     <div class="card fade ${x.live?'live':''}">
       <div class="hdr" style="margin:0">
-        <div><b style="font-size:1.05rem">${esc(x.name)}</b>
-          ${x.tname?`<div class="muted" style="font-size:.78rem">${esc(x.tname)}</div>`:''}</div>
+        <div class="row" style="gap:8px;justify-content:flex-start">
+          ${x.logo?`<img class="ava" src="${esc(x.logo)}" alt="" style="width:40px;height:40px;border-radius:11px">`:''}
+          <div><b style="font-size:1.05rem">${esc(x.name)}</b>
+            ${x.tname?`<div class="muted" style="font-size:.78rem">${esc(x.tname)}</div>`:''}</div>
+        </div>
         ${x.live?`<button class="btn sm jl" data-c="${esc(x.live)}">⚡ ادخل المسابقة</button>`:''}
       </div>
       ${x.hw&&x.hw.t?`<div class="hw"><b>📋 واجب: ${esc(x.hw.t)}</b>
@@ -2619,6 +2633,7 @@ async function screenMyHalaqas(){
       </div>`:''}
       <div class="row" style="justify-content:flex-start;margin-top:8px">
         <button class="btn ghost sm lb" data-h="${esc(x.hid)}">🏆 ترتيب الأسبوع</button>
+        ${x.cid?`<button class="btn ghost sm ci" data-c="${esc(x.cid)}">🏢 المركز</button>`:''}
         <button class="btn ghost sm lv" data-h="${esc(x.hid)}">🚪 خروج من الحلقة</button>
       </div>
     </div>`).join('')
@@ -2638,6 +2653,8 @@ async function screenMyHalaqas(){
     catch(e){ Snd.wrong(); toast(e.message==='notfound'?'❌ مفيش حلقة بالكود ده':'⚠️ محتاج إنترنت'); } };
   app.querySelectorAll('.hwL').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); startListen(+b.dataset.s); });
   app.querySelectorAll('.hwP').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); screenSurahOpts(+b.dataset.s); });
+  app.querySelectorAll('.ci').forEach(b=>b.onclick=async()=>{ Snd.click();
+    showCenterCard(await centerCard(b.dataset.c)); });
   app.querySelectorAll('.jl').forEach(b=>b.onclick=async()=>{ Snd.click(); if(await fbInit()) joinRoom(b.dataset.c); });
   app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{ if(!confirm('تخرج من الحلقة دي؟')) return;
     P.halaqas=(P.halaqas||[]).filter(x=>x.hid!==b.dataset.h); saveP(); watchHalaqas(); screenMyHalaqas(); });
@@ -2758,7 +2775,8 @@ async function screenTeacherHome(){
     if(fbUser && fbUser.isAnonymous){ Snd.wrong();
       toast('🔒 أمّن حسابك بالإيميل الأول (من ⚙️ الإعدادات) عشان تقدر تعمل حلقات'); return; }
     Snd.click(); const hid=newHid();
-    await halRef(hid).set({ t:fbUser.uid, tname:t.name, name:nm, created:Date.now() });
+    await halRef(hid).set({ t:fbUser.uid, tname:t.name, name:nm, created:Date.now(),
+      cid: t.cid || null });
     t.hal=(t.hal||[]).concat(hid); t.groups=(t.groups||[]).concat(nm); await saveTeacher(t);
     if(t.cid) mirrorHalaqa(t.cid, hid);
     Snd.win(); toast('🎉 اتعملت — ابعت رابطها لطلابك'); screenHalaqa(hid); };
@@ -2774,7 +2792,7 @@ async function screenHalaqa(hid){
   const k = weekKey();
   const studs = Object.entries(mv).map(([uid,m])=>({uid, name:m.name||'—',
     pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0, memo:m.memo||null,
-    img:m.img||null, char:m.char||'boy'})).sort((a,b)=>b.pts-a.pts);
+    img:m.img||null, char:m.char||'boy', off:!!m.off})).sort((a,b)=>b.pts-a.pts);
   app.innerHTML = `
   <div class="hdr"><h2>🏫 ${esc(v.name||'')}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade center">
@@ -2799,14 +2817,16 @@ async function screenHalaqa(hid){
   <div class="card fade">
     <div class="hdr" style="margin:0"><h3 style="margin:0">👦 الطلاب (${studs.length})</h3>
       <button class="btn ghost sm" id="lb">🏆 ترتيب الأسبوع</button></div>
-    ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>المحفوظ</th><th>آخر نشاط</th></tr>
-      ${studs.map(s=>`<tr><td><span class="row" style="gap:6px;justify-content:flex-start">
+    ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>المحفوظ</th><th>آخر نشاط</th><th></th></tr>
+      ${studs.map(s=>`<tr><td><span class="row" style="gap:6px;justify-content:flex-start">${s.off?'<span class="flag">⏸️</span>':''}
           <button class="btn ghost sm imgEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}" data-has="${s.img?1:0}"
             style="padding:2px;border:none;background:none">${avatarOf(s,30)}</button>
           ${esc(s.name)}</span></td><td><b>${s.pts}</b></td>
         <td><button class="btn ghost sm memoEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
           style="padding:4px 9px;font-size:.76rem">${memoLabel(s.memo)} ✏️</button></td>
-        <td class="muted" style="font-size:.8rem">${ago(s.last)}</td></tr>`).join('')}</table>`
+        <td class="muted" style="font-size:.8rem">${ago(s.last)}</td>
+        <td><button class="btn ghost sm stMg" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
+          data-o="${s.off?1:0}" style="padding:4px 8px">⋯</button></td></tr>`).join('')}</table>`
       :'<p class="muted center">لسه محدش انضم — ابعت الرابط فوق</p>'}
   </div>
   <div class="center row">
@@ -2819,6 +2839,8 @@ async function screenHalaqa(hid){
     teacherMemoDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).memo||null); });
   app.querySelectorAll('.imgEd').forEach(b=>b.onclick=()=>{ Snd.click();
     teacherImgDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).img||null); });
+  app.querySelectorAll('.stMg').forEach(b=>b.onclick=()=>{ Snd.click();
+    studentManageDialog(hid, b.dataset.u, b.dataset.n, b.dataset.o === '1'); });
   $('#cp').onclick=()=>{ navigator.clipboard?.writeText(halLink(hid)); Snd.correct(); toast('📋 اتنسخ!'); };
   $('#wa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent('انضم لحلقة '+(v.name||'')+' في لعبة رحلة القرآن:\n'+halLink(hid)),'_blank'); };
   let items = ((v.hw||{}).items||[]).slice();
@@ -2900,6 +2922,7 @@ async function ownerLoad(force){
   const centers = Object.entries(ctrs || {}).map(([cid, v]) => ({
     cid: cid, name: v.name || '—', mgr: v.mgr || '', mgrEmail: v.mgrEmail || '',
     created: v.created || 0,
+    paused: !!v.paused, code: v.code || '',
     teachers: Object.keys(((cidx||{})[cid]||{}).teachers || {}).length,
     halaqas:  Object.keys(((cidx||{})[cid]||{}).halaqas  || {}).length
   })).sort((a, b) => b.created - a.created);
@@ -3038,9 +3061,14 @@ async function screenOwner(sub){
     <div class="card fade">
       <h3>🏢 المراكز (${cs.length})</h3>
       ${cs.length ? cs.map(c=>`<div class="orow">
-        <div class="g"><b>${esc(c.name)} ${c.mgr?'':'<span class="flag">لسه ما اتستلمش</span>'}</b>
+        <div class="g"><b>${esc(c.name)} ${c.paused?'<span class="flag bad">⏸️ معلّق</span>':''}
+          ${c.mgr?'':'<span class="flag">لسه ما اتستلمش</span>'}</b>
           <small style="direction:ltr;display:inline-block">${esc(c.mgrEmail||'—')}</small>
-          <small>${c.teachers} معلم · ${c.halaqas} حلقة · كود <b style="direction:ltr;display:inline-block">${esc(c.cid)}</b></small></div>
+          <small>${c.teachers} معلم · ${c.halaqas} حلقة</small>
+          <small>رقم المركز (للمدير) <b style="direction:ltr;display:inline-block">${esc(c.cid)}</b>
+            ${c.code?` · كود الانضمام <b style="direction:ltr;display:inline-block">${esc(c.code)}</b>`:''}</small></div>
+        <button class="btn ghost sm cPause" data-c="${esc(c.cid)}" data-p="${c.paused?1:0}"
+          style="padding:4px 8px">${c.paused?'▶️':'⏸️'}</button>
         <button class="btn ghost sm cDel" data-c="${esc(c.cid)}" data-n="${esc(c.name)}"
           style="padding:4px 8px;border-color:var(--bad);color:var(--bad)">✕</button>
       </div>`).join('') : '<p class="muted center">مفيش مراكز — اعمل أول واحد فوق</p>'}
@@ -3117,13 +3145,20 @@ async function screenOwner(sub){
   if($('#ncGo')) $('#ncGo').onclick = async () => { Snd.click();
     const nm = ($('#ncName').value||'').trim(), em = ($('#ncMail').value||'').trim();
     if(!nm || !em) return toast('اكتب الاسم والإيميل');
-    const cid = await ownerCreateCenter(nm, em);
-    Snd.win(); toast('🏢 اتعمل — الكود ' + cid);
+    const r = await ownerCreateCenter(nm, em);
+    Snd.win(); toast('🏢 اتعمل — رقم المركز ' + r.cid);
     await ownerLoad(true); screenOwner(''); };
+  app.querySelectorAll('.cPause').forEach(b => b.onclick = async () => { Snd.click();
+    const on = b.dataset.p !== '1';
+    await firebase.database().ref('centers/'+b.dataset.c+'/paused').set(on || null).catch(()=>{});
+    toast(on ? '⏸️ اتعلّق — لوحة المدير مقفولة' : '▶️ اترجّع');
+    await ownerLoad(true); screenOwner(''); });
   app.querySelectorAll('.cDel').forEach(b => b.onclick = () => { Snd.click();
     askExit2('تمسح مركز ' + b.dataset.n + '؟',
       'المعلمين وحلقاتهم هيفضلوا شغالين — بس المدير مش هيشوفهم.', '🗑️ امسح', async ok => {
         if(!ok) return;
+        const cd = (D.centers.find(x=>x.cid===b.dataset.c)||{}).code;
+        if(cd) await firebase.database().ref('index/codes/'+cd).remove().catch(()=>{});
         await firebase.database().ref('centers/'+b.dataset.c).remove().catch(()=>{});
         await firebase.database().ref('index/centers/'+b.dataset.c).remove().catch(()=>{});
         toast('اتمسح'); await ownerLoad(true); screenOwner(''); }); });
@@ -3467,6 +3502,38 @@ function surStarsAgg(sn){
   return s >= 2.4 ? 3 : s >= 1.2 ? 2 : s > 0 ? 1 : 0;
 }
 
+/* 🧑‍🏫 المعلم: إدارة طالب — تعليق مؤقت أو إخراج من الحلقة */
+function studentManageDialog(hid, uid, name, off){
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;'
+    + 'background:rgba(0,0,0,.6);backdrop-filter:blur(2px)';
+  d.innerHTML = `<div class="card" style="margin:0;width:100%;max-width:440px;border-radius:22px 22px 0 0;
+    animation:pop .25s ease;text-align:center">
+    <h3 style="margin:0 0 10px">👦 ${esc(name)}</h3>
+    <div class="row" style="justify-content:center;flex-wrap:wrap">
+      <button class="btn ${off?'':'ghost'}" id="smP">${off?'▶️ رجّعه':'⏸️ علّقه مؤقتًا'}</button>
+      <button class="btn ghost" id="smX" style="border-color:var(--bad);color:var(--bad)">✕ شيله من الحلقة</button>
+    </div>
+    <p class="muted" style="font-size:.78rem;margin:10px 0 0">
+      <b>التعليق:</b> يفضل في الحلقة بس مايدخلش المسابقات ولا الترتيب — ورجوعه بضغطة.<br>
+      <b>الإخراج:</b> يخرج من الحلقة، و<b>نجومه وتقدّمه يفضلوا عنده كاملين</b>.</p>
+    <div class="center" style="margin-top:10px"><button class="btn ghost sm" id="smC">إلغاء</button></div>
+  </div>`;
+  document.body.appendChild(d);
+  const close = () => d.remove();
+  d.querySelector('#smC').onclick = () => { Snd.click(); close(); };
+  d.onclick = e => { if(e.target === d) close(); };
+  d.querySelector('#smP').onclick = async () => { Snd.click();
+    await pauseStudent(hid, uid, !off); close();
+    toast(off ? '▶️ رجع يشارك' : '⏸️ اتعلّق مؤقتًا'); screenHalaqa(hid); };
+  d.querySelector('#smX').onclick = () => { Snd.click(); close();
+    askExit2('تشيل ' + name + ' من الحلقة؟',
+      'هيخرج من الحلقة دي بس — <b>نجومه وتقدّمه وخريطة حفظه هتفضل عنده كاملة</b>،' +
+      ' ويقدر ينضم تاني بالكود لو حبيت.', '✕ شيله', async ok => {
+        if(!ok) return;
+        await removeStudent(hid, uid); toast('اتشال من الحلقة'); screenHalaqa(hid); }); };
+}
+
 /* 🧑‍🏫 المعلمة: ترفع صورة لطالب أو تشيلها */
 function teacherImgDialog(hid, uid, name, cur){
   const d = document.createElement('div');
@@ -3564,7 +3631,7 @@ async function pullTeacherMemo(){
 /* ---------- 📷 الصورة الشخصية ---------- */
 /* الصورة بتتصغّر على جهاز الطفل قبل أي رفع — مفيش خدمة تخزين خارجية */
 const AVA_PX = 128, AVA_Q = 0.75, AVA_MAX = 30000;   /* سقف الطول بعد التصغير */
-function pickImage(cb){
+function pickImage(cb, px, q){
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = () => {
@@ -3575,10 +3642,11 @@ function pickImage(cb){
       const im = new Image();
       im.onload = () => {
         const side = Math.min(im.width, im.height);
-        const c = document.createElement('canvas'); c.width = c.height = AVA_PX;
+        const S = px || AVA_PX;
+        const c = document.createElement('canvas'); c.width = c.height = S;
         const x = c.getContext('2d');
-        x.drawImage(im, (im.width - side) / 2, (im.height - side) / 2, side, side, 0, 0, AVA_PX, AVA_PX);
-        let url = c.toDataURL('image/jpeg', AVA_Q);
+        x.drawImage(im, (im.width - side) / 2, (im.height - side) / 2, side, side, 0, 0, S, S);
+        let url = c.toDataURL('image/jpeg', q || AVA_Q);
         if(url.length > AVA_MAX) url = c.toDataURL('image/jpeg', 0.55);
         if(url.length > AVA_MAX) return toast('⚠️ الصورة كبيرة — جرّب صورة تانية');
         cb(url);
@@ -3665,6 +3733,33 @@ async function pullCloudProfile(){
     return p;
   }catch(e){ return null; }
 }
+/* 📧 تغيير إيميل الحساب */
+function screenChangeEmail(){
+  stopTimer();
+  app.innerHTML = `
+  <div class="hdr"><h2>📧 تغيير الإيميل</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade">
+    <p style="font-size:.9rem;margin:0 0 4px">الإيميل الحالي:
+      <b style="direction:ltr;display:inline-block">${esc((fbUser&&fbUser.email)||'')}</b></p>
+    <p class="muted" style="font-size:.8rem;margin:0 0 12px">
+      حلقاتك وطلابك وكل بياناتك <b>هتفضل زي ما هي</b> — الإيميل بس اللي بيتغيّر.</p>
+    <input type="email" id="ceNew" placeholder="الإيميل الجديد" style="direction:ltr">
+    <input type="password" id="cePass" placeholder="كلمة السر الحالية" style="direction:ltr">
+    <div class="center" style="margin-top:8px"><button class="btn" id="ceGo">📧 غيّر</button></div>
+    <p class="muted" style="font-size:.76rem;margin:10px 0 0">
+      ⚠️ هتوصلك رسالة تأكيد على الإيميل الجديد — <b>لازم تفتحها</b> عشان التغيير يتم.
+      لحد ما تأكّد، سجّل دخولك بالإيميل القديم.</p>
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenAccount(); };
+  $('#ceGo').onclick = async () => { Snd.click();
+    const em = ($('#ceNew').value||'').trim(), pw = $('#cePass').value||'';
+    if(!em || !pw) return toast('اكتب الإيميل الجديد وكلمة السر');
+    try{ await changeMyEmail(em, pw); Snd.win();
+      toast('📧 بعتنا تأكيد على ' + em + ' — افتحه عشان يتم التغيير'); screenAccount(); }
+    catch(e){ Snd.wrong(); toast('⚠️ ' + authMsg(e)); } };
+}
+
 /* 👤 قائمة الحساب — تبديل، تأمين، كود الاستعادة، خروج، حذف */
 function screenAccount(){
   stopTimer();
@@ -3713,6 +3808,7 @@ function screenAccount(){
     <h3>🔄 اللاعبين على الجهاز ده</h3>
     <div class="row" style="justify-content:flex-start">
       <button class="btn ghost sm" id="acSwitch">👥 ${many?'غيّر اللاعب':'ضيف لاعب جديد'}</button>
+      ${secured?'<button class="btn ghost sm" id="acMail">📧 غيّر الإيميل</button>':''}
       ${secured?'<button class="btn ghost sm" id="acOut">🚪 تسجيل خروج</button>':''}
       <button class="btn ghost sm" id="acDel" style="border-color:var(--bad);color:var(--bad)">🗑️ شيل ملفي من الجهاز</button>
     </div>
@@ -3733,6 +3829,7 @@ function screenAccount(){
       toast('🔐 اتأمّن! تقدر تدخل من أي جهاز'); screenAccount(); }
     catch(e){ Snd.wrong(); toast('⚠️ ' + authMsg(e)); } };
   if($('#acLogin')) $('#acLogin').onclick = () => { Snd.click(); screenAccountLogin(); };
+  if($('#acMail')) $('#acMail').onclick = () => { Snd.click(); screenChangeEmail(); };
   if($('#acOut')) $('#acOut').onclick = async () => { Snd.click();
     askExit2('تسجّل خروج؟', 'تقدّمك محفوظ في حسابك — ترجعله بالإيميل في أي وقت.', '🚪 اخرج', async ok => {
       if(!ok) return; await teacherLogout(); toast('🚪 خرجت'); ASKED_WHO = false; screenHome(); }); };
@@ -3828,10 +3925,11 @@ const newCid = () => Array.from({length:5},
 
 /* 🛡️ المالك بيعمل مركز */
 async function ownerCreateCenter(name, email){
-  const cid = newCid();
+  const cid = newCid(), code = newCid();
   await centerRef(cid).set({ name: name, mgrEmail: (email||'').trim().toLowerCase(),
-    mgr: '', mgrName: '', created: Date.now() });
-  return cid;
+    mgr: '', mgrName: '', code: code, created: Date.now() });
+  await codeRef(code).set(cid).catch(()=>{});
+  return { cid: cid, code: code };
 }
 /* 🧑‍💼 المدير بيستلم مركزه بالكود (لازم يكون داخل بالإيميل اللي المالك حدده) */
 async function claimCenter(code){
@@ -3852,18 +3950,23 @@ const myCenter = () => (P && P.mgrCid) || '';
 
 /* 🧑‍🏫 المعلم بينضم لمركز بالكود */
 async function joinCenter(code){
-  const cid = (code||'').trim().toUpperCase();
-  if(cid.length !== 5) throw new Error('bad');
-  const s = await centerRef(cid).once('value');
-  const v = s.val();
-  if(!v) throw new Error('notfound');
+  const key = (code||'').trim().toUpperCase();
+  if(key.length !== 5) throw new Error('bad');
+  /* الكود بيدلّنا على المركز؛ ولو مركز قديم كوده = رقمه */
+  let cid = key;
+  const cs = await codeRef(key).once('value').catch(()=>null);
+  if(cs && cs.exists()) cid = cs.val();
+  const s = await centerRef(cid).child('name').once('value').catch(()=>null);
+  if(!s || !s.exists()) throw new Error('notfound');
+  const v = { name: s.val() };
   const t = await loadTeacher();
   await cidxRef(cid).child('teachers').child(fbUser.uid).update({
     n: (t && t.name) || (P && P.name) || '—', e: (fbUser.email||''), at: Date.now(), seen: Date.now() });
   if(P){ P.cid = cid; saveP(); }
   if(t){ t.cid = cid; await saveTeacher(t); }
   /* حلقاته الحالية تتعرض للمدير كمان */
-  for(const hid of ((t && t.hal) || [])) mirrorHalaqa(cid, hid);
+  for(const hid of ((t && t.hal) || [])){ mirrorHalaqa(cid, hid);
+    halRef(hid).child('cid').set(cid).catch(()=>{}); }
   return v;
 }
 /* مرآة الحلقة عند المركز — عشان المدير يعرف حلقات معلميه من غير ما يقرا كل الحلقات */
@@ -3906,7 +4009,10 @@ async function centerLoad(cid){
   const halaqas = Object.entries(hv).map(([hid,x]) => ({
     hid: hid, name: x.n || '—', tname: x.tn || '', t: x.t || '', created: x.at || 0 }))
     .sort((a,b) => b.created - a.created);
-  return { cid: cid, name: v.name || '—', teachers: teachers, halaqas: halaqas };
+  return { cid: cid, name: v.name || '—', paused: !!v.paused,
+           logo: v.logo || '', about: v.about || '', phone: v.phone || '',
+           wa: v.wa || '', site: v.site || '', addr: v.addr || '',
+           teachers: teachers, halaqas: halaqas };
 }
 
 /* استلام المركز بالكود */
@@ -3924,7 +4030,7 @@ function screenClaimCenter(){
   <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
   $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenHome(); };
   $('#clGo').onclick = async () => { Snd.click();
-    try{ const v = await claimCenter($('#clCode').value); Snd.win();
+    try{ const v = await claimCenter2($('#clCode').value); Snd.win();
       toast('🏢 استلمت مركز ' + v.name); screenCenter(); }
     catch(e){ Snd.wrong();
       toast(e.message==='notfound' ? '❌ مفيش مركز بالكود ده'
@@ -3932,6 +4038,108 @@ function screenClaimCenter(){
           : e.message==='taken'     ? '⚠️ المركز ده مستلمه حد تاني'
           : e.message==='needemail' ? '⚠️ أمّن حسابك بإيميل الأول'
           : '⚠️ محتاج إنترنت'); } };
+}
+
+/* نافذة إدخال نص بسيطة */
+function askText(title, val, max, cb){
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;'
+    + 'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:20px';
+  d.innerHTML = `<div class="card" style="max-width:340px;width:100%;margin:0;animation:pop .3s ease">
+    <h3 style="margin:2px 0 8px">${esc(title)}</h3>
+    <input type="text" id="atV" maxlength="${max||40}" value="${esc(val||'')}">
+    <div class="row" style="justify-content:center;margin-top:10px">
+      <button class="btn" id="atY">💾 حفظ</button>
+      <button class="btn ghost" id="atN">إلغاء</button>
+    </div></div>`;
+  document.body.appendChild(d);
+  const inp = d.querySelector('#atV');
+  setTimeout(() => inp.focus(), 60);
+  const close = v => { d.remove(); cb(v); };
+  d.querySelector('#atY').onclick = () => { Snd.click(); close((inp.value||'').trim()); };
+  d.querySelector('#atN').onclick = () => { Snd.click(); close(null); };
+  inp.onkeydown = e => { if(e.key === 'Enter'){ Snd.click(); close((inp.value||'').trim()); } };
+  d.onclick = e => { if(e.target === d) close(null); };
+}
+
+/* 🪪 المدير بيعدّل بيانات مركزه ولوجوه ووسائل تواصله */
+function screenCenterEdit(cid, C){
+  stopTimer();
+  let logo = C.logo || '';
+  const draw = () => {
+    app.innerHTML = `
+    <div class="hdr"><h2>🪪 بيانات المركز</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+    <div class="card fade center">
+      ${logo?`<img class="ava" src="${esc(logo)}" alt="" style="width:110px;height:110px;border-radius:22px;margin:0 auto">`
+        :'<div style="width:110px;height:110px;margin:0 auto;border-radius:22px;border:3px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:2.6rem;color:var(--muted)">🏢</div>'}
+      <div class="row" style="justify-content:center;margin-top:10px">
+        <button class="btn ghost sm" id="lgUp">🖼️ ${logo?'غيّر اللوجو':'ارفع لوجو'}</button>
+        ${logo?'<button class="btn ghost sm" id="lgDel">🗑️ امسح</button>':''}
+      </div>
+      <p class="muted" style="font-size:.75rem;margin:8px 0 0">اللوجو بيظهر لطلاب حلقات مركزك.</p>
+    </div>
+    <div class="card fade">
+      <label class="muted" style="font-size:.8rem">اسم المركز</label>
+      <input type="text" id="ceName" maxlength="40" value="${esc(C.name||'')}">
+      <label class="muted" style="font-size:.8rem;display:block;margin-top:8px">نبذة قصيرة</label>
+      <input type="text" id="ceAbout" maxlength="90" placeholder="مثال: تحفيظ قرآن للأطفال من ٦ لـ ١٥ سنة" value="${esc(C.about||'')}">
+      <label class="muted" style="font-size:.8rem;display:block;margin-top:8px">📞 تليفون</label>
+      <input type="tel" id="cePhone" maxlength="20" placeholder="01xxxxxxxxx" style="direction:ltr" value="${esc(C.phone||'')}">
+      <label class="muted" style="font-size:.8rem;display:block;margin-top:8px">💬 واتساب</label>
+      <input type="tel" id="ceWa" maxlength="20" placeholder="201xxxxxxxxx" style="direction:ltr" value="${esc(C.wa||'')}">
+      <label class="muted" style="font-size:.8rem;display:block;margin-top:8px">🌐 موقع أو صفحة</label>
+      <input type="url" id="ceSite" maxlength="120" placeholder="https://..." style="direction:ltr" value="${esc(C.site||'')}">
+      <label class="muted" style="font-size:.8rem;display:block;margin-top:8px">📍 العنوان</label>
+      <input type="text" id="ceAddr" maxlength="90" placeholder="اختياري" value="${esc(C.addr||'')}">
+      <div class="center" style="margin-top:12px"><button class="btn" id="ceSave">💾 حفظ</button></div>
+    </div>
+    <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+    $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenCenter(); };
+    $('#lgUp').onclick = () => { Snd.click(); pickImage(u => { logo = u; draw(); }, 160, 0.8); };
+    if($('#lgDel')) $('#lgDel').onclick = () => { Snd.click(); logo = ''; draw(); };
+    $('#ceSave').onclick = async () => { Snd.click();
+      const d = { name: ($('#ceName').value||'').trim() || C.name,
+        about: ($('#ceAbout').value||'').trim(), phone: ($('#cePhone').value||'').trim(),
+        wa: ($('#ceWa').value||'').trim().replace(/[^\d+]/g,''),
+        site: ($('#ceSite').value||'').trim(), addr: ($('#ceAddr').value||'').trim(),
+        logo: logo || null };
+      try{ await centerRef(cid).update(d); Snd.win(); toast('💾 اتحفظت'); screenCenter(); }
+      catch(e){ Snd.wrong(); toast('⚠️ مقدرناش نحفظ'); } };
+  };
+  draw();
+}
+/* 🪪 كارت المركز اللي بيشوفه الطالب وأهله */
+async function centerCard(cid){
+  try{
+    const s = await centerRef(cid).once('value');
+    const v = s.val(); if(!v) return null;
+    return { name: v.name||'', logo: v.logo||'', about: v.about||'',
+             phone: v.phone||'', wa: v.wa||'', site: v.site||'', addr: v.addr||'' };
+  }catch(e){ return null; }
+}
+function showCenterCard(c){
+  if(!c) return toast('⚠️ مفيش بيانات');
+  const d = document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:18px';
+  const wa = c.wa ? 'https://wa.me/' + c.wa.replace(/[^\d]/g,'') : '';
+  d.innerHTML = `<div class="card center" style="max-width:340px;width:100%;margin:0;animation:pop .3s ease">
+    ${c.logo?`<img class="ava" src="${esc(c.logo)}" alt="" style="width:96px;height:96px;border-radius:20px;margin:0 auto">`
+      :'<div style="font-size:2.6rem">🏢</div>'}
+    <h3 style="margin:8px 0 2px">${esc(c.name)}</h3>
+    ${c.about?`<p class="muted" style="font-size:.84rem;margin:0 0 8px">${esc(c.about)}</p>`:''}
+    ${c.addr?`<p class="muted" style="font-size:.8rem;margin:0 0 8px">📍 ${esc(c.addr)}</p>`:''}
+    <div class="row" style="justify-content:center;flex-wrap:wrap;margin-top:6px">
+      ${c.phone?`<a class="btn ghost sm" href="tel:${esc(c.phone)}" style="text-decoration:none">📞 اتصل</a>`:''}
+      ${wa?`<a class="btn ghost sm" href="${esc(wa)}" target="_blank" rel="noopener" style="text-decoration:none">💬 واتساب</a>`:''}
+      ${c.site?`<a class="btn ghost sm" href="${esc(c.site)}" target="_blank" rel="noopener" style="text-decoration:none">🌐 الموقع</a>`:''}
+    </div>
+    <div class="center" style="margin-top:10px"><button class="btn ghost sm" id="ccX">إغلاق</button></div>
+  </div>`;
+  document.body.appendChild(d);
+  const close = () => d.remove();
+  d.querySelector('#ccX').onclick = () => { Snd.click(); close(); };
+  d.onclick = e => { if(e.target === d) close(); };
 }
 
 /* ---------- 🏢 لوحة مدير المركز ---------- */
@@ -3942,6 +4150,15 @@ async function screenCenter(){
   app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
   if(!(await fbInit())) return;
   const C = await centerLoad(cid);
+  C.code = await centerJoinCode(cid).catch(()=>cid);
+  if(C.paused) return (app.innerHTML = `
+    <div class="hdr"><h2>🏢 ${esc(C.name)}</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+    <div class="card fade center"><div style="font-size:3rem">⏸️</div>
+      <h3>المركز معلّق مؤقتًا</h3>
+      <p class="muted" style="font-size:.88rem">كلّم صاحب اللعبة عشان يرجّعه.
+        بيانات معلميك وطلابهم كلها محفوظة زي ما هي.</p></div>
+    <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`,
+    ($('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); }));
   const now = Date.now(), D = 864e5;
   const live = C.teachers.filter(t => now - t.seen < 14 * D).length;
   app.innerHTML = `
@@ -3954,11 +4171,33 @@ async function screenCenter(){
   </div>
   <div class="card fade center" style="padding:12px">
     <p class="muted" style="margin:0 0 6px;font-size:.84rem">كود المركز — ابعته لمعلميك عشان ينضموا</p>
-    <div class="codebox" style="font-size:1.6rem;letter-spacing:7px;padding:7px 16px;display:inline-block">${esc(cid)}</div>
+    <div class="codebox" style="font-size:1.6rem;letter-spacing:7px;padding:7px 16px;display:inline-block">${esc(C.code)}</div>
     <div class="row" style="justify-content:center;margin-top:9px">
       <button class="btn ghost sm" id="cCopy">📋 انسخ</button>
       <button class="btn ghost sm" id="cWa">💬 واتساب</button>
+      <button class="btn ghost sm" id="cRot">🔄 كود جديد</button>
     </div>
+    <p class="muted" style="font-size:.74rem;margin:8px 0 0">لو الكود وصل لحد مش من معلميك،
+      اعمل كود جديد — القديم هيبطل يشتغل فورًا.</p>
+  </div>
+  <div class="card fade">
+    <div class="hdr" style="margin:0 0 8px"><h3 style="margin:0">🪪 بيانات المركز</h3>
+      <button class="btn ghost sm" id="cEdit">✏️ عدّل</button></div>
+    <div class="row" style="justify-content:flex-start;align-items:center;gap:12px">
+      ${C.logo?`<img class="ava" src="${esc(C.logo)}" alt="" style="width:66px;height:66px;border-radius:16px">`
+        :'<div style="width:66px;height:66px;border-radius:16px;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--muted)">🏢</div>'}
+      <div style="flex:1;min-width:0">
+        <b style="font-size:1.05rem">${esc(C.name)}</b>
+        ${C.about?`<div class="muted" style="font-size:.8rem">${esc(C.about)}</div>`:''}
+        <div class="muted" style="font-size:.78rem;margin-top:3px">
+          ${C.phone?`📞 <span style="direction:ltr;display:inline-block">${esc(C.phone)}</span> `:''}
+          ${C.wa?`💬 واتساب `:''}${C.site?`🌐 موقع`:''}
+          ${(!C.phone&&!C.wa&&!C.site)?'مفيش وسائل تواصل — ضيفها عشان تظهر لأهالي طلابك':''}
+        </div>
+      </div>
+    </div>
+    <p class="muted" style="font-size:.74rem;margin:9px 0 0">اللوجو والبيانات دي بتظهر
+      <b>لطلاب حلقات مركزك وأهاليهم</b>.</p>
   </div>
   <div class="card fade">
     <h3>🧑‍🏫 معلمو المركز</h3>
@@ -3980,11 +4219,20 @@ async function screenCenter(){
   </div>
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
   $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
-  $('#cCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(cid);
+  $('#cCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(C.code);
     Snd.correct(); toast('📋 اتنسخ'); };
   $('#cWa').onclick = () => { window.open('https://wa.me/?text=' + encodeURIComponent(
-    'انضم لمركز ' + C.name + ' في لعبة رحلة القرآن — كود المركز: ' + cid + '\n' +
+    'انضم لمركز ' + C.name + ' في لعبة رحلة القرآن — كود المركز: ' + C.code + '\n' +
     location.origin + location.pathname), '_blank'); };
+  $('#cRot').onclick = () => { Snd.click();
+    askExit2('تعمل كود جديد للمركز؟',
+      'الكود القديم <b>' + esc(C.code) + '</b> هيبطل يشتغل فورًا. معلميك الحاليين هيفضلوا معاك عادي —' +
+      ' بس أي حد معاه الكود القديم مش هيقدر ينضم.', '🔄 كود جديد', async ok => {
+        if(!ok) return;
+        try{ const nc = await rotateCenterCode(cid); Snd.win();
+          toast('🔄 الكود الجديد: ' + nc); screenCenter(); }
+        catch(e){ Snd.wrong(); toast('⚠️ مقدرناش — جرّب تاني'); } }); };
+  $('#cEdit').onclick = () => { Snd.click(); screenCenterEdit(cid, C); };
   app.querySelectorAll('.tOpen').forEach(b => b.onclick = () => { Snd.click();
     screenCenterTeacher(cid, b.dataset.u, b.dataset.n); });
   app.querySelectorAll('.chOpen').forEach(b => b.onclick = () => { Snd.click();
@@ -4051,6 +4299,90 @@ async function screenCenterHalaqa(cid, hid){
   </div>
   <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
   $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenCenter(); };
+}
+
+/* ---------- 🏢 إدارة المركز: كود جديد / تعليق / إعادة تسمية ---------- */
+/* الاستلام بقى محاولة كتابة — القواعد بتتحقق من الإيميل، فمش محتاجين نقرا mgrEmail */
+async function claimCenter2(code){
+  const cid = (code||'').trim().toUpperCase();
+  if(cid.length !== 5) throw new Error('bad');
+  const my = ((fbUser && fbUser.email) || '').toLowerCase();
+  if(!my) throw new Error('needemail');
+  const s = await centerRef(cid).child('name').once('value').catch(()=>null);
+  if(!s || !s.exists()) throw new Error('notfound');
+  try{
+    await centerRef(cid).update({ mgr: fbUser.uid, mgrName: (P && P.name) || my });
+  }catch(e){ throw new Error('notyours'); }
+  if(P){ P.mgrCid = cid; saveP(); }
+  return { name: s.val() };
+}
+/* كود الانضمام منفصل عن هوية المركز — فالتدوير مابينقلش أي بيانات */
+const codeRef = c => firebase.database().ref('index/codes/' + c);
+async function centerJoinCode(cid){
+  const s = await centerRef(cid).child('code').once('value').catch(()=>null);
+  let code = s && s.val();
+  if(!code){ code = newCid();                       /* مراكز قديمة: كودها = رقمها */
+    await centerRef(cid).child('code').set(code).catch(()=>{});
+    await codeRef(code).set(cid).catch(()=>{}); }
+  return code;
+}
+/* 🔄 كود انضمام جديد — القديم يموت فورًا، والمركز وبياناته ما بيتحركوش */
+async function rotateCenterCode(cid){
+  const old = await centerJoinCode(cid);
+  const nc = newCid();
+  await codeRef(nc).set(cid);
+  await centerRef(cid).child('code').set(nc);
+  if(old && old !== nc) await codeRef(old).remove().catch(()=>{});
+  return nc;
+}
+/* المعلم بيتأكد إن كوده لسه صالح (المدير ممكن يكون غيّره) */
+async function centerAlive(){
+  const cid = (P && P.cid) || '';
+  if(!cid || !fbReady) return true;
+  const s = await centerRef(cid).child('name').once('value').catch(()=>null);
+  if(s && s.exists()) return true;
+  P.cid = ''; saveP();
+  const t = await loadTeacher(); if(t){ t.cid = ''; await saveTeacher(t); }
+  return false;
+}
+const centerPaused = v => !!(v && v.paused);
+
+/* ---------- 📧 تغيير إيميل الحساب ---------- */
+async function changeMyEmail(newEmail, pass){
+  const u = firebase.auth().currentUser;
+  if(!u || u.isAnonymous) throw new Error('needaccount');
+  const cred = firebase.auth.EmailAuthProvider.credential(u.email, pass);
+  await u.reauthenticateWithCredential(cred);            /* لازم كلمة السر الحالية */
+  if(u.verifyBeforeUpdateEmail) await u.verifyBeforeUpdateEmail(newEmail);
+  else await u.updateEmail(newEmail);
+  return true;
+}
+
+/* ---------- 👦 المعلم: شيل / علّق طالب ---------- */
+async function removeStudent(hid, uid){
+  await memRef(hid).child(uid).remove().catch(()=>{});
+}
+async function pauseStudent(hid, uid, on){
+  await memRef(hid).child(uid).update({ off: !!on || null }).catch(()=>{});
+}
+/* الطالب: لو معلمه شاله أو علّقه */
+async function checkMyHalaqas(){
+  if(!fbReady || !P || !fbUser) return false;
+  let changed = false;
+  for(const x of ((P.halaqas || []).slice())){
+    try{
+      const s = await memRef(x.hid).child(fbUser.uid).once('value');
+      if(!s.exists()){
+        P.halaqas = (P.halaqas||[]).filter(y => y.hid !== x.hid); saveP();
+        toast('🏫 اتشلت من حلقة ' + (x.name||'')); changed = true;
+      } else {
+        const off = !!(s.val()||{}).off;
+        if(!!x.off !== off){ x.off = off; saveP(); changed = true;
+          if(off) toast('⏸️ معلمك علّق مشاركتك في ' + (x.name||'') + ' مؤقتًا'); }
+      }
+    }catch(e){}
+  }
+  return changed;
 }
 
 /* ---------- 🏠 زر البيت العائم ---------- */
@@ -5169,6 +5501,9 @@ function screenHelp(){
         },
         "tname": {
           ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "cid": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
         }
       },
       ".read": "auth.token.email === 'yahia176@gmail.com'"
@@ -5202,6 +5537,9 @@ function screenHelp(){
             "p": {
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)"
             }
+          },
+          "off": {
+            ".validate": "newData.isBoolean()"
           }
         }
       }
@@ -5244,6 +5582,13 @@ function screenHelp(){
             }
           }
         }
+      },
+      "codes": {
+        "$code": {
+          ".read": "auth != null",
+          ".write": "auth != null && (auth.token.email === 'yahia176@gmail.com' || (newData.exists() && root.child('centers').child(newData.val()).child('mgr').val() === auth.uid) || (!newData.exists() && root.child('centers').child(data.val()).child('mgr').val() === auth.uid))",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
+        }
       }
     },
     "users": {
@@ -5255,16 +5600,53 @@ function screenHelp(){
     },
     "centers": {
       "$c": {
-        ".read": "auth != null",
         ".write": "auth.token.email === 'yahia176@gmail.com' || (data.exists() && (data.child('mgr').val() === auth.uid || data.child('mgrEmail').val() === auth.token.email))",
         "name": {
+          ".read": "auth != null",
           ".validate": "newData.isString() && newData.val().length <= 40"
         },
         "mgrEmail": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'",
           ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "mgr": {
+          ".write": "auth.token.email === 'yahia176@gmail.com' || root.child('centers').child($c).child('mgrEmail').val() === auth.token.email"
+        },
+        "paused": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'"
         },
         "mgrName": {
           ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "created": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'"
+        },
+        "code": {
+          ".validate": "newData.isString() && newData.val().length === 5"
+        },
+        "logo": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40000 && newData.val().beginsWith('data:image/'))"
+        },
+        "about": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
+        },
+        "phone": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 20)"
+        },
+        "wa": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 20)"
+        },
+        "site": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 120)"
+        },
+        "addr": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
         }
       }
     }
@@ -6548,9 +6930,10 @@ if(FIREBASE_CONFIG) fbInit().then(async ok=>{ if(!ok) return;
   watchHalaqas();
   screenHome();   /* نعيد الرسم بعد التعرف على الحساب والحلقات */
   setTimeout(function(){
-    Promise.all([pullTeacherMemo(), checkImgRemoved(), checkCenter()]).then(function(r){
+    Promise.all([pullTeacherMemo(), checkImgRemoved(), checkCenter(),
+                 checkMyHalaqas(), centerAlive()]).then(function(r){
       pushHalaqaImg();
-      if(r[0] || r[1] || r[2]) screenHome();
+      if(r[0] || r[1] || r[2] || r[3] || r[4] === false) screenHome();
     });
   }, 1800);
 });
