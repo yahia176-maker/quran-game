@@ -3533,12 +3533,25 @@ function ownerImport(){
     const f = inp.files && inp.files[0]; if(!f) return;
     const fr = new FileReader();
     fr.onload = () => {
-      let data; try{ data = JSON.parse(fr.result); }catch(e){ return toast('⚠️ الملف مش سليم'); }
-      if(!data || data.v !== 1) return toast('⚠️ ده مش ملف نسخة احتياطية');
-      const when = new Date(data.at || 0).toLocaleString('ar-EG');
+      let data;
+      try{ data = JSON.parse(String(fr.result).replace(/^﻿/, '')); }
+      catch(e){ return toast('⚠️ الملف مش JSON سليم: ' + (e.message||'').slice(0,40)); }
+      const KEYS = ['users','halaqas','centers','index','config','members'];
+      const has = KEYS.filter(k => k in (data||{}));
+      if(!data || typeof data !== 'object' || !has.length){
+        const got = data && typeof data === 'object' ? Object.keys(data).slice(0,5).join('، ') : typeof data;
+        return toast('⚠️ ده مش ملف نسخة — اللي في الملف: ' + got);
+      }
+      /* معاينة المحتوى قبل الاسترجاع — فعل خطير فلازم يشوف إيه اللي جاي */
+      const cnt = k => { const v = data[k]; return v && typeof v === 'object' ? Object.keys(v).length : 0; };
+      const lines = KEYS.map(k => (k in data)
+        ? (cnt(k) ? '• ' + k + ': ' + cnt(k) : '• ' + k + ': <span style="color:var(--bad)">فاضي</span>')
+        : '• ' + k + ': <span style="color:var(--bad)">مش موجود</span>').join('<br>');
+      const when = data.at ? new Date(data.at).toLocaleString('ar-EG') : 'تاريخ غير معروف';
       askExit2('تسترجع النسخة دي؟',
-        'النسخة من <b>' + esc(when) + '</b>.<br><b style="color:var(--bad)">هتكتب فوق كل البيانات الحالية</b> —' +
-        ' أي حاجة اتعملت بعد التاريخ ده هتضيع. نزّل نسخة من الحالي الأول لو مش متأكد.',
+        'النسخة من <b>' + esc(when) + '</b>:<br>' + lines +
+        '<br><br><b style="color:var(--bad)">هتكتب فوق كل البيانات الحالية</b> —' +
+        ' أي حاجة اتعملت بعد التاريخ ده هتضيع.',
         '♻️ استرجع', async ok => {
           if(!ok) return;
           toast('⏳ بسترجع...');
