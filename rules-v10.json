@@ -93,7 +93,8 @@
             ".validate": "newData.isBoolean()"
           }
         }
-      }
+      },
+      ".read": "auth.token.email === 'yahia176@gmail.com'"
     },
     "index": {
       ".read": "auth.token.email === 'yahia176@gmail.com'",
@@ -198,6 +199,58 @@
         "addr": {
           ".read": "auth != null",
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
+        },
+        "until": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'"
+        },
+        "note": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
+        }
+      }
+    },
+    "reports": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "$id": {
+        ".write": "auth != null && (!data.exists() || auth.token.email === 'yahia176@gmail.com')",
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 600"
+        },
+        "n": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "e": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "ua": {
+          ".validate": "newData.isString() && newData.val().length <= 90"
+        }
+      }
+    },
+    "msgs": {
+      "$u": {
+        ".read": "auth != null && (auth.uid === $u || auth.token.email === 'yahia176@gmail.com')",
+        ".write": "auth.token.email === 'yahia176@gmail.com' || (auth != null && auth.uid === $u && !newData.exists())",
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 300"
+        }
+      }
+    },
+    "audit": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "$id": {
+        ".write": "auth != null && !data.exists()",
+        "a": {
+          ".validate": "newData.isString() && newData.val().length <= 30"
+        },
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "x": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "wn": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
         }
       }
     }

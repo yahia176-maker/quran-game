@@ -2184,6 +2184,11 @@ function screenStudentHome(){
     </button>
     <button class="btn ghost sm" id="cog">⚙️</button>
   </div>
+  ${MYMSG ? `<div class="card fade" id="msgBar" style="border-color:var(--gold);background:var(--goldA)">
+    <b style="display:block;margin-bottom:3px">📩 رسالة من إدارة اللعبة</b>
+    <span style="font-size:.9rem">${esc(MYMSG.t)}</span>
+    <div class="center" style="margin-top:8px"><button class="btn ghost sm" id="msgOk">تمام</button></div>
+  </div>` : ''}
   ${canInstall() && !localStorage.getItem(LS+'_instHint') ? `<div class="card fade" id="instBar" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
     <span style="font-size:.9rem">📲 <b>ثبّت اللعبة</b> على شاشة موبايلك — تفتح من غير نت!</span>
     <span style="display:flex;gap:6px"><button class="btn sm" id="instGo">تثبيت</button>
@@ -2237,6 +2242,7 @@ function screenStudentHome(){
   $('#goPlay').onclick=()=>{ Snd.init(); Snd.click();
     if(FP) startSurah(sn, FP.from, FP.to); else startSmart(); };
   $('#chgFocus').onclick=()=>{ Snd.init(); Snd.click(); screenPickFocus(); };
+  if($('#msgOk')) $('#msgOk').onclick=()=>{ Snd.click(); dismissMsg(); $('#msgBar').remove(); };
   if($('#resGo')) $('#resGo').onclick=()=>{ Snd.init(); resumeSession(); };
   if($('#resNo')) $('#resNo').onclick=()=>{ Snd.click(); clearResume(); $('#resBar').remove(); };
   if($('#instGo')) $('#instGo').onclick=()=>{ Snd.click(); localStorage.setItem(LS+'_instHint','1'); doInstall(); };
@@ -2370,6 +2376,7 @@ function screenSettings(){
     <div class="row" style="justify-content:flex-start">
       <button class="btn ghost sm" id="hlp">📘 الشرح الكامل</button>
       ${canInstall()?'<button class="btn sm" id="inst">📲 ثبّت التطبيق على جهازك</button>':''}
+      <button class="btn ghost sm" id="rep">🆘 بلّغ عن مشكلة</button>
       ${isOwner()?`<button class="btn ghost sm" id="own" style="border-color:var(--ok)">🛡️ لوحة المالك</button>`:''}
     </div>
   </div>
@@ -2396,6 +2403,7 @@ function screenSettings(){
     P.reciter = d.dataset.r; saveP(); screenSettings(); toast('🎙️ اتغيّر لـ '+RECITERS[P.reciter].nm); });
   if($('#rTry')) $('#rTry').onclick=e=>{ Snd.click(); playAyah(105, 1, e.currentTarget); };
   if($('#inst')) $('#inst').onclick=()=>{ Snd.click(); doInstall(); };
+  if($('#rep')) $('#rep').onclick=()=>{ Snd.click(); screenBugReport(); };
   if($('#own')) $('#own').onclick=()=>{ Snd.click(); screenOwner(); };
 }
 
@@ -2864,9 +2872,9 @@ async function ownerLoad(force){
   if(OWN && !force) return OWN;
   const db = firebase.database();
   const get = p => db.ref(p).once('value').then(s => s.val() || {}).catch(() => null);
-  const [idxU, idxT, hals, users, ctrs, cidx] = await Promise.all([
+  const [idxU, idxT, hals, users, ctrs, cidx, reps, aud] = await Promise.all([
     get('index/users'), get('index/teachers'), get('halaqas'), get('users'),
-    get('centers'), get('index/centers')
+    get('centers'), get('index/centers'), get('reports'), get('audit')
   ]);
   if(idxU === null && users === null) throw new Error('permission');
 
@@ -2922,11 +2930,19 @@ async function ownerLoad(force){
   const centers = Object.entries(ctrs || {}).map(([cid, v]) => ({
     cid: cid, name: v.name || '—', mgr: v.mgr || '', mgrEmail: v.mgrEmail || '',
     created: v.created || 0,
-    paused: !!v.paused, code: v.code || '',
+    paused: !!v.paused, code: v.code || '', until: v.until || 0, note: v.note || '',
     teachers: Object.keys(((cidx||{})[cid]||{}).teachers || {}).length,
     halaqas:  Object.keys(((cidx||{})[cid]||{}).halaqas  || {}).length
   })).sort((a, b) => b.created - a.created);
-  OWN = { teachers, halaqas, players, allQz, totalQz, centers,
+  const reports = Object.entries(reps || {}).map(([id, r]) => ({
+    id: id, uid: r.u || '', name: r.n || '—', role: r.r || '', email: r.e || '',
+    txt: r.t || '', at: r.at || 0, ua: r.ua || '', done: !!r.done
+  })).sort((a, b) => b.at - a.at);
+  const audits = Object.entries(aud || {}).map(([id, a]) => ({
+    id: id, who: a.wn || a.w || '—', act: a.a || '', target: a.t || '',
+    extra: a.x || '', at: a.at || 0
+  })).sort((a, b) => b.at - a.at);
+  OWN = { teachers, halaqas, players, allQz, totalQz, centers, reports, audits,
           quizStudents: Object.keys(studentMap).length,
           studentMap, at: Date.now(), indexed: Object.keys(idxU || {}).length };
   return OWN;
@@ -2967,6 +2983,11 @@ async function screenOwner(sub){
     { t:'معلم من غير حلقات', s:t.name + ' — سجّل وعمره ما عمل حلقة', k:'bad' }); });
   D.halaqas.forEach(x => { if(x.created && now - x.created > 30*DAY && !x.hw) alerts.push(
     { t:'حلقة بايتة', s:x.name + ' — بقالها شهر من غير واجب', k:'' }); });
+  (D.centers||[]).forEach(c => { const dd = subDays(c.until);
+    if(dd !== null && dd < 0) alerts.push({ t:'اشتراك منتهي', s:c.name+' — خلص من '+(-dd)+' يوم', k:'bad' });
+    else if(dd !== null && dd <= 14) alerts.push({ t:'اشتراك قرب يخلص', s:c.name+' — باقي '+dd+' يوم', k:'bad' }); });
+  (D.reports||[]).filter(r=>!r.done).slice(0,3).forEach(r =>
+    alerts.push({ t:'🆘 بلاغ جديد', s:r.name+': '+r.txt.slice(0,50), k:'bad' }));
   const noIndex = D.teachers.length && !D.indexed;
   if(noIndex) alerts.push({ t:'الفهرس فاضي', s:'المستخدمين هيظهروا أول ما يفتحوا اللعبة بعد التحديث', k:'' });
 
@@ -2976,7 +2997,9 @@ async function screenOwner(sub){
   const kpi = (v, lbl, sub2, cls) => `<div class="k"><b>${v}</b><span>${lbl}</span>
     ${sub2?`<div class="d ${cls||'muted'}">${sub2}</div>`:''}</div>`;
 
-  const TABS = [['now','📊 النبض'],['ppl','👦 الناس'],['hal','🏫 الحلقات'],
+  const nRep = (D.reports||[]).filter(r=>!r.done).length;
+  const TABS = [['now','📊 النبض'],['rep','🆘 البلاغات' + (nRep?' ('+nRep+')':'')],
+                ['ppl','👦 الناس'],['hal','🏫 الحلقات'],
                 ['ctr','🏢 المراكز'],['qz','🏆 المسابقات'],['tools','🧰 أدوات']];
 
   let body = '';
@@ -3008,6 +3031,24 @@ async function screenOwner(sub){
         <b>${esc(a.t)}</b><small>${esc(a.s)}</small></div>
         <span class="flag ${a.k}">${a.k==='bad'?'مهم':'للعلم'}</span></div>`).join('')}
     </div>`:`<div class="card fade center"><p class="muted" style="margin:0">✅ مفيش حاجة محتاجة انتباهك</p></div>`}`;
+  }
+
+  if(OTAB === 'rep'){
+    const rs = D.reports || [];
+    body = `
+    <div class="card fade">
+      <h3>🆘 البلاغات (${rs.filter(r=>!r.done).length} جديد من ${rs.length})</h3>
+      ${rs.length ? rs.slice(0,40).map(r=>`<div class="orow" style="${r.done?'opacity:.55':''}">
+        <div class="g"><b>${esc(r.name)} ${r.role==='teacher'?'🧑‍🏫':'👦'}
+          ${r.done?'<span class="flag ok">اتحلّت</span>':''}</b>
+          <small style="white-space:pre-wrap;display:block;margin:3px 0">${esc(r.txt)}</small>
+          <small>${ago(r.at)}${r.email?' · '+esc(r.email):''}</small></div>
+        <button class="btn ghost sm rOpen" data-u="${esc(r.uid)}" style="padding:4px 9px">👁️</button>
+        <button class="btn ghost sm rMsg" data-u="${esc(r.uid)}" data-n="${esc(r.name)}" style="padding:4px 9px">📩</button>
+        <button class="btn ghost sm rDone" data-i="${esc(r.id)}" data-d="${r.done?1:0}"
+          style="padding:4px 9px">${r.done?'↩️':'✅'}</button>
+      </div>`).join('') : '<p class="muted center">مفيش بلاغات — كويس 👍</p>'}
+    </div>`;
   }
 
   if(OTAB === 'ppl'){
@@ -3065,8 +3106,15 @@ async function screenOwner(sub){
           ${c.mgr?'':'<span class="flag">لسه ما اتستلمش</span>'}</b>
           <small style="direction:ltr;display:inline-block">${esc(c.mgrEmail||'—')}</small>
           <small>${c.teachers} معلم · ${c.halaqas} حلقة</small>
+          <small>${(()=>{const L=subLabel(c.until);
+            return `<span class="flag ${L.k}">📅 ${L.t}</span>`;})()}
+            ${c.note?' · '+esc(c.note):''}</small>
           <small>رقم المركز (للمدير) <b style="direction:ltr;display:inline-block">${esc(c.cid)}</b>
             ${c.code?` · كود الانضمام <b style="direction:ltr;display:inline-block">${esc(c.code)}</b>`:''}</small></div>
+        <button class="btn ghost sm cSub" data-c="${esc(c.cid)}" data-u="${c.until||0}" data-t="${esc(c.note||'')}"
+          style="padding:4px 8px">📅</button>
+        <button class="btn ghost sm cMsg" data-c="${esc(c.cid)}" data-n="${esc(c.name)}"
+          style="padding:4px 8px">📩</button>
         <button class="btn ghost sm cPause" data-c="${esc(c.cid)}" data-p="${c.paused?1:0}"
           style="padding:4px 8px">${c.paused?'▶️':'⏸️'}</button>
         <button class="btn ghost sm cDel" data-c="${esc(c.cid)}" data-n="${esc(c.name)}"
@@ -3116,9 +3164,28 @@ async function screenOwner(sub){
       <button class="btn sm" id="ann">📣 اكتب إعلان</button>
     </div>
     <div class="card fade">
+      <h3>🖼️ مراجعة الصور (${imgs})</h3>
+      <p class="muted" style="font-size:.82rem;margin:0 0 8px">كل صور المستخدمين في مكان واحد — لو فيه صورة مش مناسبة شيلها.</p>
+      ${imgs ? '<button class="btn ghost sm" id="revImg">🖼️ افتح المراجعة</button>'
+             : '<p class="muted" style="margin:0">مفيش صور مرفوعة</p>'}
+    </div>
+    <div class="card fade">
       <h3>📥 نسخة احتياطية</h3>
-      <p class="muted" style="font-size:.82rem;margin:0 0 8px">تنزّل كل بيانات النظام ملف JSON — احفظه كل فترة.</p>
-      <button class="btn ghost sm" id="exp">📥 نزّل نسخة</button>
+      <p class="muted" style="font-size:.82rem;margin:0 0 8px">نسخة <b>كاملة قابلة للاسترجاع</b> من كل بيانات النظام.
+        نزّلها كل فترة واحفظها في مكان أمان.</p>
+      <div class="row" style="justify-content:flex-start">
+        <button class="btn ghost sm" id="exp">📥 نزّل نسخة</button>
+        <button class="btn ghost sm" id="imp" style="border-color:var(--bad);color:var(--bad)">♻️ استرجاع</button>
+      </div>
+      <p class="muted" style="font-size:.74rem;margin:8px 0 0">⚠️ الاسترجاع بيكتب فوق البيانات الحالية كلها.</p>
+    </div>
+    <div class="card fade">
+      <h3>📜 سجل الأفعال (${(D.audits||[]).length})</h3>
+      ${(D.audits||[]).length ? `<table><tr><th>مين</th><th>عمل إيه</th><th>إمتى</th></tr>
+        ${D.audits.slice(0,15).map(a=>`<tr><td>${esc(a.who)}</td>
+          <td class="muted" style="font-size:.8rem">${esc(AUDN[a.act]||a.act)} ${esc(a.extra||a.target)}</td>
+          <td class="muted" style="font-size:.78rem">${ago(a.at)}</td></tr>`).join('')}
+      </table>` : '<p class="muted center">مفيش أفعال متسجلة</p>'}
     </div>
     <div class="card fade">
       <h3>🔄 تحديث البيانات</h3>
@@ -3141,7 +3208,24 @@ async function screenOwner(sub){
   if($('#ann')) $('#ann').onclick = () => { Snd.click(); screenAnn(); };
   if($('#rl'))  $('#rl').onclick  = async () => { Snd.click(); toast('⏳ بحدّث...');
     await ownerLoad(true); screenOwner(sub); };
-  if($('#exp')) $('#exp').onclick = () => { Snd.click(); ownerExport(); };
+  if($('#exp')) $('#exp').onclick = async () => { Snd.click(); toast('⏳ بجهّز...');
+    const d = await ownerBackup();
+    dlJSON(d, 'quran-game-backup-' + new Date().toISOString().slice(0,10) + '.json');
+    Snd.correct(); toast('📥 اتنزّلت'); };
+  if($('#imp')) $('#imp').onclick = () => { Snd.click(); ownerImport(); };
+  if($('#revImg')) $('#revImg').onclick = () => { Snd.click(); ownerPhotos(); };
+  app.querySelectorAll('.rOpen').forEach(b => b.onclick = () => { Snd.click(); ownerSupport(b.dataset.u); });
+  app.querySelectorAll('.rMsg').forEach(b => b.onclick = () => { Snd.click();
+    askText('📩 رسالة لـ ' + b.dataset.n, '', 300, async v => { if(!v) return;
+      await sendMsg(b.dataset.u, v); toast('📩 اتبعتت'); }); });
+  app.querySelectorAll('.rDone').forEach(b => b.onclick = async () => { Snd.click();
+    await firebase.database().ref('reports/'+b.dataset.i+'/done').set(b.dataset.d==='1'?null:true).catch(()=>{});
+    await ownerLoad(true); screenOwner(sub); });
+  app.querySelectorAll('.cMsg').forEach(b => b.onclick = () => { Snd.click();
+    askText('📩 رسالة لمعلمي ' + b.dataset.n, '', 300, async v => { if(!v) return;
+      const k = await sendMsgCenter(b.dataset.c, v); toast('📩 وصلت لـ ' + k + ' معلم'); }); });
+  app.querySelectorAll('.cSub').forEach(b => b.onclick = () => { Snd.click();
+    ownerSubDialog(b.dataset.c, +b.dataset.u || 0, b.dataset.t || ''); });
   if($('#ncGo')) $('#ncGo').onclick = async () => { Snd.click();
     const nm = ($('#ncName').value||'').trim(), em = ($('#ncMail').value||'').trim();
     if(!nm || !em) return toast('اكتب الاسم والإيميل');
@@ -3151,6 +3235,7 @@ async function screenOwner(sub){
   app.querySelectorAll('.cPause').forEach(b => b.onclick = async () => { Snd.click();
     const on = b.dataset.p !== '1';
     await firebase.database().ref('centers/'+b.dataset.c+'/paused').set(on || null).catch(()=>{});
+    audit(on ? 'pauseCenter' : 'resumeCenter', b.dataset.c);
     toast(on ? '⏸️ اتعلّق — لوحة المدير مقفولة' : '▶️ اترجّع');
     await ownerLoad(true); screenOwner(''); });
   app.querySelectorAll('.cDel').forEach(b => b.onclick = () => { Snd.click();
@@ -3161,6 +3246,7 @@ async function screenOwner(sub){
         if(cd) await firebase.database().ref('index/codes/'+cd).remove().catch(()=>{});
         await firebase.database().ref('centers/'+b.dataset.c).remove().catch(()=>{});
         await firebase.database().ref('index/centers/'+b.dataset.c).remove().catch(()=>{});
+        audit('deleteCenter', b.dataset.c, b.dataset.n);
         toast('اتمسح'); await ownerLoad(true); screenOwner(''); }); });
   app.querySelectorAll('.pOpen').forEach(b => b.onclick = () => { Snd.click(); ownerUser(b.dataset.u); });
   app.querySelectorAll('.hOpen').forEach(b => b.onclick = () => { Snd.click(); ownerHalaqa(b.dataset.h); });
@@ -3168,6 +3254,181 @@ async function screenOwner(sub){
     tmr = setTimeout(() => { screenOwner(v);
       setTimeout(() => { const i = $('#oq'); if(i){ i.focus(); i.setSelectionRange(v.length, v.length); } }, 30);
     }, 300); }; }
+}
+
+/* أسماء الأفعال في سجل التدقيق */
+const AUDN = { removeTeacher:'شال معلم', deleteCenter:'مسح مركز', pauseCenter:'علّق مركز',
+  resumeCenter:'رجّع مركز', msg:'بعت رسالة لـ', msgCenter:'بعت رسالة لمركز',
+  restore:'استرجع نسخة', rmPhoto:'شال صورة' };
+
+function dlJSON(obj, name){
+  const b = new Blob([JSON.stringify(obj)], {type:'application/json'});
+  const u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 5000);
+}
+
+/* 👁️ عرض كمستخدم — قراءة فقط، عشان الدعم الفني */
+async function ownerSupport(uid){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ بجيب شاشته...</p></div>';
+  const s = await dbr('users/' + uid).once('value').catch(() => null);
+  const u = (s && s.val()) || {};
+  const pr = u.profile || {}, tc = u.teacher || null;
+  const hids = (tc && tc.hal) || [];
+  const hs = [];
+  for(const hid of hids.slice(0, 12)){
+    const [a, b] = await Promise.all([
+      halRef(hid).once('value').catch(()=>null), memRef(hid).once('value').catch(()=>null)]);
+    const v = (a && a.val()) || {}, mv = (b && b.val()) || {};
+    hs.push({ hid, name: v.name || '—', hw: v.hw || null, live: !!v.live,
+      cid: v.cid || '', members: Object.keys(mv).length,
+      mem: Object.entries(mv).map(([k,m]) => ({ n: m.name||'—', off: !!m.off, last: m.last||0 })) });
+  }
+  const qz = Object.values(u.quizzes || {}).sort((a,b)=>(b.t||0)-(a.t||0));
+  app.innerHTML = `
+  <div class="hdr"><h2>👁️ شاشة ${esc(pr.name || (tc&&tc.name) || '—')}</h2>
+    <button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade" style="border-color:var(--gold);background:var(--goldA)">
+    <b>👁️ عرض للقراءة بس</b>
+    <p class="muted" style="font-size:.82rem;margin:4px 0 0">ده اللي المستخدم شايفه —
+      عشان تفهم مشكلته من غير ما تسأله. <b>مش بتقدر تعدّل من هنا.</b></p>
+  </div>
+  <div class="card fade">
+    <h3>👤 حسابه</h3>
+    <table>
+      <tr><td>الاسم</td><td>${esc(pr.name || '—')}</td></tr>
+      <tr><td>الدور</td><td>${tc ? '🧑‍🏫 معلم — ' + esc(tc.name||'') : '👦 طالب'}</td></tr>
+      <tr><td>مركز</td><td>${tc && tc.cid ? esc(tc.cid) : '—'}</td></tr>
+      <tr><td>نجوم</td><td>${(function(){let t=0;Object.values(pr.sstars||{}).forEach(o=>Object.values(o||{}).forEach(v=>t+=v||0));return t;})()}</td></tr>
+      <tr><td>سلسلة</td><td>🔥 ${pr.streak || 0}</td></tr>
+      <tr><td>محفوظ سابقًا</td><td>${Object.entries(pr.memo||{}).map(([k,v])=>esc((QURAN[k]||{}).nm||k)+' '+v).join('، ')||'—'}</td></tr>
+      <tr><td>صورة</td><td>${pr.img?'✅ فيه':'—'}</td></tr>
+    </table>
+  </div>
+  ${tc ? `<div class="card fade">
+    <h3>🏫 حلقاته (${hids.length})</h3>
+    ${hs.length ? hs.map(x=>`<div class="orow"><div class="g">
+      <b>${esc(x.name)} ${x.live?'<span class="flag ok">⚡ شغالة</span>':''}</b>
+      <small>${x.members} طالب · ${x.hw && x.hw.items ? ('📋 '+esc(x.hw.t||'واجب')+' — '+x.hw.items.length+' سورة') : '❗ مفيش واجب'}</small>
+      ${x.mem.length?`<small>${x.mem.slice(0,6).map(m=>esc(m.n)+(m.off?' ⏸️':'')).join('، ')}${x.mem.length>6?' +'+(x.mem.length-6):''}</small>`:'<small>مفيش طلاب</small>'}
+    </div></div>`).join('') : '<p class="muted center">مفيش حلقات</p>'}
+  </div>` : ''}
+  ${qz.length ? `<div class="card fade">
+    <h3>🏆 آخر مسابقاته</h3>
+    <table><tr><th>التاريخ</th><th>الحلقة</th><th>المحتوى</th><th>طلاب</th></tr>
+      ${qz.slice(0,6).map(z=>`<tr><td class="muted" style="font-size:.8rem">${fmtDate(z.t)}</td>
+        <td>${esc(z.grp||'—')}</td><td class="muted" style="font-size:.8rem">${esc(z.title||'—')}</td>
+        <td>${(z.players||[]).filter(p=>!p.h).length}</td></tr>`).join('')}
+    </table></div>` : ''}
+  <div class="center row" style="justify-content:center">
+    <button class="btn ghost sm" id="spMsg">📩 ابعتله رسالة</button>
+    <button class="btn ghost" id="bk2">رجوع</button>
+  </div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenOwner(''); };
+  $('#spMsg').onclick = () => { Snd.click();
+    askText('📩 رسالة لـ ' + (pr.name||''), '', 300, async v => { if(!v) return;
+      await sendMsg(uid, v); toast('📩 اتبعتت'); }); };
+}
+
+/* 🖼️ مراجعة كل الصور */
+async function ownerPhotos(){
+  stopTimer();
+  app.innerHTML = '<div class="card fade center"><p>⏳ بجيب الصور...</p></div>';
+  const list = ((OWN && OWN.players) || []).filter(p => p.hasImg).slice(0, 40);
+  const out = [];
+  for(const p of list){
+    const s = await dbr('users/' + p.uid + '/profile/img').once('value').catch(()=>null);
+    const img = s && s.val();
+    if(img) out.push({ uid: p.uid, name: p.name, img: img });
+  }
+  app.innerHTML = `
+  <div class="hdr"><h2>🖼️ مراجعة الصور (${out.length})</h2>
+    <button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade">
+    <p class="muted" style="font-size:.82rem;margin:0 0 10px">لو فيه صورة مش مناسبة، دوس 🗑️ —
+      هتتشال من كل مكان ومن جهاز صاحبها كمان.</p>
+    <div class="album">
+      ${out.length ? out.map(x=>`<div class="gcard got" style="aspect-ratio:1/1.18">
+        <img class="ava" src="${esc(x.img)}" alt="" style="width:56px;height:56px">
+        <b style="font-size:.74rem">${esc(x.name)}</b>
+        <button class="btn ghost sm phDel" data-u="${esc(x.uid)}" data-n="${esc(x.name)}"
+          style="padding:2px 8px;font-size:.7rem;border-color:var(--bad);color:var(--bad)">🗑️</button>
+      </div>`).join('') : '<p class="muted center">مفيش صور</p>'}
+    </div>
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenOwner(''); };
+  app.querySelectorAll('.phDel').forEach(b => b.onclick = () => { Snd.click();
+    askExit2('تشيل صورة ' + b.dataset.n + '؟', 'هتتشال من كل مكان ومن جهازه كمان.', '🗑️ شيل',
+      async ok => { if(!ok) return;
+        await dbr('users/'+b.dataset.u+'/profile/img').remove().catch(()=>{});
+        const hs = await dbr('halaqas').once('value').catch(()=>null);
+        for(const hid of Object.keys((hs && hs.val()) || {}))
+          await dbr('members/'+hid+'/'+b.dataset.u).update({img:null, imgX:true}).catch(()=>{});
+        audit('rmPhoto', b.dataset.u, b.dataset.n);
+        toast('🗑️ اتشالت'); ownerPhotos(); }); });
+}
+
+/* 📅 اشتراك المركز */
+function ownerSubDialog(cid, until, note){
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;'
+    + 'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:18px';
+  const iso = until ? new Date(until).toISOString().slice(0,10) : '';
+  d.innerHTML = `<div class="card" style="max-width:340px;width:100%;margin:0;animation:pop .3s ease">
+    <h3 style="margin:2px 0 8px">📅 اشتراك المركز</h3>
+    <label class="muted" style="font-size:.8rem">بيخلص إمتى؟</label>
+    <input type="date" id="sbD" value="${iso}" style="direction:ltr">
+    <label class="muted" style="font-size:.8rem;display:block;margin-top:8px">ملاحظة</label>
+    <input type="text" id="sbN" maxlength="40" placeholder="مثال: دفع ٣ شهور" value="${esc(note||'')}">
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button class="btn" id="sbY">💾 حفظ</button>
+      ${until?'<button class="btn ghost" id="sbC">♾️ خليه مفتوح</button>':''}
+      <button class="btn ghost" id="sbX">إلغاء</button>
+    </div>
+    <p class="muted" style="font-size:.74rem;margin:10px 0 0">اللوحة هتنبّهك قبل الانتهاء بأسبوعين.
+      التعليق يدوي — إنت اللي تقرر.</p></div>`;
+  document.body.appendChild(d);
+  const close = () => d.remove();
+  d.querySelector('#sbX').onclick = () => { Snd.click(); close(); };
+  d.onclick = e => { if(e.target === d) close(); };
+  const save = async (u) => {
+    await dbr('centers/'+cid).update({ until: u || null,
+      note: (d.querySelector('#sbN').value||'').trim() || null }).catch(()=>toast('⚠️ مقدرناش'));
+    close(); toast('💾 اتحفظ'); await ownerLoad(true); screenOwner('');
+  };
+  d.querySelector('#sbY').onclick = () => { Snd.click();
+    const v = d.querySelector('#sbD').value;
+    save(v ? new Date(v + 'T23:59:59').getTime() : 0); };
+  if(d.querySelector('#sbC')) d.querySelector('#sbC').onclick = () => { Snd.click(); save(0); };
+}
+
+/* ♻️ استرجاع نسخة احتياطية */
+function ownerImport(){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'application/json,.json';
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      let data; try{ data = JSON.parse(fr.result); }catch(e){ return toast('⚠️ الملف مش سليم'); }
+      if(!data || data.v !== 1) return toast('⚠️ ده مش ملف نسخة احتياطية');
+      const when = new Date(data.at || 0).toLocaleString('ar-EG');
+      askExit2('تسترجع النسخة دي؟',
+        'النسخة من <b>' + esc(when) + '</b>.<br><b style="color:var(--bad)">هتكتب فوق كل البيانات الحالية</b> —' +
+        ' أي حاجة اتعملت بعد التاريخ ده هتضيع. نزّل نسخة من الحالي الأول لو مش متأكد.',
+        '♻️ استرجع', async ok => {
+          if(!ok) return;
+          toast('⏳ بسترجع...');
+          try{ await ownerRestore(data, (k, st) => toast(k + ': ' + st));
+            Snd.win(); toast('✅ اترجّعت'); await ownerLoad(true); screenOwner(''); }
+          catch(e){ Snd.wrong(); toast('⚠️ فشل الاسترجاع'); }
+        });
+    };
+    fr.readAsText(f);
+  };
+  inp.click();
 }
 
 /* 👦 صفحة مستخدم — الملف الكامل بيتحمّل هنا بس */
@@ -3208,8 +3469,15 @@ async function ownerUser(uid){
     <p class="muted" style="font-size:.8rem;margin:0 0 8px">لو مش مناسبة، شيلها من هنا — وهتتشال من حلقاته كمان.</p>
     <button class="btn ghost sm" id="rmImg" style="border-color:var(--bad);color:var(--bad)">🗑️ شيل الصورة</button>
   </div>`:''}
-  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  <div class="center row" style="justify-content:center">
+    <button class="btn ghost sm" id="uSup">👁️ شوف شاشته</button>
+    <button class="btn ghost sm" id="uMsg">📩 رسالة</button>
+    <button class="btn ghost" id="bk2">رجوع</button>
+  </div>`;
   $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenOwner(''); };
+  $('#uSup').onclick = () => { Snd.click(); ownerSupport(uid); };
+  $('#uMsg').onclick = () => { Snd.click(); askText('📩 رسالة', '', 300, async v => {
+    if(!v) return; await sendMsg(uid, v); toast('📩 اتبعتت'); }); };
   if($('#rmImg')) $('#rmImg').onclick = async () => { Snd.click();
     await firebase.database().ref('users/'+uid+'/profile/img').remove().catch(()=>{});
     const hs = await firebase.database().ref('halaqas').once('value').catch(()=>null);
@@ -4093,6 +4361,30 @@ function screenCenterEdit(cid, C){
   };
   draw();
 }
+/* 🆘 شاشة البلاغ */
+function screenBugReport(){
+  stopTimer();
+  app.innerHTML = `
+  <div class="hdr"><h2>🆘 بلّغ عن مشكلة</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="card fade">
+    <p style="font-size:.9rem;margin:0 0 4px">فيه حاجة مش شغالة؟ أو اقتراح؟ اكتبه هنا
+      وهيوصل لصاحب اللعبة على طول.</p>
+    <p class="muted" style="font-size:.78rem;margin:0 0 10px">اكتب بالتفصيل: إنت كنت بتعمل إيه،
+      وإيه اللي حصل.</p>
+    <textarea id="rpTxt" rows="5" maxlength="600" placeholder="مثال: عملت واجب لحلقتي وطلابي مش شايفينه..."
+      style="width:100%;font:inherit;padding:10px;border-radius:12px;border:2px solid var(--line);
+      background:var(--card);color:var(--ink);resize:vertical"></textarea>
+    <div class="center" style="margin-top:10px"><button class="btn" id="rpGo">📤 ابعت</button></div>
+  </div>
+  <div class="center"><button class="btn ghost" id="bk2">رجوع</button></div>`;
+  $('#bk').onclick = $('#bk2').onclick = () => { Snd.click(); screenSettings(); };
+  $('#rpGo').onclick = async () => { Snd.click();
+    try{ await sendReport($('#rpTxt').value); Snd.win();
+      toast('📤 وصلت — شكرًا! هنشوفها بإذن الله'); screenSettings(); }
+    catch(e){ Snd.wrong();
+      toast(e.message === 'short' ? 'اكتب تفاصيل أكتر شوية' : '⚠️ محتاج إنترنت'); } };
+}
+
 /* 🪪 كارت المركز اللي بيشوفه الطالب وأهله */
 async function centerCard(cid){
   try{
@@ -4227,6 +4519,7 @@ async function screenCenter(){
       'حلقاته وطلابه هيفضلوا شغالين عنده عادي — إنت بس مش هتشوفهم.', '✕ شيله', async ok => {
         if(!ok) return;
         await cidxRef(cid).child('teachers').child(b.dataset.u).remove().catch(()=>{});
+        audit('removeTeacher', b.dataset.u, 'من مركز ' + cid);
         toast('اتشال'); screenCenter(); }); });
 }
 /* معلم بعينه جوّه المركز */
@@ -4368,6 +4661,90 @@ async function checkMyHalaqas(){
     }catch(e){}
   }
   return changed;
+}
+
+/* ============== 🧰 أدوات تشغيل المالك ============== */
+const dbr = p => firebase.database().ref(p);
+
+/* 📜 سجل التدقيق — مين عمل إيه (للأفعال المؤثرة بس) */
+function audit(act, target, extra){
+  if(!fbReady || !fbUser) return;
+  try{
+    dbr('audit').push({ w: fbUser.uid, wn: ((P && P.name) || fbUser.email || '').slice(0,40),
+      a: String(act).slice(0,30), t: String(target || '').slice(0,60),
+      x: String(extra || '').slice(0,80), at: Date.now() }).catch(()=>{});
+  }catch(e){}
+}
+
+/* 🆘 بلاغ من داخل اللعبة */
+async function sendReport(txt){
+  if(!fbReady || !fbUser) throw new Error('offline');
+  const t = (txt||'').trim();
+  if(t.length < 5) throw new Error('short');
+  await dbr('reports').push({
+    u: fbUser.uid, n: ((P && P.name) || '—').slice(0,40),
+    r: myRole() || 'student', e: (fbUser.email || '').slice(0,80),
+    t: t.slice(0, 600), at: Date.now(),
+    ua: (navigator.userAgent || '').slice(0, 90)
+  });
+}
+
+/* 📩 رسالة موجّهة من المالك */
+async function sendMsg(uid, txt){
+  await dbr('msgs/' + uid).set({ t: String(txt).slice(0,300), at: Date.now() });
+  audit('msg', uid, txt.slice(0,40));
+}
+async function sendMsgCenter(cid, txt){
+  const s = await dbr('index/centers/' + cid + '/teachers').once('value');
+  const v = s.val() || {}; let k = 0;
+  for(const uid of Object.keys(v)){ await sendMsg(uid, txt).catch(()=>{}); k++; }
+  audit('msgCenter', cid, k + ' معلم');
+  return k;
+}
+/* المستخدم بيشوف رسالته */
+let MYMSG = null;
+async function pullMsg(){
+  if(!fbReady || !fbUser) return false;
+  try{
+    const s = await dbr('msgs/' + fbUser.uid).once('value');
+    const v = s.val();
+    if(v && v.t){ MYMSG = v; return true; }
+  }catch(e){}
+  return false;
+}
+async function dismissMsg(){
+  MYMSG = null;
+  try{ await dbr('msgs/' + fbUser.uid).remove(); }catch(e){}
+}
+
+/* 💾 نسخة احتياطية خام قابلة للاسترجاع */
+async function ownerBackup(){
+  const get = p => dbr(p).once('value').then(s => s.val()).catch(() => null);
+  const [users, halaqas, centers, index, config, members] = await Promise.all([
+    get('users'), get('halaqas'), get('centers'), get('index'), get('config'), get('members')
+  ]);
+  return { v: 1, at: Date.now(), users, halaqas, centers, index, config, members };
+}
+async function ownerRestore(data, onStep){
+  if(!data || data.v !== 1) throw new Error('bad');
+  const parts = ['config','centers','halaqas','members','index','users'];
+  for(const k of parts){
+    if(data[k] == null){ if(onStep) onStep(k, 'تخطّي'); continue; }
+    await dbr(k).set(data[k]);
+    if(onStep) onStep(k, 'تم');
+  }
+  audit('restore', 'كل النظام', new Date(data.at).toLocaleString('ar-EG'));
+}
+
+/* 📅 اشتراك المركز */
+const DAYMS = 864e5;
+function subDays(until){ return until ? Math.ceil((until - Date.now()) / DAYMS) : null; }
+function subLabel(until){
+  const d = subDays(until);
+  if(d === null) return { t: 'مفتوح', k: '' };
+  if(d < 0)  return { t: 'انتهى من ' + (-d) + ' يوم', k: 'bad' };
+  if(d <= 14) return { t: 'باقي ' + d + ' يوم', k: 'bad' };
+  return { t: 'باقي ' + d + ' يوم', k: 'ok' };
 }
 
 /* ---------- 🏠 زر البيت العائم ---------- */
@@ -5527,7 +5904,8 @@ function screenHelp(){
             ".validate": "newData.isBoolean()"
           }
         }
-      }
+      },
+      ".read": "auth.token.email === 'yahia176@gmail.com'"
     },
     "index": {
       ".read": "auth.token.email === 'yahia176@gmail.com'",
@@ -5632,6 +6010,58 @@ function screenHelp(){
         "addr": {
           ".read": "auth != null",
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
+        },
+        "until": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'"
+        },
+        "note": {
+          ".write": "auth.token.email === 'yahia176@gmail.com'",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
+        }
+      }
+    },
+    "reports": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "$id": {
+        ".write": "auth != null && (!data.exists() || auth.token.email === 'yahia176@gmail.com')",
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 600"
+        },
+        "n": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "e": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "ua": {
+          ".validate": "newData.isString() && newData.val().length <= 90"
+        }
+      }
+    },
+    "msgs": {
+      "$u": {
+        ".read": "auth != null && (auth.uid === $u || auth.token.email === 'yahia176@gmail.com')",
+        ".write": "auth.token.email === 'yahia176@gmail.com' || (auth != null && auth.uid === $u && !newData.exists())",
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 300"
+        }
+      }
+    },
+    "audit": {
+      ".read": "auth.token.email === 'yahia176@gmail.com'",
+      "$id": {
+        ".write": "auth != null && !data.exists()",
+        "a": {
+          ".validate": "newData.isString() && newData.val().length <= 30"
+        },
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "x": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "wn": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
         }
       }
     }
@@ -6918,6 +7348,7 @@ if(FIREBASE_CONFIG) fbInit().then(async ok=>{ if(!ok) return;
     Promise.all([pullTeacherMemo(), checkImgRemoved(), checkCenter(),
                  checkMyHalaqas(), centerAlive()]).then(function(r){
       pushHalaqaImg();
+      pullMsg().then(function(m){ if(m) screenHome(); });
       if(r[0] || r[1] || r[2] || r[3] || r[4] === false) screenHome();
     });
   }, 1800);
