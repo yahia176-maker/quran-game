@@ -409,6 +409,9 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .lisAy:hover{opacity:.75;background:var(--card)}
 .lisAy.on{opacity:1;background:var(--goldB);box-shadow:inset 0 0 0 2px var(--line);
   transform:scale(1.015)}
+.lisTaf{font-family:var(--ui);font-size:clamp(.82rem,3vw,.98rem);line-height:1.9;
+  color:var(--muted);text-align:center;max-width:640px;margin:-2px auto 12px;
+  padding:8px 14px;background:var(--card);border-radius:12px;border:1px dashed var(--line)}
 .lisAy .num{display:inline-flex;align-items:center;justify-content:center;min-width:1.5em;height:1.5em;
   margin-right:6px;font-family:var(--ui);font-size:.55em;font-weight:700;
   background:var(--card);border:1px solid var(--line);border-radius:50%;color:var(--gold);opacity:.85}
@@ -2473,6 +2476,15 @@ function screenSettings(){
       <button class="btn ghost sm" id="rep">🆘 بلّغ عن مشكلة</button>
       ${isOwner()?`<button class="btn ghost sm" id="own" style="border-color:var(--ok)">🛡️ لوحة المالك</button>`:''}
     </div>
+  </div>
+  <div class="card fade">
+    <h3>📖 عن المصادر</h3>
+    <p class="muted" style="font-size:.82rem;margin:0;line-height:1.9">
+      • نص القرآن الكريم برواية حفص عن عاصم.<br>
+      • <b>التفسير والمعاني</b> من: «<b>المختصر في التفسير</b>» — الصادر عن
+        <b>مركز تفسير للدراسات القرآنية</b> (متاح للنشر المجاني)، ويظهر في شاشة الاستماع.<br>
+      • أسئلة الحفظ (رتّب، أكمل، املأ الفراغ) مبنية على نص المصحف مباشرةً.
+    </p>
   </div>
   <div class="center"><button class="btn" id="hm2">🏠 الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
@@ -5500,6 +5512,21 @@ async function downloadSurah(sn, onProg){
 }
 
 /* شاشة الاستماع */
+/* 📖 التفسير: «المختصر في التفسير» (مركز تفسير للدراسات القرآنية).
+   ملف منفصل بيتحمّل مرة واحدة وبيتخزّن أوفلاين تلقائيًا (Service Worker).
+   بنعرض النص كما هو من المصدر — مش من تأليفنا. */
+let TAFSIR = null, _tafP = null;
+function loadTafsir(){
+  if(TAFSIR) return Promise.resolve(TAFSIR);
+  if(_tafP) return _tafP;
+  _tafP = fetch('tafsir.json').then(r => r.ok ? r.json() : null)
+    .then(j => { TAFSIR = j || {}; return TAFSIR; })
+    .catch(() => { _tafP = null; return null; });
+  return _tafP;
+}
+const tafsirOf = (sn, ayah) => (TAFSIR && TAFSIR[sn] && TAFSIR[sn][ayah - 1]) || '';
+const TAFSIR_SRC = 'المختصر في التفسير — مركز تفسير للدراسات القرآنية';
+
 function startListen(sn, from, to){
   Snd.init(); stopAyah();
   const N = QURAN[sn].ay.length;
@@ -5538,7 +5565,9 @@ function screenListen(){
   <div class="card fade" style="padding:12px 10px">
     <div class="lisWrap" id="lWrap">
       ${Q.ay.slice(a-1, b).map((t,ix)=>{ const no=a+ix;
-        return `<div class="lisAy" data-a="${no}" id="la${no}">${esc(t)}<span class="num">${no}</span></div>`;}).join('')}
+        const tf = LSN.taf ? tafsirOf(sn, no) : '';
+        return `<div class="lisAy" data-a="${no}" id="la${no}">${esc(t)}<span class="num">${no}</span></div>`
+          + (tf ? `<div class="lisTaf">${esc(tf)}</div>` : '');}).join('')}
     </div>
     <div class="lisCtl">
       <button class="lisRound" id="lPrev" title="الآية اللي فاتت">⏮️</button>
@@ -5550,6 +5579,11 @@ function screenListen(){
       ${[1,3,5,7].map(k=>`<button class="lisRound ${LSN.rep===k?'on':''}" data-rep="${k}"
         style="width:38px;height:38px;font-size:.9rem;font-weight:700">${k===1?'✕':k}</button>`).join('')}
     </div>
+    <div class="center" style="margin-top:12px">
+      <button class="btn ${LSN.taf?'':'ghost'} sm" id="lTaf">📖 ${LSN.taf?'إخفاء المعنى':'وريني المعنى'}</button>
+    </div>
+    ${LSN.taf?`<p class="muted" style="font-size:.72rem;text-align:center;margin:8px 0 0">
+      المعنى من: ${esc(TAFSIR_SRC)}</p>`:''}
   </div>
   <div class="card fade" style="padding:12px">
     <div class="row" style="justify-content:space-between;align-items:center;gap:8px">
@@ -5595,6 +5629,11 @@ function screenListen(){
     LSN.rep = +x.dataset.rep; LSN.left = LSN.rep;
     app.querySelectorAll('[data-rep]').forEach(y=>y.classList.toggle('on', +y.dataset.rep===LSN.rep)); });
   app.querySelectorAll('.lisAy').forEach(d=>d.onclick=()=>{ Snd.click(); gotoAyah(+d.dataset.a); playListen(); });
+  $('#lTaf').onclick = async () => { Snd.click();
+    if(!LSN.taf){ const btn = $('#lTaf'); btn.textContent = '⏳ لحظة...';
+      const ok = await loadTafsir();
+      if(!ok || !tafsirOf(sn, LSN.a)){ toast('محتاج إنترنت أول مرة عشان يحمّل المعاني'); btn.textContent = '📖 وريني المعنى'; return; } }
+    LSN.taf = !LSN.taf; screenListen(); };
   $('#dlGo').onclick = () => doDownload(sn);
   markAyah(); refreshDl(sn);
 }
