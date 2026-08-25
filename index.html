@@ -5492,6 +5492,17 @@ async function ayahBlobURL(sn, a){
   }catch(e){}
   return url;                                     /* فشل الكاش؟ نشغّل من النت مباشرة */
 }
+/* 🔊 تحميل مسبق: نجهّز صوت الآية اللي جاية في التخزين وإحنا بنشغّل الحالية،
+   عشان الانتقال يبقى فوري بدون تأخير نت — التأخير ده كان بيوقف التشغيل التلقائي
+   بعد التكرار لما المستخدم يسمع من النت من غير ما ينزّل السورة. */
+function prefetchAudio(sn, a){
+  if(!QURAN[sn] || a < 1 || a > QURAN[sn].ay.length) return;
+  const url = ayAudioURL(sn, a);
+  caches.open(AUD_CACHE).then(async c => {
+    if(await c.match(url)) return;
+    try{ const r = await fetch(url, {mode:'cors'}); if(r && r.ok) await c.put(url, r.clone()); }catch(e){}
+  }).catch(()=>{});
+}
 async function surahCachedCount(sn){
   try{
     const c = await caches.open(AUD_CACHE), N = QURAN[sn].ay.length; let k = 0;
@@ -5683,6 +5694,8 @@ async function playListen(){
   au.onerror = () => { pauseListen(); toast('🔇 مشكلة في الصوت — اتأكد من النت أو نزّل السورة'); };
   mediaMeta(sn, i);
   au.play().catch(()=>{ pauseListen(); toast('🔇 دوس ▶️ تاني عشان الصوت يشتغل'); });
+  /* جهّز الآية اللي جاية في الخلفية عشان الانتقال يبقى فوري */
+  if(i < LSN.b) prefetchAudio(sn, i + 1);
 }
 /* التحكم من شاشة القفل */
 function mediaMeta(sn, i){
