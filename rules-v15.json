@@ -1,0 +1,378 @@
+{
+  "rules": {
+    "config": {
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      "ann": {
+        "txt": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        },
+        ".read": "true"
+      },
+      "owners": {
+        ".write": "auth.token.email === 'yahia176@gmail.com'",
+        "$e": {
+          ".read": "auth != null && auth.token.email.replace('.', ',') === $e"
+        }
+      }
+    },
+    "rooms": {
+      "$c": {
+        ".read": "auth != null",
+        ".write": "auth != null && $c.length === 5",
+        "players": {
+          "$u": {
+            "name": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "emoji": {
+              ".validate": "newData.isString() && newData.val().length <= 16"
+            },
+            "char": {
+              ".validate": "newData.isString() && newData.val().length <= 16"
+            },
+            "score": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+            },
+            "ord": {
+              ".validate": "newData.isNumber()"
+            },
+            "pid": {
+              ".validate": "newData.isString() && newData.val().length <= 40"
+            },
+            "host": {
+              ".validate": "newData.isBoolean()"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          }
+        }
+      }
+    },
+    "restore": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && $code.length === 6 && (!data.exists() || data.child('o').val() === auth.uid) && newData.child('o').val() === auth.uid",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "img": {
+          ".validate": "newData.isString() && newData.val().length <= 30000"
+        }
+      }
+    },
+    "halaqas": {
+      "$h": {
+        ".read": "auth != null",
+        ".write": "auth != null && $h.length === 5 && ((!data.exists() && auth.token.email != null && newData.child('t').val() === auth.uid) || (data.exists() && data.child('t').val() === auth.uid) || (data.exists() && root.child('centers').child(data.child('cid').val()).child('mgr').val() === auth.uid))",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "tname": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "cid": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
+        },
+        "tm": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 14)"
+        }
+      },
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+    },
+    "members": {
+      "$h": {
+        ".read": "auth != null",
+        "$u": {
+          ".write": "auth != null && (auth.uid === $u || root.child('halaqas').child($h).child('t').val() === auth.uid)",
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "char": {
+            ".validate": "newData.isString() && newData.val().length <= 16"
+          },
+          "img": {
+            ".validate": "newData.isString() && newData.val().length <= 30000 && newData.val().beginsWith('data:image/')"
+          },
+          "imgX": {
+            ".validate": "newData.isBoolean()"
+          },
+          "memo": {
+            "sn": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 114"
+            },
+            "to": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 300"
+            },
+            "at": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          },
+          "wk": {
+            "p": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= (data.exists() ? data.val() + 500 : 500)"
+            },
+            "k": {
+              ".validate": "newData.isString() && newData.val().length <= 10"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          },
+          "off": {
+            ".validate": "newData.isBoolean()"
+          },
+          "pid": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "joined": {
+            ".validate": "newData.isNumber()"
+          },
+          "last": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
+      },
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+    },
+    "index": {
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      "teachers": {
+        "$u": {
+          ".write": "auth != null && auth.uid === $u"
+        }
+      },
+      "users": {
+        "$u": {
+          ".write": "auth != null && auth.uid === $u",
+          "n": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          }
+        }
+      },
+      "centers": {
+        "$c": {
+          ".read": "auth != null && (root.child('centers').child($c).child('mgr').val() === auth.uid || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
+          "teachers": {
+            "$u": {
+              ".write": "auth != null && (auth.uid === $u || root.child('centers').child($c).child('mgr').val() === auth.uid || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
+              "n": {
+                ".validate": "newData.isString() && newData.val().length <= 40"
+              },
+              "e": {
+                ".validate": "newData.isString() && newData.val().length <= 80"
+              }
+            }
+          },
+          "halaqas": {
+            "$h": {
+              ".write": "auth != null && (newData.child('t').val() === auth.uid || !newData.exists() || root.child('centers').child($c).child('mgr').val() === auth.uid || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
+              "n": {
+                ".validate": "newData.isString() && newData.val().length <= 40"
+              }
+            }
+          }
+        }
+      },
+      "codes": {
+        "$code": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || (newData.exists() && root.child('centers').child(newData.val()).child('mgr').val() === auth.uid) || (!newData.exists() && root.child('centers').child(data.val()).child('mgr').val() === auth.uid))",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 5)"
+        }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      "mgrs": {
+        "$u": {
+          ".write": "auth != null && ((auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || (auth.uid === $u && (!newData.exists() || root.child('centers').child(newData.val()).child('mgr').val() === auth.uid)))",
+          ".validate": "newData.isString() && newData.val().length === 5"
+        }
+      }
+    },
+    "users": {
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      "$u": {
+        ".read": "auth != null && (auth.uid === $u || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
+        ".write": "auth != null && auth.uid === $u",
+        "profile": {
+          "img": {
+            ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 32000 && newData.val().beginsWith('data:image/'))"
+          }
+        }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+    },
+    "centers": {
+      "$c": {
+        ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || (data.exists() && (data.child('mgr').val() === auth.uid || data.child('mgrEmail').val() === auth.token.email))",
+        "name": {
+          ".read": "auth != null",
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "mgrEmail": {
+          ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "mgr": {
+          ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || root.child('centers').child($c).child('mgrEmail').val() === auth.token.email"
+        },
+        "paused": {
+          ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+        },
+        "mgrName": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "created": {
+          ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+        },
+        "code": {
+          ".validate": "newData.isString() && newData.val().length === 5"
+        },
+        "logo": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40000 && newData.val().beginsWith('data:image/'))"
+        },
+        "about": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
+        },
+        "phone": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 20)"
+        },
+        "wa": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 20)"
+        },
+        "site": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 120)"
+        },
+        "addr": {
+          ".read": "auth != null",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 90)"
+        },
+        "until": {
+          ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+        },
+        "note": {
+          ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 40)"
+        }
+      },
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())"
+    },
+    "reports": {
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      "$id": {
+        ".write": "auth != null && (!data.exists() || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 600"
+        },
+        "n": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "e": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "ua": {
+          ".validate": "newData.isString() && newData.val().length <= 90"
+        }
+      }
+    },
+    "msgs": {
+      "$u": {
+        ".read": "auth != null && (auth.uid === $u || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()))",
+        ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || (auth != null && auth.uid === $u && !newData.exists())",
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 300"
+        }
+      }
+    },
+    "audit": {
+      ".read": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      "$id": {
+        ".write": "auth != null && !data.exists()",
+        "a": {
+          ".validate": "newData.isString() && newData.val().length <= 30"
+        },
+        "t": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "x": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "wn": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        }
+      }
+    },
+    "inbox": {
+      "$u": {
+        ".read": "auth != null && auth.uid === $u",
+        ".write": "auth != null && (auth.uid === $u || (auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists()) || root.child('centers').child(newData.child('cid').val()).child('mgr').val() === auth.uid)"
+      }
+    },
+    "ann": {
+      ".write": "(auth.token.email === 'yahia176@gmail.com' || root.child('config').child('owners').child(auth.token.email.replace('.', ',')).exists())",
+      "all": {
+        ".read": "true",
+        "txt": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        },
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        }
+      },
+      "students": {
+        ".read": "auth != null",
+        "txt": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        },
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        }
+      },
+      "teachers": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('teacher').exists()",
+        "txt": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        },
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        }
+      },
+      "mgrs": {
+        ".read": "auth != null && root.child('index').child('mgrs').child(auth.uid).exists()",
+        "txt": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        },
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        }
+      }
+    }
+  }
+}
