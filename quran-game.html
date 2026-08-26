@@ -5678,20 +5678,27 @@ async function playListen(){
   const sn = LSN.sn, i = LSN.i;
   LSN.playing = true;
   const btn = $('#lPlay'); if(btn) btn.textContent = '⏸️';
-  if(LSN.au){ try{ LSN.au.pause(); }catch(e){} }
-  if(LSN.url){ URL.revokeObjectURL(LSN.url); LSN.url = null; }
+  /* 🔑 مشغّل واحد ثابت لكل الجلسة — بياخد إذن التشغيل من أول ضغطة ▶️
+     ويفضل محتفظ بيه. صناعة مشغّل جديد لكل آية كانت بتفقد الإذن ده،
+     فالمتصفح (خصوصًا الموبايل والشاشة المقفولة) كان بيرفض يكمّل بعد التكرار. */
+  let au = LSN.au;
+  if(!au){
+    au = new Audio(); au.preload = 'auto'; LSN.au = au;
+    au.onended = () => {
+      if(!LSN || !LSN.playing) return;
+      if(LSN.left > 1){ LSN.left--; return playListen(); }      /* تكرار نفس الآية */
+      LSN.left = LSN.rep;
+      if(LSN.i >= LSN.b){ pauseListen(); Snd.win(); toast('✅ خلصت السورة — تحب تسمّعها؟'); return; }
+      LSN.i++; markAyah(); playListen();
+    };
+    au.onerror = () => { if(LSN && LSN.playing){ pauseListen(); toast('🔇 مشكلة في الصوت — اتأكد من النت أو نزّل السورة'); } };
+  }
   const src = await ayahBlobURL(sn, i);
   if(!LSN || !LSN.playing){ if(src.indexOf('blob:')===0) URL.revokeObjectURL(src); return; }
-  if(src.indexOf('blob:')===0) LSN.url = src;
-  const au = new Audio(src); LSN.au = au;
-  au.onended = () => {
-    if(!LSN || !LSN.playing) return;
-    if(LSN.left > 1){ LSN.left--; return playListen(); }        /* تكرار نفس الآية */
-    LSN.left = LSN.rep;
-    if(LSN.i >= LSN.b){ pauseListen(); Snd.win(); toast('✅ خلصت السورة — تحب تسمّعها؟'); return; }
-    LSN.i++; markAyah(); playListen();
-  };
-  au.onerror = () => { pauseListen(); toast('🔇 مشكلة في الصوت — اتأكد من النت أو نزّل السورة'); };
+  const oldUrl = LSN.url;
+  LSN.url = (src.indexOf('blob:')===0) ? src : null;
+  au.src = src;
+  if(oldUrl && oldUrl !== src) URL.revokeObjectURL(oldUrl);
   mediaMeta(sn, i);
   au.play().catch(()=>{ pauseListen(); toast('🔇 دوس ▶️ تاني عشان الصوت يشتغل'); });
   /* جهّز الآية اللي جاية في الخلفية عشان الانتقال يبقى فوري */
