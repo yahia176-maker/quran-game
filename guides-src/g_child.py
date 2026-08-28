@@ -14,7 +14,7 @@ BODY = """
 <div class="step"><div class="num">١</div><div class="txt">
   <b>افتح اللعبة</b>من اللينك اللي وصلك. مش محتاج تنزّل حاجة.</div></div>
 <div class="step"><div class="num">٢</div><div class="txt">
-  <b>اكتب اسمك</b>واختار شكلك — ولد ولا بنت — وقول عمرك كام.</div></div>
+  <b>اكتب اسمك</b>واختار شكلك — ولد، بنت، ولا محجبة — وقول عمرك كام.</div></div>
 <div class="step"><div class="num">٣</div><div class="txt">
   <b>اختار «👦 طالب»</b>وخلاص، إنت جوّه!</div></div>
 <div class="box tip"><b>مهم جدًا 🎫</b> دوس على اسمك فوق، هتلاقي

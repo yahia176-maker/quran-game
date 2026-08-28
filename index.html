@@ -61,6 +61,21 @@
   --okA:rgba(126,196,164,.12); --okB:rgba(126,196,164,.18); --okC:rgba(126,196,164,.30);
   --rad:20px; --scale:1;
 }
+/* 🎈 مرح — للصغار: ألوان مبهجة مشبعة وأزرار سمينة بتنطّط (بيتختار تلقائيًا لسن ٦–٩) */
+:root[data-theme="marah"]{
+  --bg1:#eaf6ff; --bg2:#fff3d9; --bg3:#ffe9f2;
+  --gold:#c05a0a; --gold2:#f79d3c; --ink:#31405c;
+  --muted:#66779a; --ok:#1f9e68; --bad:#e05a72;
+  --card:rgba(255,255,255,.88); --line:rgba(192,90,10,.38);
+  --btnink:#fff9f0; --btnsh:#a84f07; --ayah:#2c3a55;
+  --glow:rgba(247,157,60,.38); --skyA:#c7ecff; --skyB:#ffe2ca;
+  --tint:rgba(49,64,92,.06); --sunk:rgba(49,64,92,.05);
+  --sh1:rgba(80,90,140,.16); --sh2:rgba(80,90,140,.09); --sheen:rgba(255,255,255,.6);
+  --goldA:rgba(192,90,10,.10); --goldB:rgba(192,90,10,.17); --goldC:rgba(192,90,10,.25);
+  --info:#3b82c4; --infoA:rgba(59,130,196,.13);
+  --okA:rgba(31,158,104,.12); --okB:rgba(31,158,104,.20); --okC:rgba(31,158,104,.32);
+  --rad:28px; --scale:1.12;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;min-height:100%}
 body{
@@ -73,7 +88,7 @@ body{
   min-height:100vh; overflow-x:hidden; font-size:calc(1rem*var(--scale));
 }
 /* النجوم تلمع ليلًا فقط؛ في الثيمات النهارية تتحول لفقاعات ملوّنة خفيفة */
-:root[data-theme="kids"] .star{background:var(--gold);opacity:.35}
+:root[data-theme="marah"] .star{background:var(--gold);opacity:.3}
 :root[data-theme="mushaf"] #stars{display:none}
 #stars{position:fixed;inset:0;pointer-events:none;z-index:0}
 .star{position:absolute;background:currentColor;color:#fff;border-radius:50%;opacity:.7;animation:tw 3s infinite ease-in-out}
@@ -198,6 +213,7 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 /* الشخصيات المرافقة */
 :root{ --skin:#f2d3b3; --hair:#4a3a30; --c1:#4a8168; --c2:#bb9a55; --fline:#2b3d34; }
 :root[data-theme="sunrise"]{ --c1:#b05a2d; --c2:#d18f56; }
+:root[data-theme="marah"]{ --c1:#3fa7d6; --c2:#f79d3c; }
 :root[data-theme="warm"]{ --skin:#e8c9aa; --hair:#2a1f1a; --c1:#c9a173; --c2:#e0bc8a; --fline:#2a1f1a; }
 .mascot .m,.mascot .eyes{display:none}
 .mascot[data-mood="idle"] .m.idle,.mascot[data-mood="idle"] .eyes.idle,
@@ -207,7 +223,7 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .mascot[data-mood="happy"]{animation:hop .6s ease}
 @keyframes shiver{0%,100%{transform:none}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
 .mascot[data-mood="sad"]{animation:shiver .5s ease}
-.charpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.charpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin-top:8px}
 .charpick button{background:var(--card);border:3px solid var(--line);border-radius:20px;padding:10px 4px;cursor:pointer;transition:.15s}
 .charpick button.on{border-color:var(--gold);background:var(--goldB);transform:translateY(-3px)}
 .charpick b{display:block;color:var(--ink);font-size:.95rem;margin-top:4px}
@@ -230,18 +246,21 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 /* اختيار كلمة داخل الآية — لعبة «الكلمة الدخيلة» */
 .wordpick .w{cursor:pointer;border-radius:10px;padding:5px 9px;margin:2px 0;transition:.12s;
   display:inline-block;min-width:44px;text-align:center;border-bottom:2px dashed transparent}
-:root[data-theme="kids"] .wordpick .w{padding:8px 12px;min-width:52px}
+:root[data-theme="marah"] .wordpick .w{padding:8px 12px;min-width:52px}
 .wordpick .w:hover{background:var(--goldB);border-bottom-color:var(--gold)}
 .wordpick .w.ok{background:var(--okC);border-bottom-color:var(--ok)}
 .wordpick .w.bad{background:rgba(255,107,129,.25);border-bottom-color:var(--bad)}
-/* الثيم المبهج: أزرار وبطاقات أكبر وأكثر استدارة */
-:root[data-theme="kids"] .btn{border-radius:18px;font-weight:800}
-:root[data-theme="kids"] .opt{border-radius:18px;padding:17px 18px;font-weight:600}
-:root[data-theme="kids"] .stage{border-width:3px}
-:root[data-theme="kids"] .stage .em{font-size:2.7rem}
-:root[data-theme="kids"] .chip{border-width:3px}
+/* الثيم المرح: أزرار وبطاقات أسمن وأكثر استدارة، والإجابة الصح بتنطّط */
+:root[data-theme="marah"] .btn{border-radius:22px;font-weight:800}
+:root[data-theme="marah"] .opt{border-radius:20px;padding:17px 18px;font-weight:600;border-width:3px}
+:root[data-theme="marah"] .card{border-width:2px}
+:root[data-theme="marah"] .stage{border-width:3px}
+:root[data-theme="marah"] .stage .em{font-size:2.7rem}
+:root[data-theme="marah"] .chip{border-width:3px;border-radius:18px}
 @keyframes bounceIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
-:root[data-theme="kids"] .pop{animation:bounceIn .4s cubic-bezier(.2,1.5,.4,1) both}
+:root[data-theme="marah"] .pop{animation:bounceIn .4s cubic-bezier(.2,1.5,.4,1) both}
+:root[data-theme="marah"] .opt.ok,:root[data-theme="marah"] .chip.ok,
+:root[data-theme="marah"] .wordpick .w.ok{animation:bounceIn .45s cubic-bezier(.2,1.5,.4,1)}
 /* ===== 🚪 بابا الطالب والمعلم — جنب بعض دايمًا ===== */
 .doors{display:grid!important;grid-template-columns:1fr 1fr;max-width:540px;margin:14px auto;gap:12px}
 .door{position:relative;background:var(--card);border:3px solid var(--line);border-radius:var(--rad);
@@ -1395,7 +1414,15 @@ const CHARS = {
     <path d="M32 11c-12 0-20 9-20 21 0 8 3 14 7 18-3-8-2-16 1-22 4 3 9 4 12 4s8-1 12-4c3 6 4 14 1 22 4-4 7-10 7-18 0-12-8-21-20-21z" fill="var(--hair)"/>
     <path d="M12 40q-4 12 2 22h6q-6-10-3-22zM52 40q4 12-2 22h-6q6-10 3-22z" fill="var(--hair)" opacity=".92"/>
     {FACE}
-    <circle cx="49" cy="20" r="4" fill="var(--c1)"/><circle cx="49" cy="20" r="1.6" fill="var(--bg1)" opacity=".5"/>` }
+    <circle cx="49" cy="20" r="4" fill="var(--c1)"/><circle cx="49" cy="20" r="1.6" fill="var(--bg1)" opacity=".5"/>` },
+  hijab:{ nm:'محجبة', em:'🧕', svg:`
+    <path d="M32 50c-12 0-20 6-20 14h40c0-8-8-14-20-14z" fill="var(--c1)"/>
+    <path d="M32 9c-13 0-21 10-21 24 0 9 4 16 8 20h26c4-4 8-11 8-20 0-14-8-24-21-24z" fill="var(--c1)"/>
+    <path d="M32 13c-11 0-17 8-17 20 0 7 2 12 5 16h24c3-4 5-9 5-16 0-12-6-20-17-20z" fill="var(--c2)" opacity=".28"/>
+    <ellipse cx="32" cy="33" rx="12.5" ry="13.5" fill="var(--skin)"/>
+    <path d="M22 49q10 6 20 0" stroke="var(--c2)" stroke-width="2.5" fill="none" opacity=".7" stroke-linecap="round"/>
+    {FACE}
+    <circle cx="47" cy="19" r="3.4" fill="var(--c2)"/><circle cx="47" cy="19" r="1.4" fill="var(--bg1)" opacity=".55"/>` }
 };
 function charSVG(k, mood, size){
   const c = CHARS[k] || CHARS.boy;
@@ -1411,7 +1438,7 @@ const ROLEK = 'quran_game_v1_role';
 const myRole = () => (P && P.role) || localStorage.getItem(ROLEK) || '';
 function setRole(r){ if(P){ P.role=r; saveP(); } try{ localStorage.setItem(ROLEK,r); }catch(e){} }
 const AGES = [
-  {k:'small', nm:'٦ – ٩ سنوات',  em:'🧸', th:'sunrise'},
+  {k:'small', nm:'٦ – ٩ سنوات',  em:'🧸', th:'marah'},
   {k:'mid',   nm:'١٠ – ١٥ سنة',  em:'🌿', th:'garden'},
   {k:'big',   nm:'١٦ فما فوق',   em:'📜', th:'garden'}
 ];
@@ -1520,12 +1547,13 @@ const DIFFS = { easy:{nm:'سهل', em:'🌱', t:50, dis:2, mult:1},
 let DIFF = DIFFS.normal;
 /* ===== الثيمات: مظهر لكل فئة عمرية ===== */
 const THEMES = {
+  marah  : {nm:'مرح',      em:'🎈', d:'ألوان مبهجة وأزرار كبيرة بتنطّط — مخصوص للصغار'},
   garden : {nm:'بستان',    em:'🌿', d:'أخضر هادي وذهبي مطفي — مريح للقراءة الطويلة'},
-  sunrise: {nm:'شروق',     em:'☀️', d:'نهاري دافئ وأزرار أكبر — مناسب للصغار'},
+  sunrise: {nm:'شروق',     em:'☀️', d:'نهاري دافئ وأزرار أكبر'},
   warm   : {nm:'ليل دافئ', em:'🌙', d:'غامق ومريح بالليل — وبيوفّر بطارية الموبايل'}
 };
 /* أسماء الثيمات القديمة → الجديدة */
-const THEME_OLD = { night:'warm', kids:'sunrise', mushaf:'garden' };
+const THEME_OLD = { night:'warm', kids:'marah', mushaf:'garden' };
 function applyTheme(k){
   const t = THEMES[k] ? k : (THEME_OLD[k] || 'garden');
   if(t==='garden') document.documentElement.removeAttribute('data-theme');
@@ -1950,7 +1978,7 @@ const Snd = {
     o.connect(g); g.connect(this.ctx.destination); o.start(t0); o.stop(t0+dur+.05);
   },
   click(){ this.tone(660,0,.06,'triangle',.07); },
-  correct(){ const kid = (typeof P!=='undefined'&&P&&P.theme==='kids');
+  correct(){ const kid = (typeof P!=='undefined'&&P&&(P.theme==='marah'||P.theme==='kids'));
     const n = kid?[523.25,659.25,783.99,1046.5]:[523.25,659.25,783.99];
     n.forEach((f,i)=>this.tone(f,i*.075,.22,kid?'triangle':'sine',.13)); },
   wrong(){ this.tone(233,0,.14,'triangle',.09); this.tone(175,.13,.24,'triangle',.09); },
@@ -4210,7 +4238,7 @@ function avatarOf(o, size){
   size = size || 30;
   if(o && o.img) return `<img class="ava avaS" src="${esc(o.img)}" alt=""
     style="width:${size}px;height:${size}px">`;
-  return `<span style="font-size:${Math.round(size*0.8)}px;line-height:1">${(o&&o.char==='girl')?'🧒':'👦'}</span>`;
+  return `<span style="font-size:${Math.round(size*0.8)}px;line-height:1">${(CHARS[o&&o.char]||CHARS.boy).em}</span>`;
 }
 function setAvatarImg(url){
   if(!P) return;
