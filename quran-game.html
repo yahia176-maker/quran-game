@@ -5571,7 +5571,7 @@ const TAFSIR_SRC = 'المختصر في التفسير — مركز تفسير �
 function startListen(sn, from, to){
   Snd.init(); stopAyah();
   const N = QURAN[sn].ay.length;
-  LSN = { sn, a: from||1, b: to||N, i: from||1, playing:false, rep:1, left:1, au:null, url:null };
+  LSN = { sn, a: from||1, b: to||N, i: from||1, playing:false, done:false, rep:1, left:1, au:null, url:null };
   screenListen();
 }
 function screenListen(){
@@ -5685,7 +5685,7 @@ function markAyah(){
   if(el) el.scrollIntoView({block:'center', behavior:'smooth'});
   const pos = $('#lPos'); if(pos) pos.textContent = LSN.i + ' / ' + LSN.b;
 }
-function gotoAyah(no){ if(!LSN) return; LSN.i = no; LSN.left = LSN.rep; markAyah(); if(LSN.playing) playListen(); }
+function gotoAyah(no){ if(!LSN) return; LSN.i = no; LSN.left = LSN.rep; LSN.done = false; markAyah(); if(LSN.playing) playListen(); }
 function pauseListen(){
   if(!LSN) return;
   LSN.playing = false;
@@ -5703,6 +5703,8 @@ function stopListen(){
 }
 async function playListen(){
   if(!LSN) return;
+  /* بعد ما المقطع يخلص: أي تشغيل (زر 🔁 أو شاشة القفل) يرجع من أوله */
+  if(LSN.done){ LSN.done = false; LSN.i = LSN.a; LSN.left = LSN.rep; markAyah(); }
   const sn = LSN.sn, i = LSN.i;
   LSN.playing = true;
   const btn = $('#lPlay'); if(btn) btn.textContent = '⏸️';
@@ -5716,7 +5718,10 @@ async function playListen(){
       if(!LSN || !LSN.playing) return;
       if(LSN.left > 1){ LSN.left--; return playListen(); }      /* تكرار نفس الآية */
       LSN.left = LSN.rep;
-      if(LSN.i >= LSN.b){ pauseListen(); Snd.win(); toast('✅ خلصت السورة — تحب تسمّعها؟'); return; }
+      if(LSN.i >= LSN.b){
+        pauseListen(); LSN.done = true;                          /* ضغطة ▶️ الجاية بتعيد من الأول */
+        const pb = $('#lPlay'); if(pb) pb.textContent = '🔁';
+        Snd.win(); toast('✅ خلصت — دوس 🔁 تسمعها من الأول'); return; }
       LSN.i++; markAyah(); playListen();
     };
     au.onerror = () => { if(LSN && LSN.playing){ pauseListen(); toast('🔇 مشكلة في الصوت — اتأكد من النت أو نزّل السورة'); } };
