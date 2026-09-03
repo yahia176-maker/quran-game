@@ -1594,6 +1594,13 @@ function newProfile(name, emoji){
     stats:{c:0, w:0, per:{}}, badges:[], created:Date.now() };
 }
 function activateProfile(p){
+  /* بروفايلات قديمة ناقصها الحاويات دي — من غيرها الشاشات بترمي خطأ صامت والزر «مش بيدخل» */
+  if(!p.stars) p.stars = {};
+  if(!p.sstars) p.sstars = {};
+  if(!p.memo) p.memo = {};
+  if(!p.mistakes) p.mistakes = [];
+  if(!p.badges) p.badges = [];
+  if(!p.stats) p.stats = {c:0, w:0, per:{}};
   P = p; localStorage.setItem(PACT, p.id); setDiff(p.diff||'normal'); applyTheme(p.theme||curTheme());
   /* استيراد تقدم النسخ القديمة (قبل نظام البروفايلات) مرة واحدة */
   setTimeout(()=>{ tryPendingHal(); }, 400);
@@ -6128,7 +6135,7 @@ function juzProgress(j){
   const id = CURATED_JUZ[j] || 'juz-'+j;
   const e = CURATED_JUZ[j] ? SURAHS.find(x=>x.id===CURATED_JUZ[j]) : null;
   const nStages = e ? e.stages.length : 8;
-  const st = (P && P.stars[id]) ? P.stars[id] : [];
+  const st = (P && P.stars && Array.isArray(P.stars[id])) ? P.stars[id] : [];
   const earned = st.reduce((a,b)=>a+(b||0),0);
   return { pct: Math.round(earned/(nStages*3)*100), done: P && P.jdone && P.jdone[id] };
 }
