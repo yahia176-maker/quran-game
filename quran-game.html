@@ -5869,7 +5869,7 @@ function tasmeeMistake(sn, ay){
 function screenTasmeeEnd(){
   stopAyah();
   if(!TS) return screenHome();
-  const {sn, ok, done} = TS; TS = null;
+  const {sn, a, b, ok, done} = TS; TS = null;
   if(!done) return screenHome();
   const all = ok === done;
   if(P){ P.daily = today(); touchStreak(); saveP(); }
@@ -5888,7 +5888,8 @@ function screenTasmeeEnd(){
       <button class="btn ghost" id="tHome">🏠 الرئيسية</button>
     </div>
   </div>`;
-  $('#tAgain').onclick=()=>{ Snd.click(); screenSurahOpts(sn); };
+  /* إعادة مباشرة لنفس التسميع بنفس المدى — مش شاشة الاختيارات */
+  $('#tAgain').onclick=()=>{ Snd.click(); startTasmee(sn, a, b); };
   $('#tShare').onclick=()=>{ Snd.click(); shareCard({ title:'🎤 تسميع سورة '+QURAN[sn].nm,
     big:ok+'/'+done, sub:'آية سمّعها من حفظه' }); };
   $('#tHome').onclick=()=>{ Snd.click(); screenHome(); };
