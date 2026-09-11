@@ -4441,8 +4441,29 @@ function screenAccountLogin(){
   $('#liRst').onclick = async () => { Snd.click();
     const em = ($('#liEmail').value||'').trim();
     if(!em) return toast('اكتب الإيميل الأول');
-    try{ await teacherResetPass(em); toast('📧 بعتنالك رسالة على الإيميل'); }
+    try{ await teacherResetPass(em); resetSentMsg(); }
     catch(e){ toast('⚠️ ' + authMsg(e)); } };
+}
+/* رسالة إرشادية ثابتة بزر واحد — للرسايل اللي أطول من toast */
+function infoMsg(title, body){
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;'
+    + 'background:rgba(0,0,0,.66);backdrop-filter:blur(3px);padding:20px';
+  d.innerHTML = `<div class="card" style="max-width:380px;margin:0;animation:pop .3s ease">
+    <h3 style="margin:4px 0 8px;text-align:center">${esc(title)}</h3>
+    <p style="font-size:.88rem;margin:0 0 12px;line-height:2">${body}</p>
+    <div class="center"><button class="btn" id="im1">تمام 👍</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelector('#im1').onclick = () => { Snd.click(); d.remove(); };
+}
+/* بعد طلب استرجاع كلمة السر: Firebase بينجح حتى لو الإيميل مش مسجل أصلًا
+   (حماية من تخمين الإيميلات) — فلازم نشرح للمعلم ليه ممكن الرسالة ما توصلش */
+function resetSentMsg(){
+  infoMsg('📧 اتبعت طلب تغيير كلمة السر',
+    'لو ده <b>نفس الإيميل اللي سجلت بيه</b> هتوصلك رسالة خلال دقايق.<br>'
+    + '• مش لاقيها؟ بص في <b>السبام / الرسائل غير المرغوبة</b>.<br>'
+    + '• مفيش رسالة خالص؟ يبقى غالبًا حسابك متسجل بإيميل تاني أو فيه حرف مكتوب غلط — '
+    + 'كلّم صاحب اللعبة يطلّعلك الإيميل المسجل بالظبط.');
 }
 /* نافذة تأكيد عامة */
 function askExit2(title, body, okTxt, cb){
@@ -7587,8 +7608,7 @@ function screenTeacherSignup(){
   $('#lgFor').onclick=async()=>{ Snd.click();
     const em=($('#lgEmail').value||'').trim();
     if(!em) return toast('اكتب إيميلك الأول فوق');
-    try{ await teacherResetPass(em); Snd.correct();
-      toast('📧 بعتنا لك رابط تغيير كلمة السر على إيميلك'); }
+    try{ await teacherResetPass(em); Snd.correct(); resetSentMsg(); }
     catch(e){ toast('⚠️ '+authMsg(e)); } };
   $('#reg').onclick=async()=>{ Snd.click();
     const name=($('#tname').value||'').trim(), g=($('#tgrp').value||'').trim();
