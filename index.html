@@ -2978,8 +2978,40 @@ async function screenTeacherHome(){
 }
 
 /* ---------- 🏫 صفحة الحلقة (للمعلم) ---------- */
+/* مستمع حي لقائمة طلاب الحلقة — بيتفصل لما المعلم يخرج من الشاشة */
+let HAL_LIVE = null;
+function stopHalLive(){ if(HAL_LIVE){ try{ HAL_LIVE.off(); }catch(e){} HAL_LIVE = null; } }
+/* بيرسم بطاقة الطلاب ويربط أزرارها — بينده أول مرة ومع كل تغيير حي */
+function paintHalStuds(hid, v, mv){
+  const card = document.getElementById('halStudsCard'); if(!card) return;
+  const k = weekKey();
+  const studs = Object.entries(mv||{}).map(([uid,m])=>({uid, name:m.name||'—',
+    pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0, memo:m.memo||null,
+    img:m.img||null, char:m.char||'boy', off:!!m.off})).sort((a,b)=>b.pts-a.pts);
+  card.innerHTML = `
+    <div class="hdr" style="margin:0"><h3 style="margin:0">👦 الطلاب (${studs.length})</h3>
+      <button class="btn ghost sm" id="lb">🏆 ترتيب الأسبوع</button></div>
+    ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>المحفوظ</th><th>آخر نشاط</th><th></th></tr>
+      ${studs.map(s=>`<tr><td><span class="row" style="gap:6px;justify-content:flex-start">${s.off?'<span class="flag">⏸️</span>':''}
+          <button class="btn ghost sm imgEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}" data-has="${s.img?1:0}"
+            style="padding:2px;border:none;background:none">${avatarOf(s,30)}</button>
+          ${esc(s.name)}</span></td><td><b>${s.pts}</b></td>
+        <td><button class="btn ghost sm memoEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
+          style="padding:4px 9px;font-size:.76rem">${memoLabel(s.memo)} ✏️</button></td>
+        <td class="muted" style="font-size:.8rem">${ago(s.last)}</td>
+        <td><button class="btn ghost sm stMg" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
+          data-o="${s.off?1:0}" style="padding:4px 8px">⋯</button></td></tr>`).join('')}</table>`
+      :'<p class="muted center">لسه محدش انضم — ابعت الرابط فوق</p>'}`;
+  card.querySelector('#lb').onclick=()=>{ Snd.click(); screenLeaderboard(hid); };
+  card.querySelectorAll('.memoEd').forEach(b=>b.onclick=()=>{ Snd.click();
+    teacherMemoDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).memo||null); });
+  card.querySelectorAll('.imgEd').forEach(b=>b.onclick=()=>{ Snd.click();
+    teacherImgDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).img||null); });
+  card.querySelectorAll('.stMg').forEach(b=>b.onclick=()=>{ Snd.click();
+    studentManageDialog(hid, b.dataset.u, b.dataset.n, b.dataset.o === '1'); });
+}
 async function screenHalaqa(hid){
-  stopTimer();
+  stopTimer(); stopHalLive();
   app.innerHTML = '<div class="card fade center"><p>⏳ لحظة...</p></div>';
   if(!(await fbInit())) return;
   const [hs, ms] = await Promise.all([halRef(hid).once('value'), memRef(hid).once('value')]);
@@ -3028,39 +3060,26 @@ async function screenHalaqa(hid){
         data-d="${Math.floor((Date.now()-m.last)/864e5)}" style="padding:4px 10px">💬 فكّره</button>
     </div>`).join('')}
   </div>` : ''; })()}
-  <div class="card fade">
-    <div class="hdr" style="margin:0"><h3 style="margin:0">👦 الطلاب (${studs.length})</h3>
-      <button class="btn ghost sm" id="lb">🏆 ترتيب الأسبوع</button></div>
-    ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>المحفوظ</th><th>آخر نشاط</th><th></th></tr>
-      ${studs.map(s=>`<tr><td><span class="row" style="gap:6px;justify-content:flex-start">${s.off?'<span class="flag">⏸️</span>':''}
-          <button class="btn ghost sm imgEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}" data-has="${s.img?1:0}"
-            style="padding:2px;border:none;background:none">${avatarOf(s,30)}</button>
-          ${esc(s.name)}</span></td><td><b>${s.pts}</b></td>
-        <td><button class="btn ghost sm memoEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
-          style="padding:4px 9px;font-size:.76rem">${memoLabel(s.memo)} ✏️</button></td>
-        <td class="muted" style="font-size:.8rem">${ago(s.last)}</td>
-        <td><button class="btn ghost sm stMg" data-u="${esc(s.uid)}" data-n="${esc(s.name)}"
-          data-o="${s.off?1:0}" style="padding:4px 8px">⋯</button></td></tr>`).join('')}</table>`
-      :'<p class="muted center">لسه محدش انضم — ابعت الرابط فوق</p>'}
-  </div>
+  <div class="card fade" id="halStudsCard"></div>
   <div class="center row">
     <button class="btn" id="quiz">🚀 ابدأ مسابقة للحلقة</button>
     <button class="btn ghost" id="bk2">رجوع</button>
   </div>`;
-  $('#bk').onclick=$('#bk2').onclick=()=>{ Snd.click(); screenHome(); };
-  $('#lb').onclick=()=>{ Snd.click(); screenLeaderboard(hid); };
+  $('#bk').onclick=$('#bk2').onclick=()=>{ Snd.click(); stopHalLive(); screenHome(); };
   app.querySelectorAll('.gWa').forEach(b=>b.onclick=()=>{ Snd.click();
     nudgeWa(b.dataset.n, v.name||'', b.dataset.d); });
+  /* 🔴 قائمة الطلاب حيّة: أي طالب ينضم يظهر فورًا من غير ما المعلم يخرج ويرجع */
+  paintHalStuds(hid, v, mv);
+  stopHalLive();
+  HAL_LIVE = memRef(hid);
+  HAL_LIVE.on('value', s=>{
+    if(!document.getElementById('halStudsCard')){ stopHalLive(); return; }
+    paintHalStuds(hid, v, s.val()||{});
+  });
   $('#hDays').onclick=()=>{ Snd.click();
     halaqaDaysDialog(hid, v.days||[], v.tm||'', async (dd, tm) => {
       await halRef(hid).update({ days: dd.length?dd:null, tm: tm||null }).catch(()=>{});
       toast('📅 اتحفظت'); screenHalaqa(hid); }); };
-  app.querySelectorAll('.memoEd').forEach(b=>b.onclick=()=>{ Snd.click();
-    teacherMemoDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).memo||null); });
-  app.querySelectorAll('.imgEd').forEach(b=>b.onclick=()=>{ Snd.click();
-    teacherImgDialog(hid, b.dataset.u, b.dataset.n, (mv[b.dataset.u]||{}).img||null); });
-  app.querySelectorAll('.stMg').forEach(b=>b.onclick=()=>{ Snd.click();
-    studentManageDialog(hid, b.dataset.u, b.dataset.n, b.dataset.o === '1'); });
   $('#cp').onclick=()=>{ navigator.clipboard?.writeText(halLink(hid)); Snd.correct(); toast('📋 اتنسخ!'); };
   $('#wa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent('انضم لحلقة '+(v.name||'')+' في لعبة رحلة القرآن:\n'+halLink(hid)),'_blank'); };
   let items = ((v.hw||{}).items||[]).slice();
