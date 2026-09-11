@@ -2864,6 +2864,8 @@ async function screenTeacherHome(){
     totalStu += cnt; info.push({hid, ...(hs.val()||{}), count:cnt});
   }
   const qz = Object.keys((await firebase.database().ref('users/'+fbUser.uid+'/quizzes').once('value')).val()||{}).length;
+  /* حدّث حالة تأكيد الإيميل من السيرفر — عشان البانر يختفي أول ما يأكد */
+  try{ await fbUser.reload(); fbUser = firebase.auth().currentUser; }catch(e){}
   app.innerHTML = `
   <div class="hdr fade">
     <button class="pill" id="whoBtn" title="غيّر اللاعب"
@@ -2880,6 +2882,18 @@ async function screenTeacherHome(){
         <div style="font-weight:800;font-size:1.5rem">${x[1]}</div>
         <div class="muted" style="font-size:.75rem">${x[2]}</div></div>`).join('')}
   </div>
+  ${(fbUser && fbUser.email && !fbUser.emailVerified)?`
+  <div class="card fade" style="border:2px solid var(--bad)">
+    <p style="font-size:.86rem;margin:0 0 8px">⚠️ <b>إيميلك لسه مش متأكد:</b>
+      <span style="direction:ltr;display:inline-block">${esc(fbUser.email)}</span><br>
+      <span class="muted" style="font-size:.8rem">افتح الرسالة اللي بعتناهالك ودوس على اللينك —
+      ده اللي بيضمن إن الإيميل سليم ونقدر نرجعلك حسابك لو نسيت كلمة السر.
+      مفيش رسالة حتى في السبام؟ يبقى الإيميل متكتب غلط.</span></p>
+    <div class="row" style="justify-content:flex-start">
+      <button class="btn ghost sm" id="tvRe">✉️ ابعت التأكيد تاني</button>
+      <button class="btn ghost sm" id="tvFix">✏️ الإيميل غلط؟ صححه</button>
+    </div>
+  </div>`:''}
   <div class="card fade">
     <h3>🏫 حلقاتي</h3>
     ${info.length? info.map(x=>`<div class="halrow hcard" data-h="${esc(x.hid)}">
@@ -2931,6 +2945,10 @@ async function screenTeacherHome(){
       <button class="btn ghost sm" id="ctrClaim">🏢 أنا مدير مركز — استلم مركزي</button></div>`:''}
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
+  if($('#tvRe')) $('#tvRe').onclick=async()=>{ Snd.click();
+    try{ await fbUser.sendEmailVerification(); toast('✉️ اتبعتت — بص في صندوقك والسبام'); }
+    catch(e){ toast('⚠️ '+authMsg(e)); } };
+  if($('#tvFix')) $('#tvFix').onclick=()=>{ Snd.click(); screenChangeEmail(); };
   if($('#whoBtn')) $('#whoBtn').onclick=()=>{ Snd.click(); screenAccount(); };
   $('#tRep').onclick=()=>{ Snd.click(); screenGroups(); };
   $('#tPlay').onclick=()=>{ Snd.click(); screenPickHub(); };
@@ -7390,6 +7408,14 @@ function becomeTeacher(after){
 async function linkTeacherEmail(email, pass){
   const r = await linkEmailRaw(email, pass);
   if(WANT_TEACHER){ WANT_TEACHER = false; setRole('teacher'); toast('🧑‍🏫 بقيت معلم'); }
+  /* تأكيد الإيميل فورًا: حرف واحد غلط في الإيميل بيقفل الحساب للأبد
+     أول ما صاحبه ينسى كلمة السر — التأكيد بيكشف الغلطة يوم التسجيل نفسه */
+  try{ firebase.auth().currentUser.sendEmailVerification(); }catch(e){}
+  infoMsg('✉️ خطوة أخيرة مهمة: أكّد إيميلك',
+    'بعتنالك رسالة تأكيد على <b style="direction:ltr;display:inline-block">' + esc(email) + '</b> — افتحها ودوس على اللينك اللي فيها.<br>'
+    + '<b>ليه مهم؟</b> لو نسيت كلمة السر يوم من الأيام، رسالة الاسترجاع بتتبعت على الإيميل ده نفسه.<br>'
+    + '⚠️ مفيش رسالة خلال دقايق (بص في السبام كمان)؟ يبقى الإيميل متكتب غلط — '
+    + 'صححه فورًا من ⚙️ ← تغيير الإيميل، وإنت لسه فاكر كلمة السر.');
   return r;
 }
 async function linkEmailRaw(email, pass){
