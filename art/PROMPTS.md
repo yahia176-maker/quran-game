@@ -162,7 +162,7 @@ A kind young Egyptian female Quran teacher wearing a soft beige hijab and a mode
 ---
 
 ## ٦) بطاقات السور (٢٩ بطاقة)
-كل بطاقة مربعة، والخلفية منظر بسيط مالي المربع.
+كل بطاقة مربعة، والخلفية منظر بسيط مالي المربع. **خلصوا واتركّبوا: `s105` الفيل، `s108` الكوثر، `s111` المسد.** و`s106` قريش محتاجة تتعاد (الشريط الدهبي طلع عليه نقوش شبه الكتابة).
 
 **`s105 — الفيل`**
 
@@ -173,7 +173,7 @@ A cute friendly baby elephant standing on sand, a flock of small birds flying hi
 **`s106 — قريش`**
 
 ```
-The Kaaba, a simple black cube with a golden band, in a calm valley, with a small camel caravan and palm trees nearby. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
+The Kaaba, a simple black cube with one plain solid golden stripe around it. The stripe is completely plain gold with at most small simple diamond shapes: absolutely no calligraphy, no script, no writing-like patterns, no decorated panels. In a calm valley, with a small camel caravan and palm trees nearby. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
 ```
 
 **`s108 — الكوثر`**

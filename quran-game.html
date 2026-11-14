@@ -299,6 +299,7 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .art{color:var(--gold);display:block;margin:0 auto;filter:drop-shadow(0 4px 10px var(--sh1))}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .art.big{animation:floaty 3.4s ease-in-out infinite}
+.cardArt{object-fit:cover;border-radius:22%;border:2px solid var(--line);background:var(--bg2)}
 .artrow{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
 .speech{position:relative;background:var(--card);border:2px solid var(--line);border-radius:16px;
   padding:9px 14px;font-weight:700;max-width:230px;font-size:.95rem}
@@ -1621,8 +1622,11 @@ const ART = {
    <path d="M14 52h12M38 52h12" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".45"/>`]
 };
 const artOf = sn => ART[sn] || null;
+/* بطاقات السور اللي اترسمت بالاستايل الجديد (art/s<رقم>.webp) — الباقي لسه بالرسم البسيط */
+const CARD_ART = new Set([105, 108, 111]);
 function artSVG(sn, size){
   const a = artOf(sn); if(!a) return '';
+  if(CARD_ART.has(+sn)) return '<img class="art cardArt'+((size||64)>=90?' big':'')+'" src="art/s'+(+sn)+'.webp" alt="'+esc(a[0])+'" style="width:'+(size||64)+'px;height:'+(size||64)+'px">';
   return '<svg class="art'+((size||64)>=90?' big':'')+'" viewBox="0 0 64 64" fill="currentColor" style="width:'+(size||64)+'px;height:'+(size||64)+'px" role="img" aria-label="'+esc(a[0])+'">'+a[1]+'</svg>';
 }
 
