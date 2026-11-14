@@ -227,6 +227,26 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .charpick button{background:var(--card);border:3px solid var(--line);border-radius:20px;padding:10px 4px;cursor:pointer;transition:.15s}
 .charpick button.on{border-color:var(--gold);background:var(--goldB);transform:translateY(-3px)}
 .charpick b{display:block;color:var(--ink);font-size:.95rem;margin-top:4px}
+.charpick .kidPick{height:84px;width:auto;display:block;margin:0 auto}
+/* 🌈 شاشة البداية: رسمة الأطفال ورا الكروت (الطبقات دي جوه #app فبتختفي مع أي شاشة تانية) */
+.heroBg{position:fixed;inset:0;z-index:-1;background:#8fd16a url(art/hero-m.webp) center top/cover no-repeat}
+:root[data-theme="warm"] .heroBg,:root[data-theme="warm"] .heroPanel{filter:brightness(.62) saturate(.9)}
+.heroPanel{display:none}
+/* الأطفال بينتهوا عند ٥٣٪ من طول الرسمة — المسافة دي بتبدأ الكروت تحتهم بالظبط */
+.heroSpace{height:max(54vh,97vw)}
+.heroWrap .card{background:var(--bg1);background:color-mix(in srgb,var(--bg1) 90%,transparent)}
+.heroTalk{display:flex;align-items:center;gap:12px}
+.heroTalk img{height:92px;width:auto;flex:none;animation:floaty 3.4s ease-in-out infinite}
+.heroTalk h1{margin:0 0 2px;font-size:clamp(1.5rem,5.4vw,2.2rem)}
+.heroTalk p{margin:0;line-height:1.8}
+@media (min-width:1000px) and (min-aspect-ratio:4/3){
+  .heroBg{background:linear-gradient(180deg,#8fd3f4 0%,#cdeefd 22%,#b5e08a 33%,#8fd16a 100%)}
+  .heroPanel{display:block;position:fixed;top:0;left:0;height:100vh;aspect-ratio:768/1376;z-index:-1;
+    background:url(art/hero-m.webp) center/cover no-repeat;
+    -webkit-mask-image:linear-gradient(to right,#000 80%,transparent);mask-image:linear-gradient(to right,#000 80%,transparent)}
+  .heroSpace{height:5vh}
+  .heroWrap{max-width:520px;margin-left:auto;margin-right:0}
+}
 /* رسومات السور */
 .art{color:var(--gold);display:block;margin:0 auto;filter:drop-shadow(0 4px 10px var(--sh1))}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
@@ -1433,6 +1453,8 @@ function charSVG(k, mood, size){
     + '</svg>';
 }
 const myChar = () => (P && P.char) || 'boy';
+/* رسوم الأطفال الحقيقية لزراير «اختار شكلك» — ملفات مكاشة في sw.js */
+const KID_ART = { boy:'art/boy.webp', girl:'art/girl.webp', hijab:'art/hijab.webp' };
 /* الفئة العمرية → الثيم المناسب */
 const ROLEK = 'quran_game_v1_role';
 const myRole = () => (P && P.role) || localStorage.getItem(ROLEK) || '';
@@ -2108,15 +2130,18 @@ function screenProfiles(){
   stopTimer();
   const ps = allProfiles();
   app.innerHTML = `
-  <div class="center fade">
-    <div class="moon"><i class="l"></i><i class="r"></i></div>
-    <h1>رحلة القرآن</h1>
-    <p class="muted" style="margin-top:-6px">لعبة تفاعلية في القرآن الكريم</p>
+  <div class="heroBg" aria-hidden="true"></div><div class="heroPanel" aria-hidden="true"></div>
+  <div class="heroSpace"></div>
+  <div class="heroWrap">
+  <div class="card fade heroTalk">
+    <img src="art/lantern.webp" alt="">
+    <div><h1>رحلة القرآن</h1>
+      <p>أهلًا! أنا <b style="color:var(--gold)">نور</b> ✨ فانوس الرحلة — هنحفظ القرآن سوا ونجمع نجوم.</p></div>
   </div>
-  <div class="card fade">
+  ${ps.length?`<div class="card fade">
     <h3>مين اللي هيلعب النهارده؟ 👋</h3>
     ${ps.length>1?'<p class="muted" style="margin:-4px 0 8px;font-size:.82rem">كل واحد ليه تقدّمه ونجومه لوحده — دوس على اسمك.</p>':''}
-    ${ps.length? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
       ${ps.map(p=>`<div class="stage ${(P&&p.id===P.id)?'live':''}" data-p="${p.id}">
         ${(p.img && p.avatar==='img')
           ? `<img class="ava" src="${esc(p.img)}" alt="" style="width:62px;height:62px;margin:0 auto">`
@@ -2125,15 +2150,15 @@ function screenProfiles(){
         <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${(p.stats||{}).c||0}</div>
         ${(P&&p.id===P.id)?'<div class="muted" style="font-size:.68rem;color:var(--ok)">داخل حاليًا</div>':''}
       </div>`).join('')}
-    </div>`:'<p class="muted center">أول مرة تلعب؟ اعمل ملفك الشخصي وابدأ 🌟</p>'}
-  </div>
+    </div>
+  </div>`:''}
   <div class="card fade">
-    <h3>➕ ملف جديد</h3>
+    <h3>➕ ${ps.length?'ملف جديد':'أول مرة؟ اعمل ملفك وابدأ 🌟'}</h3>
     <input type="text" id="npName" maxlength="14" placeholder="اكتب اسمك...">
     <h3 style="margin-top:14px;font-size:1rem">اختار شكلك</h3>
     <div class="charpick" id="chRow">
       ${Object.entries(CHARS).map(([k,c],i)=>`<button data-c="${k}" class="${i===0?'on':''}">
-        ${charSVG(k,'happy',78)}<b>${c.nm}</b></button>`).join('')}
+        ${KID_ART[k]?`<img class="kidPick" src="${KID_ART[k]}" alt="">`:charSVG(k,'happy',78)}<b>${c.nm}</b></button>`).join('')}
     </div>
     <h3 style="margin-top:14px;font-size:1rem">عمرك كام؟ <span class="muted" style="font-size:.8rem">— عشان نختارلك الشكل المناسب</span></h3>
     <div class="seg" id="agRow">
@@ -2154,6 +2179,7 @@ function screenProfiles(){
       <input type="text" id="rcCode" maxlength="6" placeholder="ABC123" style="text-align:center;font-size:1.3rem;letter-spacing:6px;direction:ltr">
       <button class="btn sm" id="rcGo">استرجاع</button>
     </div>
+  </div>
   </div>`;
   let ch='boy', ageK='mid', newRole='student';
   app.querySelectorAll('#chRow button').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); ch=b.dataset.c;
