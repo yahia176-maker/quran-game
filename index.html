@@ -412,6 +412,37 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 /* ===== 🏫 الحلقات ===== */
 .live{border-color:var(--ok)!important;background:var(--okA);animation:pulseLive 1.8s ease-in-out infinite}
 @keyframes pulseLive{0%,100%{box-shadow:0 0 0 0 var(--okC)}50%{box-shadow:0 0 0 12px rgba(126,196,164,0)}}
+/* ===== لوحة المعلم: شريط أرقام + عمودين على الشاشة الواسعة عشان كله يبان في صفحة واحدة ===== */
+.tStats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 12px}
+.tStat{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:8px 10px;min-width:0}
+.tStat img{height:44px;width:auto;flex:none}
+.tStat b{font-size:1.6rem;line-height:1}
+.tStat span{font-size:.8rem;color:var(--muted)}
+@media(max-width:420px){ .tStat{flex-direction:column;gap:2px;padding:8px 4px} .tStat img{height:36px} .tStat b{font-size:1.3rem} }
+.tCols{display:grid;gap:12px}
+.tCols .card{margin:0}
+.tMain,.tSide{display:grid;gap:12px;align-content:start;min-width:0}
+.tTiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.tTiles .stage{padding:12px 6px}
+.tWarn{border:2px solid var(--bad)!important;padding:10px 14px!important;margin:0 0 12px!important}
+.tWarnBtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tWarnBtns .btn{white-space:nowrap}
+.tCtrCard{padding:10px 14px!important}
+.tCtrCard summary{cursor:pointer;font-weight:800;font-size:.95rem;list-style:none;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tCtrCard summary::-webkit-details-marker{display:none}
+.tCtrCard summary::after{content:"‹";margin-inline-start:auto;color:var(--gold);font-size:1.3rem;transform:rotate(-90deg);transition:transform .2s}
+.tCtrCard[open] summary::after{transform:rotate(90deg)}
+.tCtrCard summary .muted{font-weight:400;font-size:.78rem}
+@media (min-width:900px) and (min-aspect-ratio:11/10){
+  #app:has(.tCols){max-width:1180px}
+  .tCols{grid-template-columns:1.25fr 1fr;align-items:start}
+  .tHalList{max-height:calc(100vh - 470px);min-height:74px;overflow-y:auto;padding-inline-end:2px}
+  #app:has(.tCols){padding-bottom:16px}
+  .tTiles .tileIc{height:48px}
+  .tWarn{display:flex;align-items:center;gap:16px}
+  .tWarnTxt{flex:1;min-width:0}
+  .tWarnBtns{margin-top:0;flex:none}
+}
 .halrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;
   background:var(--card);border:2px solid var(--line);border-radius:16px;margin-bottom:8px;cursor:pointer;
   transition:.15s;-webkit-tap-highlight-color:transparent}
@@ -3117,42 +3148,40 @@ async function screenTeacherHome(){
     </button>
     <button class="btn ghost sm" id="cog">⚙️</button>
   </div>
-  <div class="grid fade" style="grid-template-columns:repeat(3,1fr);max-width:520px;margin:0 auto 12px">
-    ${[['🏫',hids.length,'حلقة'],['👦',totalStu,'طالب'],['🏆',qz,'مسابقة']].map(x=>
-      `<div class="stage" style="cursor:default;padding:12px 4px"><span class="em">${x[0]}</span>
-        <div style="font-weight:800;font-size:1.5rem">${x[1]}</div>
-        <div class="muted" style="font-size:.75rem">${x[2]}</div></div>`).join('')}
+  <div class="tStats fade">
+    ${[['ic-halaqa',hids.length,'حلقة'],['boy-wave',totalStu,'طالب'],['lv-5',qz,'مسابقة']].map(x=>
+      `<div class="tStat"><img src="art/${x[0]}.webp" alt=""><b>${x[1]}</b><span>${x[2]}</span></div>`).join('')}
   </div>
   ${(fbUser && fbUser.email && !fbUser.emailVerified)?`
-  <div class="card fade" style="border:2px solid var(--bad)">
-    <p style="font-size:.86rem;margin:0 0 8px">⚠️ <b>إيميلك لسه مش متأكد:</b>
-      <span style="direction:ltr;display:inline-block">${esc(fbUser.email)}</span><br>
-      <span class="muted" style="font-size:.8rem">افتح الرسالة اللي بعتناهالك ودوس على اللينك —
-      ده اللي بيضمن إن الإيميل سليم ونقدر نرجعلك حسابك لو نسيت كلمة السر.
-      مفيش رسالة حتى في السبام؟ يبقى الإيميل متكتب غلط.</span></p>
-    <div class="row" style="justify-content:flex-start">
+  <div class="card fade tWarn">
+    <div class="tWarnTxt">
+      <p style="font-size:.84rem;margin:0 0 4px">⚠️ <b>إيميلك لسه مش متأكد:</b>
+        <span style="direction:ltr;display:inline-block">${esc(fbUser.email)}</span></p>
+      <p class="muted" style="font-size:.78rem;margin:0;line-height:1.7">افتح رسالة التأكيد ودوس على اللينك — ده اللي بيرجّعلك حسابك لو نسيت كلمة السر.
+        مفيش رسالة حتى في السبام؟ يبقى الإيميل متكتب غلط.</p>
+    </div>
+    <div class="tWarnBtns">
       <button class="btn ghost sm" id="tvRe">✉️ ابعت التأكيد تاني</button>
       <button class="btn ghost sm" id="tvFix">✏️ الإيميل غلط؟ صححه</button>
     </div>
   </div>`:''}
+  <div class="tCols">
+  <div class="tMain">
   <div class="card fade">
-    <h3>🏫 حلقاتي</h3>
+    <h3 style="margin-top:0">${ic('halaqa',28)} حلقاتي</h3>
+    <div class="tHalList">
     ${info.length? info.map(x=>`<div class="halrow hcard" data-h="${esc(x.hid)}">
         <div><b>${esc(x.name)}</b><div class="muted" style="font-size:.78rem">${x.count} طالب${x.live&&x.live.code?' · ⚡ مسابقة شغالة':''}</div></div>
         <span>‹</span></div>`).join('')
-      : '<p class="muted center">لسه مفيش حلقات — اعمل أول حلقة وابعت رابطها لطلابك</p>'}
+      : '<p class="muted center" style="margin:6px 0">لسه مفيش حلقات — اعمل أول حلقة وابعت رابطها لطلابك</p>'}
+    </div>
     <div class="row" style="justify-content:flex-start;margin-top:10px">
       <input type="text" id="nh" maxlength="24" placeholder="اسم حلقة جديدة..." style="flex:1;min-width:150px;margin:0">
       <button class="btn sm" id="addh">➕ إنشاء</button>
     </div>
   </div>
-  <div class="grid fade" style="grid-template-columns:1fr 1fr;max-width:520px;margin:0 auto">
-    <div class="stage" id="tRep"><span class="em">📊</span><b>التقارير</b>
-      <div class="muted" style="font-size:.74rem">متابعة مستوى الطلاب</div></div>
-    <div class="stage" id="tPlay"><span class="em">📖</span><b>ألعب أنا</b>
-      <div class="muted" style="font-size:.74rem">جرّب اللعبة كطالب</div></div>
-    ${DIG && !digestSeen() ? `<div class="card fade" id="digBox" style="border-color:var(--gold)">
-    <div class="hdr" style="margin:0 0 6px"><h3 style="margin:0">📊 ملخّص أسبوعك</h3>
+  ${DIG && !digestSeen() ? `<div class="card fade" id="digBox" style="border-color:var(--gold)">
+    <div class="hdr" style="margin:0 0 6px"><h3 style="margin:0">${ic('progress',24)} ملخّص أسبوعك</h3>
       <button class="btn ghost sm" id="digX">✕</button></div>
     <div class="okpi" style="margin:0">
       <div class="k"><b>${DIG.active}</b><span>لعبوا الأسبوع ده</span>
@@ -3160,30 +3189,38 @@ async function screenTeacherHome(){
       <div class="k"><b>${DIG.pts}</b><span>نقطة للحلقة</span></div>
       <div class="k"><b style="color:${DIG.gone?'var(--bad)':'var(--ok)'}">${DIG.gone}</b><span>مختفيين</span></div>
     </div>
-    ${DIG.top?`<p style="font-size:.88rem;margin:8px 0 0">🥇 <b>${esc(DIG.top.name)}</b> الأول الأسبوع ده
+    ${DIG.top?`<p style="font-size:.88rem;margin:8px 0 0">${artIc('bd-gold',20)} <b>${esc(DIG.top.name)}</b> الأول الأسبوع ده
       بـ ${DIG.top.pts} نقطة — اذكره قدام الحلقة 👏</p>`:''}
     ${DIG.gone?`<p class="muted" style="font-size:.82rem;margin:6px 0 0">
       👻 ${DIG.gone} طالب غابوا أكتر من أسبوع — افتح الحلقة وفكّرهم بضغطة.</p>`:''}
     ${!DIG.hw?`<p class="muted" style="font-size:.82rem;margin:6px 0 0">❗ مفيش واجب متحدد للحلقة.</p>`:''}
   </div>`:''}
-  ${myCenter()?`<div class="stage" id="tCtr" style="border-color:var(--gold)">
+  </div>
+  <div class="tSide">
+  <div class="tTiles fade">
+    <div class="stage" id="tRep"><img class="tileIc" src="art/ic-progress.webp" alt=""><b>التقارير</b>
+      <div class="muted" style="font-size:.74rem">متابعة مستوى الطلاب</div></div>
+    <div class="stage" id="tPlay"><img class="tileIc" src="art/ic-pick.webp" alt=""><b>ألعب أنا</b>
+      <div class="muted" style="font-size:.74rem">جرّب اللعبة كطالب</div></div>
+    ${myCenter()?`<div class="stage" id="tCtr" style="border-color:var(--gold)">
       <span class="em">🏢</span><b>مركزي</b>
       <div class="muted" style="font-size:.74rem">متابعة المعلمين</div></div>`:''}
   </div>
-  <div class="card fade" style="padding:12px">
-    <h3 style="margin:0 0 6px;font-size:1rem">🏢 المركز</h3>
-    ${(P&&P.cid)?`<p style="font-size:.88rem;margin:0">إنت في مركز — مديره بيشوف نشاطك وحلقاتك.
+  <details class="card fade tCtrCard" ${(P&&P.cid)?'open':''}>
+    <summary>🏢 المركز <span class="muted">${(P&&P.cid)?'— إنت في مركز':'— بتشتغل في مركز أو أكاديمية؟'}</span></summary>
+    ${(P&&P.cid)?`<p style="font-size:.88rem;margin:8px 0 0">مدير المركز بيشوف نشاطك وحلقاتك.
       <span class="muted" style="direction:ltr;display:inline-block">${esc(P.cid)}</span></p>
       <div class="center" style="margin-top:8px"><button class="btn ghost sm" id="ctrOut">🚪 اخرج من المركز</button></div>`
-    :`<p class="muted" style="font-size:.84rem;margin:0 0 8px">لو بتشتغل في مركز أو أكاديمية،
-        اكتب كود المركز عشان مديرك يتابع معاك.</p>
-      <div class="row" style="justify-content:flex-start">
+    :`<p class="muted" style="font-size:.8rem;margin:8px 0">اكتب كود المركز عشان مديرك يتابع معاك.</p>
+      <div class="row" style="justify-content:flex-start;gap:8px">
         <input type="text" id="ctrCode" maxlength="5" placeholder="كود المركز"
           style="text-align:center;letter-spacing:5px;direction:ltr;margin:0;max-width:150px">
         <button class="btn sm" id="ctrGo">انضم</button>
+        ${(!myCenter()&&fbUser&&!fbUser.isAnonymous)?`<button class="btn ghost sm" id="ctrClaim">🏢 أنا مدير مركز</button>`:''}
       </div>`}
-    ${(!myCenter()&&fbUser&&!fbUser.isAnonymous)?`<div class="center" style="margin-top:8px">
-      <button class="btn ghost sm" id="ctrClaim">🏢 أنا مدير مركز — استلم مركزي</button></div>`:''}
+  </details>
+  </div>
+  </div>
   </div>`;
   $('#cog').onclick=()=>{ Snd.click(); screenSettings(); };
   if($('#tvRe')) $('#tvRe').onclick=async()=>{ Snd.click();
