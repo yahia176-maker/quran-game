@@ -227,25 +227,49 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .charpick button{background:var(--card);border:3px solid var(--line);border-radius:20px;padding:10px 4px;cursor:pointer;transition:.15s}
 .charpick button.on{border-color:var(--gold);background:var(--goldB);transform:translateY(-3px)}
 .charpick b{display:block;color:var(--ink);font-size:.95rem;margin-top:4px}
-.charpick .kidPick{height:84px;width:auto;display:block;margin:0 auto}
-/* 🌈 شاشة البداية: رسمة الأطفال ورا الكروت (الطبقات دي جوه #app فبتختفي مع أي شاشة تانية) */
-.heroBg{position:fixed;inset:0;z-index:-1;background:#8fd16a url(art/hero-m.webp) center top/cover no-repeat}
-:root[data-theme="warm"] .heroBg,:root[data-theme="warm"] .heroPanel{filter:brightness(.62) saturate(.9)}
-.heroPanel{display:none}
-/* الأطفال بينتهوا عند ٥٣٪ من طول الرسمة — المسافة دي بتبدأ الكروت تحتهم بالظبط */
-.heroSpace{height:max(54vh,97vw)}
-.heroWrap .card{background:var(--bg1);background:color-mix(in srgb,var(--bg1) 90%,transparent)}
-.heroTalk{display:flex;align-items:center;gap:12px}
-.heroTalk img{height:92px;width:auto;flex:none;animation:floaty 3.4s ease-in-out infinite}
-.heroTalk h1{margin:0 0 2px;font-size:clamp(1.5rem,5.4vw,2.2rem)}
-.heroTalk p{margin:0;line-height:1.8}
-@media (min-width:1000px) and (min-aspect-ratio:4/3){
-  .heroBg{background:linear-gradient(180deg,#8fd3f4 0%,#cdeefd 22%,#b5e08a 33%,#8fd16a 100%)}
-  .heroPanel{display:block;position:fixed;top:0;left:0;height:100vh;aspect-ratio:768/1376;z-index:-1;
-    background:url(art/hero-m.webp) center/cover no-repeat;
-    -webkit-mask-image:linear-gradient(to right,#000 80%,transparent);mask-image:linear-gradient(to right,#000 80%,transparent)}
-  .heroSpace{height:5vh}
-  .heroWrap{max-width:520px;margin-left:auto;margin-right:0}
+.charpick .kidPick{height:70px;width:auto;display:block;margin:0 auto}
+/* 🌈 شاشة البداية — شاشة واحدة ثابتة من غير سكرول: الرسمة + كارت واحد.
+   كل الطبقات جوه #app فبتختفي مع أي شاشة تانية. */
+.startScreen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;overflow:hidden;background:#8fd16a}
+/* موبايل: الرسمة فوق (بتاخد اللي فاضل) والكارت تحت. خط رجلين الأطفال عند ٥٦٪ من طول
+   الصورة — بنثبّته على آخر منطقة الرسمة، فلو المساحة صغرت بيتقص من السما مش من الأطفال */
+.startArt{position:relative;flex:1 1 0;min-height:110px;overflow:hidden;background:#8fd3f4}
+.startArt img{position:absolute;left:0;width:100%;height:auto;bottom:-78.8vw;display:block}
+:root[data-theme="warm"] .startArt img{filter:brightness(.62) saturate(.9)}
+.startSide{flex:0 1 auto;min-height:0;display:flex;padding:0 10px 10px;margin-top:-22px;position:relative}
+.startCard{margin:0;width:100%;max-height:100%;overflow-y:auto;padding:14px 16px;
+  background:var(--bg1);background:color-mix(in srgb,var(--bg1) 95%,transparent)}
+.startTalk{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.startTalk img{height:64px;width:auto;flex:none;animation:floaty 3.4s ease-in-out infinite}
+.startTalk h1{margin:0;font-size:clamp(1.35rem,5vw,1.9rem)}
+.startTalk p{margin:0;line-height:1.6;font-size:.86rem}
+.startCard h3{font-size:1rem;margin:8px 0 6px}
+.startCard input[type=text]{margin-bottom:6px}
+.startCard .charpick{margin-top:0;gap:8px}
+.startCard .charpick button{padding:6px 4px}
+.startCard .seg{margin-bottom:6px}
+.startCard .seg .btn{padding:9px 4px;font-size:.86rem}
+.startList{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-bottom:10px}
+.startList .stage{padding:10px 6px}
+.startLinks{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.startCard .seg .btn{white-space:nowrap}
+@media (max-width:380px){ .startCard .seg .btn{font-size:.76rem;padding:9px 2px} }
+/* موبايل قصير: نصغّر الكارت عشان الأطفال يفضلوا باينين فوقه */
+@media (max-height:700px){ .startTalk p{display:none} .startTalk{margin-bottom:6px} .startTalk img{height:46px}
+  .charpick .kidPick{height:46px} .startCard{padding:10px 12px} .startCard h3{margin:4px 0}
+  .startCard #roleHint{display:none} .startCard #mk{padding:10px 26px} .startLinks{margin-top:6px} }
+/* شاشة عريضة: الرسمة لوحة كبيرة على الشمال بتدوب في سما ونجيلة، والكارت يمين في النص */
+@media (min-width:900px) and (min-aspect-ratio:11/10){
+  .startScreen{flex-direction:row;align-items:center;justify-content:flex-start}
+  .startScreen{background:linear-gradient(180deg,#8fd3f4 0%,#bfe9fb 24%,#a9dc8f 34%,#9ad85f 46%,#86cc5a 100%)}
+  :root[data-theme="warm"] .startScreen{background:linear-gradient(180deg,#3d6f86 0%,#4a7f6a 34%,#4d7a35 100%)}
+  .startArt{position:absolute;left:0;top:0;bottom:0;width:min(56vw,108vh);min-height:0;background:none;
+    -webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+  .startArt img{top:0;bottom:auto;height:100%;object-fit:cover;object-position:50% 12%}
+  .startSide{flex:0 0 auto;width:min(440px,40vw);height:100%;align-items:center;margin:0 max(20px,5vw) 0 0;padding:16px 0}
+  .startCard{padding:18px 20px;box-shadow:0 18px 50px rgba(30,60,30,.35)}
+  .startTalk img{height:78px}
+  .charpick .kidPick{height:76px}
 }
 /* رسومات السور */
 .art{color:var(--gold);display:block;margin:0 auto;filter:drop-shadow(0 4px 10px var(--sh1))}
@@ -2126,61 +2150,60 @@ function saveBoard(sid, rows){
 const AVATARS = ['🙂','😃','🧕','👳','🐱','🐦','🦁','🌟','🌙','🚀','⚽','🎨'];
 const ENCOURAGE = ['أحسنت! 🌟','ما شاء الله!','ممتاز يا بطل!','تمام كده! 👏','برافو عليك!','جميل جدًا!'];
 const CONSOLE_ = ['ولا يهمك، جرّب تاني 💪','قريب أوي!','مرة تانية وهتظبط','ركّز شوية وهتعرف','معلش، الغلط بيعلّم'];
-function screenProfiles(){
+function screenProfiles(mode){
   stopTimer();
   const ps = allProfiles();
+  const form = mode === 'new' || !ps.length;       /* كارت واحد: يا قايمة اللاعبين يا فورمة لاعب جديد */
   app.innerHTML = `
-  <div class="heroBg" aria-hidden="true"></div><div class="heroPanel" aria-hidden="true"></div>
-  <div class="heroSpace"></div>
-  <div class="heroWrap">
-  <div class="card fade heroTalk">
-    <img src="art/lantern.webp" alt="">
-    <div><h1>رحلة القرآن</h1>
-      <p>أهلًا! أنا <b style="color:var(--gold)">نور</b> ✨ فانوس الرحلة — هنحفظ القرآن سوا ونجمع نجوم.</p></div>
-  </div>
-  ${ps.length?`<div class="card fade">
-    <h3>مين اللي هيلعب النهارده؟ 👋</h3>
-    ${ps.length>1?'<p class="muted" style="margin:-4px 0 8px;font-size:.82rem">كل واحد ليه تقدّمه ونجومه لوحده — دوس على اسمك.</p>':''}
-    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
-      ${ps.map(p=>`<div class="stage ${(P&&p.id===P.id)?'live':''}" data-p="${p.id}">
-        ${(p.img && p.avatar==='img')
-          ? `<img class="ava" src="${esc(p.img)}" alt="" style="width:62px;height:62px;margin:0 auto">`
-          : (p.char?charSVG(p.char,'idle',62):`<span class="em">${esc(p.emoji||'🙂')}</span>`)}
-        <div style="font-weight:700">${esc(p.name)}</div>
-        <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${(p.stats||{}).c||0}</div>
-        ${(P&&p.id===P.id)?'<div class="muted" style="font-size:.68rem;color:var(--ok)">داخل حاليًا</div>':''}
-      </div>`).join('')}
-    </div>
-  </div>`:''}
-  <div class="card fade">
-    <h3>➕ ${ps.length?'ملف جديد':'أول مرة؟ اعمل ملفك وابدأ 🌟'}</h3>
-    <input type="text" id="npName" maxlength="14" placeholder="اكتب اسمك...">
-    <h3 style="margin-top:14px;font-size:1rem">اختار شكلك</h3>
-    <div class="charpick" id="chRow">
-      ${Object.entries(CHARS).map(([k,c],i)=>`<button data-c="${k}" class="${i===0?'on':''}">
-        ${KID_ART[k]?`<img class="kidPick" src="${KID_ART[k]}" alt="">`:charSVG(k,'happy',78)}<b>${c.nm}</b></button>`).join('')}
-    </div>
-    <h3 style="margin-top:14px;font-size:1rem">عمرك كام؟ <span class="muted" style="font-size:.8rem">— عشان نختارلك الشكل المناسب</span></h3>
-    <div class="seg" id="agRow">
-      ${AGES.map((a,i)=>`<button class="btn ${i===1?'':'ghost'} sm" data-ag="${a.k}">${a.em} ${a.nm}</button>`).join('')}
-    </div>
-    <h3 style="margin-top:14px;font-size:1rem">إنت مين؟</h3>
-    <div class="seg" id="roleRow">
-      <button class="btn sm" data-role="student">👦 طالب</button>
-      <button class="btn ghost sm" data-role="teacher">🧑‍🏫 معلم</button>
-    </div>
-    <p class="muted" id="roleHint" style="font-size:.78rem;margin:6px 0 0">هتحفظ وتلعب وتدخل حلقتك.</p>
-    <div class="center" style="margin-top:8px"><button class="btn" id="mk">يلا بينا 🚀</button></div>
-  </div>
-  <div class="card fade center" style="padding:12px">
-    <span class="muted" style="font-size:.85rem">لعبت قبل كده على جهاز تاني ومعاك كود الاستعادة؟</span>
-    <button class="btn ghost sm" id="rcBtn">🎫 استعادة تقدمي</button>
-    <div id="rcForm" hidden style="margin-top:8px">
-      <input type="text" id="rcCode" maxlength="6" placeholder="ABC123" style="text-align:center;font-size:1.3rem;letter-spacing:6px;direction:ltr">
-      <button class="btn sm" id="rcGo">استرجاع</button>
-    </div>
-  </div>
+  <div class="startScreen">
+    <div class="startArt" aria-hidden="true"><img src="art/hero-m.webp" alt=""></div>
+    <div class="startSide"><div class="card startCard fade">
+      <div class="startTalk">
+        <img src="art/lantern.webp" alt="">
+        <div><h1>رحلة القرآن</h1>
+          <p>أهلًا! أنا <b style="color:var(--gold)">نور</b> ✨ هنحفظ القرآن سوا ونجمع نجوم.</p></div>
+      </div>
+      ${form ? `
+      <input type="text" id="npName" maxlength="14" placeholder="اكتب اسمك...">
+      <div class="charpick" id="chRow">
+        ${Object.entries(CHARS).map(([k,c],i)=>`<button data-c="${k}" class="${i===0?'on':''}">
+          ${KID_ART[k]?`<img class="kidPick" src="${KID_ART[k]}" alt="">`:charSVG(k,'happy',70)}<b>${c.nm}</b></button>`).join('')}
+      </div>
+      <h3>عمرك كام؟</h3>
+      <div class="seg" id="agRow">
+        ${AGES.map((a,i)=>`<button class="btn ${i===1?'':'ghost'} sm" data-ag="${a.k}">${a.em} ${a.nm}</button>`).join('')}
+      </div>
+      <div class="seg" id="roleRow" style="grid-template-columns:1fr 1fr">
+        <button class="btn sm" data-role="student">👦 طالب</button>
+        <button class="btn ghost sm" data-role="teacher">🧑‍🏫 معلم</button>
+      </div>
+      <p class="muted" id="roleHint" style="font-size:.76rem;margin:0 0 8px;text-align:center">هتحفظ وتلعب وتدخل حلقتك.</p>
+      <div class="center"><button class="btn" id="mk">يلا بينا 🚀</button></div>`
+      : `
+      <h3>مين اللي هيلعب النهارده؟ 👋</h3>
+      <div class="startList">
+        ${ps.map(p=>`<div class="stage ${(P&&p.id===P.id)?'live':''}" data-p="${p.id}">
+          ${(p.img && p.avatar==='img')
+            ? `<img class="ava" src="${esc(p.img)}" alt="" style="width:56px;height:56px;margin:0 auto">`
+            : (KID_ART[p.char]?`<img src="${KID_ART[p.char]}" alt="" style="height:60px;width:auto;display:block;margin:0 auto">`
+              :(p.char?charSVG(p.char,'idle',56):`<span class="em">${esc(p.emoji||'🙂')}</span>`))}
+          <div style="font-weight:700">${esc(p.name)}</div>
+          <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${(p.stats||{}).c||0}</div>
+        </div>`).join('')}
+      </div>
+      <div class="center"><button class="btn" id="npOpen">➕ لاعب جديد</button></div>`}
+      <div class="startLinks">
+        ${form && ps.length ? '<button class="btn ghost sm" id="npBack">↩️ رجوع</button>' : ''}
+        <button class="btn ghost sm" id="rcBtn">🎫 معايا كود استعادة</button>
+      </div>
+      <div id="rcForm" hidden style="margin-top:8px;text-align:center">
+        <input type="text" id="rcCode" maxlength="6" placeholder="ABC123" style="text-align:center;font-size:1.3rem;letter-spacing:6px;direction:ltr">
+        <button class="btn sm" id="rcGo">استرجاع</button>
+      </div>
+    </div></div>
   </div>`;
+  if($('#npOpen')) $('#npOpen').onclick=()=>{ Snd.init(); Snd.click(); screenProfiles('new'); };
+  if($('#npBack')) $('#npBack').onclick=()=>{ Snd.init(); Snd.click(); screenProfiles(); };
   let ch='boy', ageK='mid', newRole='student';
   app.querySelectorAll('#chRow button').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); ch=b.dataset.c;
     app.querySelectorAll('#chRow button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
@@ -2194,8 +2217,8 @@ function screenProfiles(){
       : 'هتحفظ وتلعب وتدخل حلقتك.'; });
   app.querySelectorAll('[data-p]').forEach(d=>d.onclick=()=>{ Snd.init(); Snd.click();
     activateProfile(allProfiles().find(x=>x.id===d.dataset.p)); screenHome(); });
-  $('#mk').onclick=()=>{ Snd.init();
-    const name=($('#npName').value||'').trim(); if(!name){ $('#npName').classList.add('shake'); setTimeout(()=>$('#npName').classList.remove('shake'),450); return; }
+  if($('#mk')) $('#mk').onclick=()=>{ Snd.init();
+    const name=($('#npName').value||'').trim(); if(!name){ $('#npName').classList.add('shake'); setTimeout(()=>{ const n=$('#npName'); if(n) n.classList.remove('shake'); },450); return; }
     const th=(AGES.find(a=>a.k===ageK)||{}).th || 'night';
     const p=newProfile(name, CHARS[ch].em); p.char=ch; p.age=ageK; p.theme=th;
     const ps2=allProfiles(); ps2.push(p); saveAll(ps2);
@@ -2203,7 +2226,8 @@ function screenProfiles(){
     /* الدور اتحدد على الفورمة. المعلم بيعدّي على بوابة الإيميل. */
     if(newRole==='teacher') return becomeTeacher(() => screenHome());
     setRole('student'); screenHome(); };
-  $('#rcBtn').onclick=()=>{ Snd.init(); Snd.click(); $('#rcForm').hidden=!$('#rcForm').hidden; };
+  $('#rcBtn').onclick=()=>{ Snd.init(); Snd.click(); $('#rcForm').hidden=!$('#rcForm').hidden;
+    if(!$('#rcForm').hidden) $('#rcCode').scrollIntoView({block:'nearest'}); };
   $('#rcGo').onclick=async()=>{ Snd.init(); Snd.click();
     const c=($('#rcCode').value||'').trim();
     if(c.length!==6) return toast('الكود ٦ حروف/أرقام');
@@ -5371,7 +5395,7 @@ function updateFab(){
   if(!fab) return;
   const has = s => !!document.querySelector(s);
   const atHome  = has('#goPlay') || has('#tRep');      /* بيت الطالب أو المعلم */
-  const preHome = !P || !myRole() || has('.door');     /* قبل ما يختار ملف/دور */
+  const preHome = !P || !myRole() || has('.door') || has('.startScreen');   /* قبل ما يختار ملف/دور، أو شاشة البداية */
   fab.hidden = atHome || preHome || HOME_IDS.some(has);
   document.body.classList.toggle('hasFab', !fab.hidden);
 }
