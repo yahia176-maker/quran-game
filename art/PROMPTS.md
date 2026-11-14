@@ -549,6 +549,8 @@ A calm tidy corner of a mosque courtyard garden, a low wooden bookshelf, a small
 
 ## ١١) أيقونة التطبيق
 
+**خلصت:** أيقونة التطبيق اتعملت من رسمة «نور» نفسها على خلفية أخضر وسماوي (مش محتاجة توليد).
+
 **`app-icon`**
 
 ```
