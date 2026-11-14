@@ -191,7 +191,7 @@ A coiled rope made of twisted palm fiber lying next to a small campfire flame on
 **`s112 — الإخلاص`**
 
 ```
-One single big glowing golden star alone in a clear deep blue sky above calm green hills. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
+A child's small hand raised up with only the index finger pointing to the sky, seen from the wrist up, in front of a clear bright blue sky with soft white clouds and warm sunlight. Only the hand and wrist are visible, no face and no body. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text.
 ```
 
 **`s113 — الفلق`**
