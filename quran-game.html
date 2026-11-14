@@ -3663,8 +3663,8 @@ async function screenOwner(sub){
     <div class="card fade">
       <h3>🧑‍🏫 المعلمون — بالنشاط</h3>
       <table><tr><th>#</th><th>المعلم</th><th>حلقات</th><th>مسابقات</th><th>آخر نشاط</th></tr>
-        ${D.teachers.map((t,i)=>`<tr><td>${rankIc(i)}</td>
-          <td>${esc(t.name)}<br><span class="muted" style="font-size:.72rem;direction:ltr;display:inline-block">${esc(t.email)}</span></td>
+        ${D.teachers.map((t,i)=>`<tr class="tOpen" data-u="${esc(t.uid)}" style="cursor:pointer" title="افتح كارت المعلم"><td>${rankIc(i)}</td>
+          <td><b>${esc(t.name)}</b> <span style="color:var(--gold)">‹</span><br><span class="muted" style="font-size:.72rem;direction:ltr;display:inline-block">${esc(t.email)}</span></td>
           <td>${t.halaqas}</td><td><b>${t.quizzes}</b></td>
           <td class="muted" style="font-size:.8rem">${ago(t.seen)}</td></tr>`).join('')}
       </table>
@@ -3816,6 +3816,8 @@ async function screenOwner(sub){
         audit('deleteCenter', b.dataset.c, b.dataset.n);
         toast('اتمسح'); await ownerLoad(true); screenOwner(''); }); });
   app.querySelectorAll('.pOpen').forEach(b => b.onclick = () => { Snd.click(); ownerUser(b.dataset.u); });
+  /* صف المعلم يفتح كارته (الصورة + الإيميل + حلقاته) — للتحقق من هويته لما يطلب مساعدة */
+  app.querySelectorAll('.tOpen').forEach(b => b.onclick = () => { Snd.click(); ownerUser(b.dataset.u); });
   app.querySelectorAll('.hOpen').forEach(b => b.onclick = () => { Snd.click(); ownerHalaqa(b.dataset.h); });
   if($('#oq')){ let tmr; $('#oq').oninput = e => { clearTimeout(tmr); const v = e.target.value;
     tmr = setTimeout(() => { screenOwner(v);
@@ -4023,6 +4025,8 @@ async function ownerUser(uid){
   const u = (s && s.val()) || {};
   const pr = u.profile || {};
   const g = (OWN && OWN.players.find(x => x.uid === uid)) || {};
+  const tt = (OWN && (OWN.teachers||[]).find(x => x.uid === uid)) || {};
+  const tEmail = (tt.email && tt.email !== '—') ? tt.email : '';
   const surs = Object.keys(pr.sstars || {}).length;
   app.innerHTML = `
   <div class="hdr"><h2>👦 ${esc(pr.name || g.name || '—')}</h2>
@@ -4045,6 +4049,8 @@ async function ownerUser(uid){
       <tr><td>إجابات</td><td>✔ ${g.c||0} · ✘ ${g.w||0}</td></tr>
       <tr><td>حلقات</td><td>${g.halaqas||0}</td></tr>
       <tr><td>معلم؟</td><td>${u.teacher?('نعم — '+esc(u.teacher.name||'')):'لا'}</td></tr>
+      ${tEmail?`<tr><td>الإيميل</td><td style="direction:ltr;text-align:right">${esc(tEmail)}</td></tr>`:''}
+      ${(u.teacher && (u.teacher.groups||[]).length)?`<tr><td>أسماء حلقاته</td><td>${u.teacher.groups.map(x=>esc(x)).join('، ')}</td></tr>`:''}
       <tr><td>محفوظ سابقًا</td><td>${Object.entries(pr.memo||{}).map(([k,v])=>esc((QURAN[k]||{}).nm||k)+' '+v).join('، ')||'—'}</td></tr>
     </table>
   </div>
