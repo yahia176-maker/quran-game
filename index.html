@@ -220,6 +220,8 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .nourRow{display:flex;align-items:center;gap:10px;margin-top:8px}
 .kidBox{position:relative;display:inline-block;line-height:0;vertical-align:middle}
 .kidBox img{display:block;width:auto;max-width:none}
+/* رسوم المعلمين مقصوصة عند الركبة — بندوّب آخرها بدل حافة مقطوعة */
+.tch img,img.tchFade{-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
 .kidGear{position:absolute;top:-2px;inset-inline-end:-6px;width:1.7em;height:1.7em;display:grid;place-items:center;line-height:1;
   background:var(--bg1);border:2px solid var(--line);border-radius:50%;box-shadow:0 2px 6px var(--sh2)}
 .mascot .m,.mascot .eyes{display:none}
@@ -1493,9 +1495,20 @@ const CHARS = {
 /* رسوم الأطفال بالحالات (ملفات art/<الشخصية>-<الحالة>.webp).
    idle = نتيجة مش قوية → «بيفكر». الإكسسوار بيبان شارة جنب الطفل لأن كل رسمة بوضعية مختلفة. */
 const KID_MOOD = { happy:'happy', sad:'sad', idle:'think', think:'think', wave:'wave' };
+/* المعلم بيشوف نفسه برسمة معلم. «بنت» من غير حجاب مالهاش رسمة معلمة لسه فبتفضل برسمة البنت. */
+const TEACHER_ART = { boy:'art/teacher-man.webp', hijab:'art/teacher-woman.webp' };
+const teacherArt = (k, role) => (role==='teacher' && TEACHER_ART[k]) || '';
 function charSVG(k, mood, size){
   const key = CHARS[k] ? k : 'boy', c = CHARS[key];
   const m = KID_MOOD[mood] ? mood : 'idle', h = Math.round((size||72) * 1.45);
+  const tArt = teacherArt(key, myRole());
+  if(tArt){
+    const g = (typeof GEAR!=='undefined' && P && P.gear && P.gear!=='none' && GEAR[P.gear]) ? GEAR[P.gear] : null;
+    return '<span class="kidBox tch mascot" data-mood="'+m+'" role="img" aria-label="'+esc(c.nm)+'">'
+      + '<img src="'+tArt+'" alt="" style="height:'+Math.round(h*1.1)+'px">'
+      + (g ? '<span class="kidGear" style="font-size:'+Math.max(13,Math.round(h*.17))+'px">'+g.em+'</span>' : '')
+      + '</span>';
+  }
   const g = (typeof GEAR!=='undefined' && P && P.gear && P.gear!=='none' && GEAR[P.gear]) ? GEAR[P.gear] : null;
   return '<span class="kidBox mascot" data-mood="'+m+'" role="img" aria-label="'+esc(c.nm)+'">'
     + '<img src="art/'+key+'-'+KID_MOOD[m]+'.webp" alt="" style="height:'+h+'px">'
@@ -2221,7 +2234,8 @@ function screenProfiles(mode){
         ${ps.map(p=>`<div class="stage ${(P&&p.id===P.id)?'live':''}" data-p="${p.id}">
           ${(p.img && p.avatar==='img')
             ? `<img class="ava" src="${esc(p.img)}" alt="" style="width:56px;height:56px;margin:0 auto">`
-            : (KID_ART[p.char]?`<img src="${KID_ART[p.char]}" alt="" style="height:60px;width:auto;display:block;margin:0 auto">`
+            : (teacherArt(p.char,p.role)?`<img class="tchFade" src="${teacherArt(p.char,p.role)}" alt="" style="height:64px;width:auto;display:block;margin:0 auto">`
+              : KID_ART[p.char]?`<img src="${KID_ART[p.char]}" alt="" style="height:60px;width:auto;display:block;margin:0 auto">`
               :(p.char?charSVG(p.char,'idle',56):`<span class="em">${esc(p.emoji||'🙂')}</span>`))}
           <div style="font-weight:700">${esc(p.name)}</div>
           <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${(p.stats||{}).c||0}</div>
@@ -2297,9 +2311,9 @@ function screenRole(){
     <p class="muted" style="margin-top:-4px">إنت مين؟</p>
   </div>
   <div class="grid fade doors">
-    <div class="door" id="rStudent"><span class="em">👦</span>
+    <div class="door" id="rStudent"><img src="art/${CHARS[P.char]?P.char:'boy'}-wave.webp" alt="" style="height:96px;width:auto;display:block;margin:0 auto 4px">
       <b>طالب</b><span>أحفظ وألعب وأدخل حلقتي</span></div>
-    <div class="door" id="rTeacher"><span class="em">🧑‍🏫</span>
+    <div class="door" id="rTeacher"><img class="tchFade" src="${P.char==='boy'?'art/teacher-man.webp':'art/teacher-woman.webp'}" alt="" style="height:96px;width:auto;display:block;margin:0 auto 4px">
       <b>معلم</b><span>أدير حلقاتي وأتابع طلابي<br>📧 محتاج إيميل</span></div>
   </div>
   <p class="muted center" style="font-size:.8rem">تقدر تغيّرها في أي وقت من ⚙️</p>`;
@@ -2956,7 +2970,9 @@ async function screenTeacherHome(){
   <div class="hdr fade">
     <button class="pill" id="whoBtn" title="غيّر اللاعب"
       style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
-      ${useImg()?`<img class="ava avaS" src="${esc(P.img)}" alt="">`:'<span>🧑‍🏫</span>'}
+      ${useImg()?`<img class="ava avaS" src="${esc(P.img)}" alt="">`
+        : teacherArt(P.char,'teacher')?`<img class="ava avaS" src="${teacherArt(P.char,'teacher')}" alt="" style="object-fit:cover;object-position:50% 3%;background:var(--bg2)">`
+        : '<span>🧑‍🏫</span>'}
       <b>${esc(t.name)}</b>
       ${allProfiles().length>1?'<span style="opacity:.7;font-size:.8em">🔄</span>':''}
     </button>
@@ -4042,7 +4058,7 @@ function screenDressUp(){
     <h3>👦 الشخصية</h3>
     <div class="wear">
       ${Object.entries(CHARS).map(([k,c])=>`<div class="w ${myChar()===k?'on':''}" data-c="${k}">
-        <img src="art/${k}-wave.webp" alt="" style="height:64px;width:auto;display:block;margin:0 auto 2px"><small>${esc(c.nm)}</small></div>`).join('')}
+        <img ${teacherArt(k,myRole())?'class="tchFade"':''} src="${teacherArt(k,myRole())||('art/'+k+'-wave.webp')}" alt="" style="height:64px;width:auto;display:block;margin:0 auto 2px"><small>${esc(c.nm)}</small></div>`).join('')}
     </div>
     <h3 style="margin-top:14px">✨ الإكسسوار</h3>
     <div class="wear">
@@ -7714,6 +7730,7 @@ function screenTeacherSignup(){
   app.innerHTML = `
   <div class="hdr"><h2>🧑‍🏫 تسجيل معلم</h2><button class="btn ghost sm" id="hm">🏠</button></div>
   <div class="card fade">
+    <div class="center"><img class="tchFade" src="${P&&P.char==='boy'?'art/teacher-man.webp':'art/teacher-woman.webp'}" alt="" style="height:130px;width:auto"></div>
     <p>سجّل مرة واحدة بس — وهيفضل جهازك ده فاكرك دايمًا.</p>
     <h3>اسمك</h3>
     <input type="text" id="tname" maxlength="24" placeholder="مثال: الشيخ يحيى" value="${esc(P?P.name:'')}">
