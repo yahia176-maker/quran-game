@@ -27,7 +27,7 @@ The attached image is the style reference for a children's Quran learning game. 
 ---
 
 ## ١) الولد
-خلفية بيضا عشان تتقص. **الصور `boy-happy` و`boy-think` و`boy-sad` وصلت خلاص**، فاضل `boy-wave` بس.
+خلفية بيضا عشان تتقص. **الأربع صور بتوع الولد وصلوا خلاص** (مش محتاج تولّدهم تاني).
 
 **`boy-happy`**
 
