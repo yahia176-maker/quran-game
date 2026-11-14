@@ -342,7 +342,7 @@ A sky parting with golden light, pink sunset glow on the horizon and a full moon
 
 ## ٧) أيقونات الشاشة الرئيسية
 
-**اتركّبوا في اللعبة: `ic-pick` و`ic-halaqa` و`ic-progress` و`ic-race` و`ic-dress`.** `ic-listen` وصلت ومحفوظة. فاضل: `ic-album` (مكانها دلوقتي بطاقة سورة) و`ic-recite` و`ic-daily` و`ic-review`.
+**اتركّبوا في اللعبة: `ic-pick` و`ic-halaqa` و`ic-progress` و`ic-race` و`ic-dress`.** وكمان `ic-listen` و`ic-recite` و`ic-daily` و`ic-review`. فاضل `ic-album` بس (مكانها دلوقتي بطاقة سورة، واختيارية).
 
 **`ic-pick — اختر سورة`**
 

@@ -1,11 +1,11 @@
 /* رحلة القرآن — Service Worker: يفتح بدون إنترنت بعد أول زيارة */
-const C = 'qg-v50';
+const C = 'qg-v51';
 const CORE = ['./', 'index.html', 'guide.html', 'guide-child.html', 'guide-quick.html', 'guide-manager.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'art/hero-m.webp', 'art/garden.webp', 'art/boy.webp', 'art/girl.webp', 'art/hijab.webp',
   'art/nour-happy.webp', 'art/nour-talk.webp', 'art/nour-think.webp', 'art/nour-cheer.webp', 'art/nour-sleep.webp',
   'art/teacher-man.webp', 'art/teacher-woman.webp',
   'art/s105.webp', 'art/s106.webp', 'art/s108.webp', 'art/s111.webp', 'art/s112.webp', 'art/s113.webp', 'art/s114.webp',
-  'art/ic-pick.webp', 'art/ic-halaqa.webp', 'art/ic-progress.webp', 'art/ic-race.webp', 'art/ic-dress.webp',
+  'art/ic-pick.webp', 'art/ic-halaqa.webp', 'art/ic-progress.webp', 'art/ic-race.webp', 'art/ic-dress.webp', 'art/ic-listen.webp', 'art/ic-recite.webp', 'art/ic-daily.webp', 'art/ic-review.webp',
   'art/boy-happy.webp', 'art/boy-think.webp', 'art/boy-sad.webp', 'art/boy-wave.webp', 'art/girl-happy.webp', 'art/girl-think.webp', 'art/girl-sad.webp', 'art/girl-wave.webp', 'art/hijab-happy.webp', 'art/hijab-think.webp', 'art/hijab-sad.webp', 'art/hijab-wave.webp'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
