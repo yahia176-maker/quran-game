@@ -1657,7 +1657,7 @@ const ART = {
 };
 const artOf = sn => ART[sn] || null;
 /* بطاقات السور اللي اترسمت بالاستايل الجديد (art/s<رقم>.webp) — الباقي لسه بالرسم البسيط */
-const CARD_ART = new Set([105, 106, 108, 111, 112, 113, 114]);
+const CARD_ART = new Set([81, 82, 84, 89, 90, 105, 106, 108, 111, 112, 113, 114]);
 function artSVG(sn, size){
   const a = artOf(sn); if(!a) return '';
   if(CARD_ART.has(+sn)) return '<img class="art cardArt'+((size||64)>=90?' big':'')+'" src="art/s'+(+sn)+'.webp" alt="'+esc(a[0])+'" style="width:'+(size||64)+'px;height:'+(size||64)+'px">';

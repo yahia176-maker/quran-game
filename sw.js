@@ -1,10 +1,10 @@
 /* رحلة القرآن — Service Worker: يفتح بدون إنترنت بعد أول زيارة */
-const C = 'qg-v59';
+const C = 'qg-v60';
 const CORE = ['./', 'index.html', 'guide.html', 'guide-child.html', 'guide-quick.html', 'guide-manager.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'art/hero-m.webp', 'art/garden.webp', 'art/bg-home-m.webp', 'art/bg-win-m.webp', 'art/bg-night-m.webp', 'art/bg-teacher-w.webp', 'art/boy.webp', 'art/girl.webp', 'art/hijab.webp',
   'art/nour-happy.webp', 'art/nour-talk.webp', 'art/nour-think.webp', 'art/nour-cheer.webp', 'art/nour-sleep.webp',
   'art/teacher-man.webp', 'art/teacher-woman.webp',
-  'art/s105.webp', 'art/s106.webp', 'art/s108.webp', 'art/s111.webp', 'art/s112.webp', 'art/s113.webp', 'art/s114.webp',
+  'art/s81.webp', 'art/s82.webp', 'art/s84.webp', 'art/s89.webp', 'art/s90.webp', 'art/s105.webp', 'art/s106.webp', 'art/s108.webp', 'art/s111.webp', 'art/s112.webp', 'art/s113.webp', 'art/s114.webp',
   'art/ic-pick.webp', 'art/ic-halaqa.webp', 'art/ic-progress.webp', 'art/ic-race.webp', 'art/ic-dress.webp', 'art/ic-listen.webp', 'art/ic-recite.webp', 'art/ic-daily.webp', 'art/ic-review.webp',
   'art/lv-1.webp', 'art/lv-2.webp', 'art/lv-3.webp', 'art/lv-4.webp', 'art/lv-5.webp', 'art/bd-shield.webp', 'art/lv-6.webp', 'art/bd-bronze.webp', 'art/bd-silver.webp', 'art/bd-gold.webp', 'art/bd-streak.webp',
   'art/gear-taqiyah.webp', 'art/gear-crown.webp', 'art/gear-wreath.webp', 'art/gear-star.webp', 'art/gear-glasses.webp',
