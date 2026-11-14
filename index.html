@@ -87,6 +87,18 @@ body{
   background-attachment:fixed;
   min-height:100vh; overflow-x:hidden; font-size:calc(1rem*var(--scale));
 }
+/* ===== خلفيات مرسومة (نفس روح الشخصيات) =====
+   طبقة ثابتة ورا كل الشاشات، فوقها غلالة خفيفة عشان الكروت والنص يفضلوا واضحين.
+   مرح → الجنينة · ليل دافئ → جنينة بالليل · المعلم → ساحة المسجد · لحظة الفوز → احتفال */
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:center top/cover no-repeat}
+:root[data-theme="marah"] body::before{background-image:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,.38)),url(art/bg-home-m.webp)}
+@media (min-width:900px) and (min-aspect-ratio:11/10){
+  :root[data-theme="marah"] body::before{background-image:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,.38)),url(art/garden.webp);background-position:center}
+}
+:root[data-theme="warm"] body::before{background-image:linear-gradient(rgba(22,15,32,.5),rgba(22,15,32,.5)),url(art/bg-night-m.webp)}
+:root[data-role="teacher"]:not([data-theme="warm"]) body::before{background-image:linear-gradient(rgba(255,255,255,.5),rgba(255,255,255,.5)),url(art/bg-teacher-w.webp);background-position:center}
+:root:not([data-theme="warm"]) body.winBg::before{background-image:linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,.22)),url(art/bg-win-m.webp);background-position:center top}
+@media print{ body::before{display:none} }
 /* النجوم تلمع ليلًا فقط؛ في الثيمات النهارية تتحول لفقاعات ملوّنة خفيفة */
 :root[data-theme="marah"] .star{background:var(--gold);opacity:.3}
 :root[data-theme="mushaf"] #stars{display:none}
@@ -1547,7 +1559,9 @@ const KID_ART = { boy:'art/boy.webp', girl:'art/girl.webp', hijab:'art/hijab.web
 /* الفئة العمرية → الثيم المناسب */
 const ROLEK = 'quran_game_v1_role';
 const myRole = () => (P && P.role) || localStorage.getItem(ROLEK) || '';
-function setRole(r){ if(P){ P.role=r; saveP(); } try{ localStorage.setItem(ROLEK,r); }catch(e){} }
+function setRole(r){ if(P){ P.role=r; saveP(); } try{ localStorage.setItem(ROLEK,r); }catch(e){} paintRole(); }
+/* الدور على <html> عشان خلفية المعلم (ساحة المسجد) تتطبق على كل شاشاته */
+function paintRole(){ const r = P ? myRole() : ''; if(r) document.documentElement.dataset.role = r; else delete document.documentElement.dataset.role; }
 const AGES = [
   {k:'small', nm:'٦ – ٩ سنوات',  em:'🧸', th:'marah'},
   {k:'mid',   nm:'١٠ – ١٥ سنة',  em:'🌿', th:'garden'},
@@ -2185,7 +2199,14 @@ function loadSolo(sn){
     h += `<div class="star" style="right:${(Math.random()*100).toFixed(2)}%;top:${(Math.random()*100).toFixed(2)}%;width:${s}px;height:${s}px;animation-delay:${(Math.random()*3).toFixed(2)}s"></div>`; }
   box.innerHTML=h; })();
 
+/* خلفية الاحتفال: بتظهر مع القصاصات وتفضل لحد ما الشاشة تتغيّر */
+function winBg(){
+  document.body.classList.add('winBg');
+  setTimeout(()=>{ const mo = new MutationObserver(()=>{ mo.disconnect(); document.body.classList.remove('winBg'); });
+    mo.observe(app, { childList:true }); }, 0);
+}
 function confetti(big){
+  winBg();
   const cols=['#ffd67e','#3ddc97','#7db6ff','#ff9ecb','#ffffff','#ffb03a'];
   const N = big?130:70;
   for(let i=0;i<N;i++){ const d=document.createElement('div'); d.className='confetti';
@@ -2315,7 +2336,7 @@ function screenProfiles(mode){
 /* جهاز مشترك: لو فيه أكتر من لاعب، نسأل مين بيلعب أول ما تفتح اللعبة — مرة واحدة بس */
 let ASKED_WHO = false;
 function screenHome(){
-  stopTimer();
+  stopTimer(); paintRole();
   if(!P) return screenProfiles();
   if(!ASKED_WHO){ ASKED_WHO = true;
     if(allProfiles().length > 1) return screenProfiles(); }

@@ -517,6 +517,8 @@ A small blue and gold shield with a star in the middle. Single object icon, squa
 ## ١٠) الخلفيات
 من غير شخصيات، عشان الكروت تتحط فوقها.
 
+**خلصوا واتركّبوا:** `bg-home-m` (خلفية ثيم «مرح»)، `bg-win-m` (لحظة الفوز)، `bg-night-m` (ثيم «ليل دافئ»)، `bg-teacher-w` (شاشات المعلم). على الكمبيوتر ثيم «مرح» بيستخدم `garden.webp` الموجودة (أعلى دقة) بدل `bg-home-w`.
+
 **`bg-home-m (طولي)`**
 
 ```

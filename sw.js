@@ -1,7 +1,7 @@
 /* رحلة القرآن — Service Worker: يفتح بدون إنترنت بعد أول زيارة */
-const C = 'qg-v58';
+const C = 'qg-v59';
 const CORE = ['./', 'index.html', 'guide.html', 'guide-child.html', 'guide-quick.html', 'guide-manager.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
-  'art/hero-m.webp', 'art/garden.webp', 'art/boy.webp', 'art/girl.webp', 'art/hijab.webp',
+  'art/hero-m.webp', 'art/garden.webp', 'art/bg-home-m.webp', 'art/bg-win-m.webp', 'art/bg-night-m.webp', 'art/bg-teacher-w.webp', 'art/boy.webp', 'art/girl.webp', 'art/hijab.webp',
   'art/nour-happy.webp', 'art/nour-talk.webp', 'art/nour-think.webp', 'art/nour-cheer.webp', 'art/nour-sleep.webp',
   'art/teacher-man.webp', 'art/teacher-woman.webp',
   'art/s105.webp', 'art/s106.webp', 'art/s108.webp', 'art/s111.webp', 'art/s112.webp', 'art/s113.webp', 'art/s114.webp',
