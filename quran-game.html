@@ -1531,6 +1531,12 @@ const myChar = () => (P && P.char) || 'boy';
 const gearImg = (k, h) => '<img class="gearImg" src="art/gear-'+k+'.webp" alt="" style="height:'+h+'px">';
 /* أيقونة مرسومة صغيرة جوه الزراير والعناوين (art/ic-<اسم>.webp) */
 const ic = (n, h) => '<img class="ic" src="art/ic-'+n+'.webp" alt="" style="height:'+(h||22)+'px">';
+/* رسمة أي أيقونة من art/ بالاسم الكامل — للشارات والمستويات والميداليات */
+const artIc = (f, h) => '<img class="ic" src="art/'+f+'.webp" alt="" style="height:'+(h||22)+'px">';
+const lvIc = (l, h) => l.img ? artIc(l.img, h) : l.e;
+const bdIc = (b, h) => b.img ? artIc(b.img, h) : b.em;
+const flameIc = h => artIc('bd-streak', h);
+const rankIc = i => i < 3 ? artIc(['bd-gold','bd-silver','bd-bronze'][i], 30) : (i+1);
 /* 🏮 «نور» الفانوس المرشد: talk بيشرح · happy بيحتفل · think بيفكر · cheer بيشجّع · sleep نايم */
 function nourImg(mood, h){
   const m = ['happy','talk','think','cheer','sleep'].includes(mood) ? mood : 'talk';
@@ -1801,10 +1807,10 @@ function touchStreak(){
 /* ===================== الأوسمة ===================== */
 const BADGES = [
  {id:'first',   em:'🌱', t:'أول إجابة صحيحة',   f:p=>p.stats.c>=1},
- {id:'c50',     em:'🥉', t:'٥٠ إجابة صحيحة',   f:p=>p.stats.c>=50},
- {id:'c200',    em:'🥈', t:'٢٠٠ إجابة صحيحة',  f:p=>p.stats.c>=200},
- {id:'c1000',   em:'🥇', t:'١٠٠٠ إجابة صحيحة', f:p=>p.stats.c>=1000},
- {id:'streak3', em:'🔥', t:'٣ أيام متواصلة',   f:p=>p.streak>=3},
+ {id:'c50',     em:'🥉', img:'bd-bronze', t:'٥٠ إجابة صحيحة',   f:p=>p.stats.c>=50},
+ {id:'c200',    em:'🥈', img:'bd-silver', t:'٢٠٠ إجابة صحيحة',  f:p=>p.stats.c>=200},
+ {id:'c1000',   em:'🥇', img:'bd-gold', t:'١٠٠٠ إجابة صحيحة', f:p=>p.stats.c>=1000},
+ {id:'streak3', em:'🔥', img:'bd-streak', t:'٣ أيام متواصلة',   f:p=>p.streak>=3},
  {id:'streak7', em:'🌋', t:'٧ أيام متواصلة',   f:p=>p.streak>=7},
  {id:'streak30',em:'🏆', t:'٣٠ يومًا متواصلًا', f:p=>p.streak>=30},
  {id:'stage3',  em:'⭐', t:'مرحلة بثلاث نجوم', f:p=>Object.values(p.stars).some(a=>(a||[]).some(s=>s===3))},
@@ -2257,7 +2263,7 @@ function screenProfiles(mode){
               : KID_ART[p.char]?`<img src="${KID_ART[p.char]}" alt="" style="height:60px;width:auto;display:block;margin:0 auto">`
               :(p.char?charSVG(p.char,'idle',56):`<span class="em">${esc(p.emoji||'🙂')}</span>`))}
           <div style="font-weight:700">${esc(p.name)}</div>
-          <div class="muted" style="font-size:.75rem">🔥 ${p.streak||0} · ✔ ${(p.stats||{}).c||0}</div>
+          <div class="muted" style="font-size:.75rem">${flameIc(16)} ${p.streak||0} · ✔ ${(p.stats||{}).c||0}</div>
         </div>`).join('')}
       </div>
       <div class="center"><button class="btn" id="npOpen">➕ لاعب جديد</button></div>`}
@@ -2414,8 +2420,8 @@ function screenStudentHome(){
   <div class="hdr fade">
     <button class="pill" id="whoBtn" title="غيّر اللاعب"
       style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
-      ${useImg()?`<img class="ava avaS" src="${esc(P.img)}" alt="">`:`<span>${lv.cur.e}</span>`}
-      <b>${esc(P.name)}</b> · 🔥 ${P.streak||0}${(P.shield||0)?' 🛡️'+P.shield:''}
+      ${useImg()?`<img class="ava avaS" src="${esc(P.img)}" alt="">`:`<span>${lvIc(lv.cur,22)}</span>`}
+      <b>${esc(P.name)}</b> · ${flameIc(20)} ${P.streak||0}${(P.shield||0)?' 🛡️'+P.shield:''}
       ${allProfiles().length>1?'<span style="opacity:.7;font-size:.8em">🔄</span>':''}
     </button>
     <button class="btn ghost sm" id="cog">⚙️</button>
@@ -2539,14 +2545,14 @@ function screenProgress(){
       بتتحسب هنا — الرحلة عمر مش سباق.</p>
   </div>
   <div class="card fade center">
-    <div style="font-size:3rem">${lv.cur.e}</div>
+    <div style="font-size:3rem">${lvIc(lv.cur,72)}</div>
     <h2 style="color:var(--gold);margin:0">${lv.cur.n}</h2>
     <div class="bar" style="max-width:280px;margin:10px auto"><i style="width:${lv.pct}%"></i></div>
-    ${lv.nxt?`<p class="muted" style="margin:0">${lv.nxt.min-lv.t} نجمة كمان → ${lv.nxt.e} ${lv.nxt.n}</p>`
+    ${lv.nxt?`<p class="muted" style="margin:0">${lv.nxt.min-lv.t} نجمة كمان → ${lvIc(lv.nxt,20)} ${lv.nxt.n}</p>`
             :`<p class="muted" style="margin:0">وصلت لأعلى مستوى 👑</p>`}
   </div>
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(100px,1fr))">
-    ${[['⭐',lv.t,'نجمة'],['📖',done.length,'سورة'],['🎴',cardsOwned()+'/'+ALBUM_SET.length,'بطاقة'],['🔥',P.streak||0,'يوم متواصل'],['✔️',(P.stats||{}).c||0,'إجابة صح']]
+    ${[['⭐',lv.t,'نجمة'],['📖',done.length,'سورة'],['🎴',cardsOwned()+'/'+ALBUM_SET.length,'بطاقة'],[flameIc(44),P.streak||0,'يوم متواصل'],['✔️',(P.stats||{}).c||0,'إجابة صح']]
       .map(x=>`<div class="stage" style="cursor:default"><span class="em">${x[0]}</span>
         <div style="font-weight:800;font-size:1.3rem">${x[1]}</div>
         <div class="muted" style="font-size:.75rem">${x[2]}</div></div>`).join('')}
@@ -2557,7 +2563,7 @@ function screenProgress(){
     <p class="muted" style="font-size:.82rem">اللعبة بتركّز عليها تلقائيًا في جلساتك ${due?`— عندك ${due} سؤال مستحق`:''}</p>
   </div>`:''}
   ${badges.length?`<div class="card fade"><h3>🏅 أوسمتك (${badges.length})</h3>
-    <p>${badges.map(b=>`<span class="pill">${b.em} ${esc(b.t)}</span>`).join(' ')}</p></div>`:''}
+    <p>${badges.map(b=>`<span class="pill">${bdIc(b,22)} ${esc(b.t)}</span>`).join(' ')}</p></div>`:''}
   <div class="card fade">
     <h3>📗 سورك</h3>
     ${done.length?`<div class="grid surahs">${done.map(sn=>{const st=surStars(sn);
@@ -2685,7 +2691,7 @@ const LEVELS = [
   {n:'حافظ صغير',   e:'📗', min:30},
   {n:'حافظ',        e:'🏅', min:60},
   {n:'حافظ متقن',   e:'🏆', min:100},
-  {n:'نجم القرآن',  e:'👑', min:180}
+  {n:'نجم القرآن',  e:'👑', img:'lv-6', min:180}
 ];
 function totalStars(){
   if(!P) return 0;
@@ -2785,14 +2791,14 @@ function screenSmartEnd(){
       <span class="speech">${esc(pct>=80?'شغل ممتاز يا بطل!':pct>=50?'كويس! كمّل كده':'مفيش مشكلة، بكرة أحسن')}</span></div>
     <h2>خلّصت جلستك 🎉</h2>
     <p><b>${p.right}</b> من ${G.chal.length} صح · 🏅 ${p.score} نقطة</p>
-    <div style="font-size:1.6rem;color:var(--gold)">🔥 ${P.streak} ${P.streak===1?'يوم':'أيام'} متواصلة</div>
+    <div style="font-size:1.6rem;color:var(--gold)">${flameIc(34)} ${P.streak} ${P.streak===1?'يوم':'أيام'} متواصلة</div>
   </div>
   <div class="card fade">
-    <div class="lvrow"><span style="font-size:1.6rem">${lv.cur.e}</span>
+    <div class="lvrow"><span style="font-size:1.6rem">${lvIc(lv.cur,34)}</span>
       <div style="flex:1">
         <b>${lv.cur.n}</b> <span class="muted" style="font-size:.8rem">${lv.t} نجمة</span>
         <div class="bar" style="margin:6px 0 0"><i style="width:${lv.pct}%"></i></div>
-        ${lv.nxt?`<span class="muted" style="font-size:.75rem">${lv.nxt.min-lv.t} نجمة كمان توصلك لـ ${lv.nxt.e} ${lv.nxt.n}</span>`:''}
+        ${lv.nxt?`<span class="muted" style="font-size:.75rem">${lv.nxt.min-lv.t} نجمة كمان توصلك لـ ${lvIc(lv.nxt,18)} ${lv.nxt.n}</span>`:''}
       </div></div>
   </div>
   <div class="center row">
@@ -3031,7 +3037,7 @@ async function screenLeaderboard(hid){
     <p class="muted" style="font-size:.82rem;margin:2px 0">الترتيب بيتصفّر كل أسبوع — كل نقطة بتكسبها في اللعب بتتحسبلك</p></div>
   <div class="card fade">
     ${rows.length?`<table><tr><th>#</th><th>الطالب</th><th>نقاط الأسبوع</th></tr>
-      ${rows.map((r,i)=>`<tr class="${mine===i?'turnGlow':''}"><td>${['🥇','🥈','🥉'][i]||(i+1)}</td>
+      ${rows.map((r,i)=>`<tr class="${mine===i?'turnGlow':''}"><td>${rankIc(i)}</td>
         <td>${esc(r.name)}${mine===i?' <span class="muted">(إنت)</span>':''}</td><td><b>${r.pts}</b></td></tr>`).join('')}
       </table>`:'<p class="muted center">لسه مفيش نشاط الأسبوع ده — كن أول واحد! 🚀</p>'}
   </div>
@@ -3588,7 +3594,7 @@ async function screenOwner(sub){
     <div class="card fade">
       <h3>🧑‍🏫 المعلمون — بالنشاط</h3>
       <table><tr><th>#</th><th>المعلم</th><th>حلقات</th><th>مسابقات</th><th>آخر نشاط</th></tr>
-        ${D.teachers.map((t,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td>
+        ${D.teachers.map((t,i)=>`<tr><td>${rankIc(i)}</td>
           <td>${esc(t.name)}<br><span class="muted" style="font-size:.72rem;direction:ltr;display:inline-block">${esc(t.email)}</span></td>
           <td>${t.halaqas}</td><td><b>${t.quizzes}</b></td>
           <td class="muted" style="font-size:.8rem">${ago(t.seen)}</td></tr>`).join('')}
@@ -5309,7 +5315,7 @@ async function screenCenterHalaqa(cid, hid){
   <div class="card fade">
     <h3>👦 الطلاب — بنقاط الأسبوع</h3>
     ${mem.length ? `<table><tr><th>#</th><th>الطالب</th><th>نقاط الأسبوع</th><th>محفوظ</th><th>آخر نشاط</th></tr>
-      ${mem.map((m,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(m.name)}</td>
+      ${mem.map((m,i)=>`<tr><td>${rankIc(i)}</td><td>${esc(m.name)}</td>
         <td><b>${m.pts}</b></td>
         <td class="muted" style="font-size:.78rem">${m.memo?esc((QURAN[m.memo.sn]||{}).nm||'')+' '+m.memo.to:'—'}</td>
         <td class="muted" style="font-size:.78rem">${ago(m.last)}</td></tr>`).join('')}
@@ -6184,7 +6190,7 @@ function screenPath(){
   const lv = myLevel();
   app.innerHTML = `
   <div class="hdr"><h2>🏝️ طريق الحفظ</h2>
-    <div class="row" style="gap:6px"><span class="pill">${lv.cur.e} ${doneCount}/${PATH.length}</span>
+    <div class="row" style="gap:6px"><span class="pill">${lvIc(lv.cur,20)} ${doneCount}/${PATH.length}</span>
     <button class="btn ghost sm" id="hm">🏠</button></div></div>
   <div class="card fade center" style="padding:12px">
     <p class="muted" style="margin:0;font-size:.85rem">امشِ في الطريق سورة سورة من الناس للنبأ — أو انطّ لأي محطة تحبها</p>
@@ -6498,7 +6504,7 @@ function screenDailyEnd(){
     <div>${ic('daily',74)}</div>
     <h2>تحدي اليوم خلص!</h2>
     <p><b>${p.right}</b> من ${G.chal.length} صح · 🏅 ${p.score} نقطة</p>
-    <div style="font-size:2rem;color:var(--gold)">🔥 سلسلتك: ${P.streak} ${P.streak===1?'يوم':'أيام'}</div>
+    <div style="font-size:2rem;color:var(--gold)">${flameIc(40)} سلسلتك: ${P.streak} ${P.streak===1?'يوم':'أيام'}</div>
     <p class="muted">ارجع بكرة عشان تحافظ على السلسلة!</p>
   </div>
   <div class="center"><button class="btn" id="hm">🏠 الرئيسية</button></div>`;
@@ -6983,7 +6989,7 @@ function screenBoard(surah){
   <div class="hdr"><h2>🏆 سجل الأبطال — ${esc(surah.name)}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade">
     ${rows.length? `<table><tr><th>#</th><th>الاسم</th><th>النقاط</th><th>⭐</th><th>التاريخ</th></tr>
-      ${rows.map((r,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(r.name)}</td><td><b>${r.score}</b></td><td>${r.stars||'-'}</td><td class="muted" style="font-size:.8rem">${esc(r.date)}</td></tr>`).join('')}
+      ${rows.map((r,i)=>`<tr><td>${rankIc(i)}</td><td>${esc(r.name)}</td><td><b>${r.score}</b></td><td>${r.stars||'-'}</td><td class="muted" style="font-size:.8rem">${esc(r.date)}</td></tr>`).join('')}
       </table>` : '<p class="muted center">مفيش نتايج لسه… كن أول بطل! 🌟</p>'}
   </div>
   <div class="center row">
@@ -7527,7 +7533,7 @@ function screenFinal(){
   <div class="card fade">
     <h3>الترتيب النهائي</h3>
     <table><tr><th>#</th><th>اللاعب</th><th>النقاط</th><th>صح</th><th>خطأ</th></tr>
-    ${rank.map((p,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(p.name)}</td><td><b>${p.score}</b></td><td>${p.right}</td><td>${p.wrong}</td></tr>`).join('')}</table>
+    ${rank.map((p,i)=>`<tr><td>${rankIc(i)}</td><td>${esc(p.name)}</td><td><b>${p.score}</b></td><td>${p.right}</td><td>${p.wrong}</td></tr>`).join('')}</table>
   </div>
   <div class="card fade center">
     <div class="ayah">وَلَقَدْ يَسَّرْنَا ٱلْقُرْءَانَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍۢ<span class="num">17</span></div>
@@ -8150,7 +8156,7 @@ async function screenGroups(sel){
     </div>
     <table><tr><th>#</th><th>الطالب</th><th>النقاط</th><th>صح</th><th>غلط</th></tr>
       ${(qz.players||[]).filter(p=>!p.h).sort((a,b)=>b.score-a.score).map((p,i)=>
-        `<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${avatarOf(p,26)} ${esc(dispName(p))}</td>
+        `<tr><td>${rankIc(i)}</td><td>${avatarOf(p,26)} ${esc(dispName(p))}</td>
          <td><b>${p.score}</b></td><td>${p.c}</td><td>${p.w}</td></tr>`).join('')}
     </table>
   </div>`).join('')}`}
@@ -8264,7 +8270,7 @@ function renderOnlineEnd(){
     <div style="font-size:3.4rem">🏆</div>
     <h2>نتيجة المسابقة</h2>
     <table><tr><th>#</th><th>اللاعب</th><th>النقاط</th></tr>
-      ${ps.map((p,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||(i+1)}</td><td>${esc(p.emoji||'🙂')} ${esc(p.name)}</td><td><b>${p.score||0}</b></td></tr>`).join('')}
+      ${ps.map((p,i)=>`<tr><td>${rankIc(i)}</td><td>${esc(p.emoji||'🙂')} ${esc(p.name)}</td><td><b>${p.score||0}</b></td></tr>`).join('')}
     </table>
     ${host?`<p class="muted" style="font-size:.85rem">💾 النتيجة اتسجلت تلقائيًا في سجلّ مجموعاتك (${esc((R.data.settings||{}).grp||'عام')})</p>`:''}
   </div>

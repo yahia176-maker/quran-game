@@ -444,6 +444,8 @@ A pair of round friendly glasses with a teal frame. Single object icon, square 1
 
 ## ٩) الشارات والمستويات
 
+**خلصوا واتركّبوا: `lv-6` التاج، `bd-bronze`، `bd-silver`، `bd-gold`، `bd-streak` الشعلة.** فاضل: `lv-1` لحد `lv-5` و`bd-shield`.
+
 **`lv-1`**
 
 ```
