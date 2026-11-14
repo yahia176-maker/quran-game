@@ -258,19 +258,34 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 @media (max-height:700px){ .startTalk p{display:none} .startTalk{margin-bottom:6px} .startTalk img{height:46px}
   .charpick .kidPick{height:46px} .startCard{padding:10px 12px} .startCard h3{margin:4px 0}
   .startCard #roleHint{display:none} .startCard #mk{padding:10px 26px} .startLinks{margin-top:6px} }
-/* شاشة عريضة: الرسمة لوحة كبيرة على الشمال بتدوب في سما ونجيلة، والكارت يمين في النص */
+.startKids{display:none}
+/* شاشة عريضة: الجنينة مالية الشاشة كلها بدرجة أخف، الولد شمال والبنتين يمين، والكارت في النص */
 @media (min-width:900px) and (min-aspect-ratio:11/10){
-  .startScreen{flex-direction:row;align-items:center;justify-content:flex-start}
-  .startScreen{background:linear-gradient(180deg,#bfe6fb 0%,#e2f4fd 26%,#dbf0c4 38%,#cbeaa6 56%,#b9e191 100%)}
-  :root[data-theme="warm"] .startScreen{background:linear-gradient(180deg,#3d6f86 0%,#4a7f6a 34%,#4d7a35 100%)}
-  .startArt{position:absolute;left:0;top:0;bottom:0;width:min(56vw,108vh);min-height:0;background:none;
-    -webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
-  .startArt img{top:0;bottom:auto;height:100%;object-fit:cover;object-position:50% 12%}
-  .startSide{flex:0 0 auto;width:min(440px,40vw);height:100%;align-items:center;margin:0 max(20px,5vw) 0 0;padding:16px 0}
+  .startScreen{--cw:min(440px,36vw); --zc:calc((50vw - var(--cw) / 2) / 2); --kh:min(48vh,21vw);
+    flex-direction:row;align-items:center;justify-content:center;
+    background:linear-gradient(rgba(255,255,255,.26),rgba(255,255,255,.26)),url(art/garden.webp) center 60%/cover no-repeat}
+  :root[data-theme="warm"] .startScreen{background:linear-gradient(rgba(22,16,34,.58),rgba(22,16,34,.58)),url(art/garden.webp) center 60%/cover no-repeat}
+  .startArt{display:none}
+  .startKids{display:block;position:absolute;inset:0;pointer-events:none}
+  .startKids .sk{position:absolute;bottom:5vh}
+  .startKids .sk::after{content:'';position:absolute;left:12%;right:12%;bottom:-10px;height:22px;z-index:-1;
+    background:radial-gradient(ellipse at center,rgba(30,70,20,.38),transparent 68%)}
+  .startKids img{display:block;height:var(--kh);width:auto;animation:kidHop 2.2s ease-in-out infinite}
+  .startKids .skB{left:var(--zc);transform:translateX(-50%)}
+  .startKids .skB img{height:min(52vh,24vw)}
+  .startKids .skG{right:calc(var(--zc) + var(--kh) * .29);transform:translateX(50%)}
+  .startKids .skH{right:calc(var(--zc) - var(--kh) * .29);transform:translateX(50%)}
+  .startKids .skG img,.startKids .skH img{animation-name:kidHopM}
+  .startKids .skG img{animation-delay:-.7s}
+  .startKids .skH img{animation-delay:-1.4s}
+  :root[data-theme="warm"] .startKids img{filter:brightness(.78)}
+  .startSide{flex:0 0 auto;width:var(--cw);height:100%;align-items:center;margin:0;padding:16px 0}
   .startCard{padding:18px 20px;box-shadow:0 18px 50px rgba(30,60,30,.35)}
   .startTalk img{height:78px}
   .charpick .kidPick{height:76px}
 }
+@keyframes kidHop{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes kidHopM{0%,100%{transform:scaleX(-1) translateY(0)}50%{transform:scaleX(-1) translateY(-12px)}}
 /* رسومات السور */
 .art{color:var(--gold);display:block;margin:0 auto;filter:drop-shadow(0 4px 10px var(--sh1))}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
@@ -2157,6 +2172,11 @@ function screenProfiles(mode){
   app.innerHTML = `
   <div class="startScreen">
     <div class="startArt" aria-hidden="true"><img src="art/hero-m.webp" alt=""></div>
+    <div class="startKids" aria-hidden="true">
+      <div class="sk skB"><img src="art/boy.webp" alt=""></div>
+      <div class="sk skG"><img src="art/girl.webp" alt=""></div>
+      <div class="sk skH"><img src="art/hijab.webp" alt=""></div>
+    </div>
     <div class="startSide"><div class="card startCard fade">
       <div class="startTalk">
         <img src="art/lantern.webp" alt="">
