@@ -1812,7 +1812,7 @@ const BADGES = [
  {id:'c1000',   em:'🥇', img:'bd-gold', t:'١٠٠٠ إجابة صحيحة', f:p=>p.stats.c>=1000},
  {id:'streak3', em:'🔥', img:'bd-streak', t:'٣ أيام متواصلة',   f:p=>p.streak>=3},
  {id:'streak7', em:'🌋', t:'٧ أيام متواصلة',   f:p=>p.streak>=7},
- {id:'streak30',em:'🏆', t:'٣٠ يومًا متواصلًا', f:p=>p.streak>=30},
+ {id:'streak30',em:'🏆', img:'lv-5', t:'٣٠ يومًا متواصلًا', f:p=>p.streak>=30},
  {id:'stage3',  em:'⭐', t:'مرحلة بثلاث نجوم', f:p=>Object.values(p.stars).some(a=>(a||[]).some(s=>s===3))},
  {id:'juz1',    em:'📗', t:'أتممت جزءًا كاملًا', f:p=>Object.keys(p.jdone||{}).length>=1},
  {id:'juz5',    em:'📚', t:'أتممت ٥ أجزاء',     f:p=>Object.keys(p.jdone||{}).length>=5},
@@ -2690,7 +2690,7 @@ const LEVELS = [
   {n:'نجم صاعد',    e:'⭐', img:'lv-2', min:10},
   {n:'حافظ صغير',   e:'📗', img:'lv-3', min:30},
   {n:'حافظ',        e:'🏅', img:'lv-4', min:60},
-  {n:'حافظ متقن',   e:'🏆', min:100},
+  {n:'حافظ متقن',   e:'🏆', img:'lv-5', min:100},
   {n:'نجم القرآن',  e:'👑', img:'lv-6', min:180}
 ];
 function totalStars(){
