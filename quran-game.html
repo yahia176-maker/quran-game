@@ -1806,7 +1806,7 @@ function touchStreak(){
 
 /* ===================== الأوسمة ===================== */
 const BADGES = [
- {id:'first',   em:'🌱', t:'أول إجابة صحيحة',   f:p=>p.stats.c>=1},
+ {id:'first',   em:'🌱', img:'lv-1', t:'أول إجابة صحيحة',   f:p=>p.stats.c>=1},
  {id:'c50',     em:'🥉', img:'bd-bronze', t:'٥٠ إجابة صحيحة',   f:p=>p.stats.c>=50},
  {id:'c200',    em:'🥈', img:'bd-silver', t:'٢٠٠ إجابة صحيحة',  f:p=>p.stats.c>=200},
  {id:'c1000',   em:'🥇', img:'bd-gold', t:'١٠٠٠ إجابة صحيحة', f:p=>p.stats.c>=1000},
@@ -2421,7 +2421,7 @@ function screenStudentHome(){
     <button class="pill" id="whoBtn" title="غيّر اللاعب"
       style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
       ${useImg()?`<img class="ava avaS" src="${esc(P.img)}" alt="">`:`<span>${lvIc(lv.cur,22)}</span>`}
-      <b>${esc(P.name)}</b> · ${flameIc(20)} ${P.streak||0}${(P.shield||0)?' 🛡️'+P.shield:''}
+      <b>${esc(P.name)}</b> · ${flameIc(20)} ${P.streak||0}${(P.shield||0)?' '+artIc('bd-shield',20)+P.shield:''}
       ${allProfiles().length>1?'<span style="opacity:.7;font-size:.8em">🔄</span>':''}
     </button>
     <button class="btn ghost sm" id="cog">⚙️</button>
@@ -2686,10 +2686,10 @@ const masteredSurahs = () => PATH.filter(sn => surStars(sn) >= 2);
 
 /* ============ ⭐ المستويات ============ */
 const LEVELS = [
-  {n:'مبتدئ',       e:'🌱', min:0},
-  {n:'نجم صاعد',    e:'⭐', min:10},
-  {n:'حافظ صغير',   e:'📗', min:30},
-  {n:'حافظ',        e:'🏅', min:60},
+  {n:'مبتدئ',       e:'🌱', img:'lv-1', min:0},
+  {n:'نجم صاعد',    e:'⭐', img:'lv-2', min:10},
+  {n:'حافظ صغير',   e:'📗', img:'lv-3', min:30},
+  {n:'حافظ',        e:'🏅', img:'lv-4', min:60},
   {n:'حافظ متقن',   e:'🏆', min:100},
   {n:'نجم القرآن',  e:'👑', img:'lv-6', min:180}
 ];
