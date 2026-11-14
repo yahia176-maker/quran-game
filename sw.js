@@ -1,5 +1,5 @@
 /* رحلة القرآن — Service Worker: يفتح بدون إنترنت بعد أول زيارة */
-const C = 'qg-v42';
+const C = 'qg-v43';
 const CORE = ['./', 'index.html', 'guide.html', 'guide-child.html', 'guide-quick.html', 'guide-manager.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'art/hero-m.webp', 'art/boy.webp', 'art/girl.webp', 'art/hijab.webp', 'art/lantern.webp'];
 self.addEventListener('install', e => {
