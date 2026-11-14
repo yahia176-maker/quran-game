@@ -278,6 +278,14 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .startCard input[type=text]{margin-bottom:6px}
 .startCard .charpick{margin-top:0;gap:8px}
 .startCard .charpick button{padding:6px 4px}
+/* التلات شخصيات دايمًا في صف واحد في شاشة البداية — على الموبايل الضيق كانوا بينزلوا سطرين
+   وزر «يلا بينا» بيطلع بره الشاشة */
+.startCard .charpick{grid-template-columns:repeat(3,1fr)}
+@media (max-width:350px){ .startCard .charpick{gap:6px} .startCard .charpick button{padding:5px 2px;border-radius:16px}
+  .startCard .charpick span{font-size:.8rem} }
+@media (max-height:600px){ .startArt{min-height:70px} .startCard .charpick .kidPick{height:38px}
+  .startCard h3{font-size:.9rem;margin:3px 0} .startCard .seg .btn{padding:7px 2px} .startCard input[type=text]{padding:9px 12px}
+  .startLinks .btn{padding:7px 12px;font-size:.78rem} }
 .startCard .seg{margin-bottom:6px}
 .startCard .seg .btn{padding:9px 4px;font-size:.86rem}
 .startList{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-bottom:10px}
@@ -3025,8 +3033,9 @@ async function screenMyHalaqas(){
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   $('#hgo').onclick=async()=>{ Snd.click();
     try{ const v=await joinHalaqa($('#hcode').value); if(PENDING_HAL===v_hid($('#hcode'))) clearPendingHal(); Snd.win(); toast('🎉 انضممت لـ '+v.name); screenMyHalaqas(); }
-    catch(e){ Snd.wrong(); console.error('halaqa join', e);
+    catch(e){ Snd.wrong();
       const m = e && e.message, c = String(e && e.code || '');
+      if(m!=='notfound' && m!=='bad' && m!=='own') console.error('halaqa join', e);
       toast(m==='notfound' ? '❌ مفيش حلقة بالكود ده' : m==='bad' ? '✏️ اكتب كود الحلقة (٥ حروف)'
         : m==='own' ? '👩‍🏫 دي حلقتك أنت — ابعت الكود لطلابك'
         : c.indexOf('PERMISSION')>=0 ? '⛔ الحلقة رفضت الانضمام — بلّغ معلمك' : '⚠️ محتاج إنترنت'); } };
@@ -3035,8 +3044,14 @@ async function screenMyHalaqas(){
   app.querySelectorAll('.ci').forEach(b=>b.onclick=async()=>{ Snd.click();
     showCenterCard(await centerCard(b.dataset.c)); });
   app.querySelectorAll('.jl').forEach(b=>b.onclick=async()=>{ Snd.click(); if(await fbInit()) joinRoom(b.dataset.c); });
-  app.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{ if(!confirm('تخرج من الحلقة دي؟')) return;
-    P.halaqas=(P.halaqas||[]).filter(x=>x.hid!==b.dataset.h); saveP(); watchHalaqas(); screenMyHalaqas(); });
+  app.querySelectorAll('.lv').forEach(b=>b.onclick=async()=>{ if(!confirm('تخرج من الحلقة دي؟')) return;
+    const hid = b.dataset.h;
+    P.halaqas=(P.halaqas||[]).filter(x=>x.hid!==hid); saveP();
+    /* نشيل سجله من عند المعلم كمان — قبل كده كان بيفضل ظاهر في قائمة الحلقة بعد ما يخرج.
+       (جهاز مشترك: السجل ممكن يكون باسم أخوه — مانشيلوش إلا لو بتاعه) */
+    try{ if(fbReady && fbUser){ const r = memRef(hid).child(fbUser.uid); const m = (await r.once('value')).val();
+      if(m && (!m.pid || m.pid === P.id)) await r.remove(); } }catch(e){}
+    watchHalaqas(); screenMyHalaqas(); });
   app.querySelectorAll('.lb').forEach(b=>b.onclick=()=>{ Snd.click(); screenLeaderboard(b.dataset.h); });
 }
 
@@ -3195,11 +3210,7 @@ async function screenTeacherHome(){
   $('#addh').onclick=async()=>{ const nm=($('#nh').value||'').trim(); if(!nm) return toast('اكتب اسم الحلقة');
     if(fbUser && fbUser.isAnonymous){ Snd.wrong();
       toast('🔒 أمّن حسابك بالإيميل الأول (من ⚙️ الإعدادات) عشان تقدر تعمل حلقات'); return; }
-    Snd.click(); const hid=newHid();
-    await halRef(hid).set({ t:fbUser.uid, tname:t.name, name:nm, created:Date.now(),
-      cid: t.cid || null });
-    t.hal=(t.hal||[]).concat(hid); t.groups=(t.groups||[]).concat(nm); await saveTeacher(t);
-    if(t.cid) mirrorHalaqa(t.cid, hid);
+    Snd.click(); const hid = await createHalaqa(t, nm);
     Snd.win(); toast('🎉 اتعملت — ابعت رابطها لطلابك'); screenHalaqa(hid); };
 }
 
@@ -4508,7 +4519,8 @@ function avatarOf(o, size){
   size = size || 30;
   if(o && o.img) return `<img class="ava avaS" src="${esc(o.img)}" alt=""
     style="width:${size}px;height:${size}px">`;
-  return `<span style="font-size:${Math.round(size*0.8)}px;line-height:1">${(CHARS[o&&o.char]||CHARS.boy).em}</span>`;
+  const kid = KID_ART[o && o.char] || KID_ART.boy;      /* نفس رسمة الشخصية اللي الطفل اختارها */
+  return `<img src="${kid}" alt="" style="height:${size}px;width:auto;vertical-align:middle">`;
 }
 function setAvatarImg(url){
   if(!P) return;
@@ -4698,6 +4710,12 @@ function screenAccountLogin(){
     try{
       await teacherLogin(em, pw);
       const p = await pullCloudProfile();
+      /* معلم داخل من جهاز جديد: حسابه معروف إنه معلم — مانسألوش «إنت مين؟» تاني */
+      if(WANT_TEACHER || !myRole()){
+        let isT = WANT_TEACHER;
+        try{ if(!isT) isT = (await firebase.database().ref('users/'+fbUser.uid+'/teacher').once('value')).exists(); }catch(e){}
+        WANT_TEACHER = false; if(isT) setRole('teacher');
+      }
       Snd.win(); toast(p ? ('🎉 أهلًا ' + p.name + ' — رجّعنالك تقدّمك') : '🔐 دخلت');
       ASKED_WHO = true; screenHome();
     }catch(e){ Snd.wrong(); toast('⚠️ ' + authMsg(e)); } };
@@ -5325,12 +5343,12 @@ async function screenCenterHalaqa(cid, hid){
   const mem = Object.entries(mv).map(([uid,m])=>({ uid: uid, name: m.name||'—',
     pts: (m.wk && m.wk.k===k) ? (m.wk.p||0) : 0, last: m.last||0,
     memo: m.memo||null })).sort((a,b)=>b.pts-a.pts);
-  const活 = mem.filter(x => now - x.last < 7*864e5).length;
+  const activeN = mem.filter(x => now - x.last < 7*864e5).length;
   app.innerHTML = `
   <div class="hdr"><h2>🏫 ${esc(v.name||'—')}</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="okpi">
     <div class="k"><b>${mem.length}</b><span>طالب</span></div>
-    <div class="k"><b>${活}</b><span>نشط الأسبوع</span></div>
+    <div class="k"><b>${activeN}</b><span>نشط الأسبوع</span></div>
     <div class="k"><b>${(v.hw&&v.hw.items)?v.hw.items.length:0}</b><span>سورة واجب</span></div>
   </div>
   <div class="card fade">
@@ -7813,6 +7831,16 @@ async function loadTeacher(){
   return s.val();
 }
 function saveTeacher(t){ indexTeacher(t); return firebase.database().ref('users/'+fbUser.uid+'/teacher').set(t); }
+/* إنشاء حلقة فعلية (برابط وأعضاء) — مستخدمة من شاشة المعلم ومن التسجيل الأول */
+async function createHalaqa(t, nm){
+  const hid = newHid();
+  await halRef(hid).set({ t:fbUser.uid, tname:t.name, name:nm, created:Date.now(), cid: t.cid || null });
+  t.hal = (t.hal||[]).concat(hid);
+  if((t.groups||[]).indexOf(nm) < 0) t.groups = (t.groups||[]).concat(nm);
+  await saveTeacher(t);
+  if(t.cid) mirrorHalaqa(t.cid, hid);
+  return hid;
+}
 
 /* --- شاشة الطالب: دخول مسابقة بالكود --- */
 function screenOnline(){
@@ -7895,8 +7923,14 @@ function screenTeacherSignup(){
     const name=($('#tname').value||'').trim(), g=($('#tgrp').value||'').trim();
     if(!name) return toast('اكتب اسمك الأول');
     if(!g) return toast('اكتب اسم الحلقة');
-    await saveTeacher({name, groups:[g], created:Date.now()});
+    const t = {name, groups:[g], created:Date.now()};
+    await saveTeacher(t);
     Snd.correct(); toast('🎉 أهلًا بيك يا '+name);
+    /* الاسم اللي كتبه «اسم أول حلقة» لازم يبقى حلقة فعلًا برابط جاهز — قبل كده كان
+       بيتسجل اسم بس والمعلم يلاقي «٠ حلقة» ومفيش رابط يبعته */
+    if(fbUser && !fbUser.isAnonymous){
+      try{ const hid = await createHalaqa(t, g); return screenHalaqa(hid); }catch(e){ console.error('first halaqa', e); }
+    }
     screenTeacher(); };
 }
 function screenTeacherPanel(t){
