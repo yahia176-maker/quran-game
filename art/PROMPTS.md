@@ -408,6 +408,8 @@ A small green plant growing from a pot with a tiny watering can beside it. Singl
 
 ## ٨) الإكسسوارات
 
+**الخمسة خلصوا واتركّبوا في اللعبة.** مش محتاج تولّدهم تاني.
+
 **`gear-cap`**
 
 ```
