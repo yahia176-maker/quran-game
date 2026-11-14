@@ -261,6 +261,7 @@ pre{background:var(--card);color:var(--ink);border:1px solid var(--line);border-
 .startTalk img{height:64px!important;width:auto;flex:none;animation:floaty 3.4s ease-in-out infinite}
 .startTalk h1{margin:0;font-size:clamp(1.35rem,5vw,1.9rem)}
 .startTalk p{margin:0;line-height:1.6;font-size:.86rem}
+.invite{background:color-mix(in srgb,var(--gold) 16%,transparent);border:1.5px dashed var(--gold);border-radius:12px;padding:6px 10px;margin:0 0 8px;font-size:.8rem;line-height:1.6;text-align:center}
 .startCard h3{font-size:1rem;margin:8px 0 6px}
 .startCard input[type=text]{margin-bottom:6px}
 .startCard .charpick{margin-top:0;gap:8px}
@@ -2229,6 +2230,7 @@ function screenProfiles(mode){
         <div><h1>رحلة القرآن</h1>
           <p>أهلًا! أنا <b style="color:var(--gold)">نور</b> ✨ هنحفظ القرآن سوا ونجمع نجوم.</p></div>
       </div>
+      ${inviteHTML()}
       ${form ? `
       <input type="text" id="npName" maxlength="14" placeholder="اكتب اسمك...">
       <div class="charpick" id="chRow">
@@ -2819,26 +2821,100 @@ async function joinHalaqa(hid){
   const s = await halRef(hid).once('value');
   if(!s.exists()) throw new Error('notfound');
   const v = s.val();
+  if(v.t === fbUser.uid) throw new Error('own');   /* المعلم فتح رابط حلقته — مايتسجلش طالب فيها */
   await memRef(hid).child(fbUser.uid).update({ name:P.name, char:P.char||'boy', pid:P.id, joined:Date.now(), last:Date.now() });
   P.halaqas = (P.halaqas||[]).filter(x=>x.hid!==hid);
-  P.halaqas.push({ hid, name:v.name, tname:v.tname||'' });
+  P.halaqas.push({ hid, name:v.name, tname:v.tname||'', uid:fbUser.uid });
   saveP();
   watchHalaqas();
   return v;
 }
 /* يراقب الحلقات: مسابقة شغالة أو واجب جديد */
 let halWatch = [];
-/* ينضم لرابط الحلقة أول ما يتوفر ملف شخصي واتصال — يشتغل مهما كان ترتيب الخطوات */
+/* ===== دعوة الحلقة (رابط ?h=CODE) =====
+   الكود بيتحفظ على الجهاز لحد ما الانضمام ينجح فعلًا: لو النت وقع أو الطفل قفل
+   قبل ما يكتب اسمه، الدعوة تفضل مستنياه المرة الجاية بدل ما تضيع من غير أثر. */
+const PH_KEY = LS + '_pendhal';
+const v_hid = el => ((el && el.value) || '').trim().toUpperCase();
+let PENDING_HAL = null, PH_INFO = null, PH_BUSY = false, PH_TRIES = 0;
+function readPendingHal(){
+  let c = '';
+  try{ c = (new URLSearchParams(location.search)).get('h') || ''; }catch(e){}
+  c = c.trim().toUpperCase();
+  if(/^[A-Z0-9]{4,8}$/.test(c)){
+    PENDING_HAL = c;
+    try{ localStorage.setItem(PH_KEY, c); }catch(e){}
+    try{ history.replaceState({}, '', location.pathname); }catch(e){}
+    return;
+  }
+  try{ c = localStorage.getItem(PH_KEY) || ''; }catch(e){ c = ''; }
+  PENDING_HAL = /^[A-Z0-9]{4,8}$/.test(c) ? c : null;
+}
+function clearPendingHal(){
+  PENDING_HAL = null; PH_INFO = null; PH_TRIES = 0;
+  try{ localStorage.removeItem(PH_KEY); }catch(e){}
+  const b = document.getElementById('invBox'); if(b) b.remove();
+}
+/* سطر الدعوة في شاشة البداية — بيتحدّث في مكانه من غير ما نعيد رسم الفورمة */
+function inviteHTML(){
+  if(!PENDING_HAL) return '';
+  return '<div class="invite" id="invBox">📩 <span id="invTxt">' + inviteText() + '</span></div>';
+}
+function inviteText(){
+  return PH_INFO
+    ? 'معلمك دعاك لحلقة <b>' + esc(PH_INFO.name||'') + '</b>' + (PH_INFO.tname ? ' (' + esc(PH_INFO.tname) + ')' : '') + ' — هتنضم أول ما تدخل'
+    : 'معلمك دعاك لحلقة — هتنضم أول ما تدخل';
+}
+async function peekPendingHal(){
+  if(!PENDING_HAL || !fbReady) return;
+  if(P && !document.querySelector('.startScreen')) return;   /* الانضمام نفسه هيبلّغ بالنتيجة */
+  const code = PENDING_HAL;
+  try{
+    const s = await halRef(code).once('value');
+    if(code !== PENDING_HAL) return;
+    if(!s.exists()){ clearPendingHal();
+      infoMsg('رابط الحلقة مش شغال', 'الحلقة دي مش موجودة — ممكن المعلم مسحها أو الرابط ناقص. اطلب من معلمك <b>رابط جديد</b>.', 'think'); return; }
+    const v = s.val() || {};
+    PH_INFO = { name: v.name || '', tname: v.tname || '' };
+    const t = document.getElementById('invTxt'); if(t) t.innerHTML = inviteText();
+  }catch(e){}
+}
+/* ينضم للحلقة أول ما يتوفر ملف شخصي واتصال — يشتغل مهما كان ترتيب الخطوات */
 async function tryPendingHal(){
-  if(!PENDING_HAL || !P || !fbReady) return false;
-  const code = PENDING_HAL; PENDING_HAL = null;
+  if(!PENDING_HAL || !P || !fbReady || PH_BUSY) return false;
+  /* لسه في شاشة «مين هيلعب؟» — نستنى لحد ما الطفل يختار اسمه، عشان الدعوة
+     ماتتسجلش باسم أخوه اللي لعب آخر مرة على نفس الجهاز */
+  if(document.querySelector('.startScreen')) return false;
+  PH_BUSY = true;
+  const code = PENDING_HAL;
   try{
     const v = await joinHalaqa(code);
+    clearPendingHal();
     if(!myRole()) setRole('student');
-    Snd.win(); toast('🎉 انضممت لحلقة ' + v.name);
-    watchHalaqas(); screenHome(); return true;
-  }catch(e){ toast(e.message==='notfound'?'❌ رابط الحلقة مش موجود':'⚠️ محتاج إنترنت للانضمام'); return false; }
+    Snd.win(); watchHalaqas(); screenHome();
+    infoMsg('🎉 انضممت للحلقة',
+      'أنت دلوقتي في حلقة <b>' + esc(v.name||'') + '</b>' + (v.tname ? ' مع <b>' + esc(v.tname) + '</b>' : '') + '.<br>'
+      + 'واجبات المعلم والمسابقات هتلاقيها في زر <b>«حلقتي»</b> في الصفحة الرئيسية.', 'cheer');
+    return true;
+  }catch(e){
+    const m = e && e.message;
+    if(m === 'notfound' || m === 'bad'){ clearPendingHal();
+      infoMsg('رابط الحلقة مش شغال', 'الحلقة دي مش موجودة — ممكن المعلم مسحها أو الرابط ناقص. اطلب من معلمك <b>رابط جديد</b>.', 'think'); }
+    else if(m === 'own'){ clearPendingHal(); toast('👩‍🏫 ده رابط حلقتك — ابعته لطلابك'); }
+    else {
+      /* نت واقع أو رفض مؤقت: الدعوة تفضل محفوظة ونحاول تاني */
+      PH_TRIES++;
+      console.error('halaqa join', e);
+      if(PH_TRIES === 1) toast('⚠️ لسه ما انضمتش للحلقة — هنحاول تاني أول ما النت يرجع');
+    }
+    return false;
+  }finally{ PH_BUSY = false; }
 }
+/* النت رجع والدعوة لسه مستنية → نحاول تاني */
+window.addEventListener('online', function(){
+  if(!PENDING_HAL) return;
+  fbInit().then(function(ok){ if(!ok) return; peekPendingHal(); tryPendingHal(); });
+});
 function watchHalaqas(){
   if(!fbReady || !P) return;
   halWatch.forEach(r=>{ try{ r.off(); }catch(e){} }); halWatch = [];
@@ -2915,14 +2991,18 @@ async function screenMyHalaqas(){
   </div>
   <div class="card fade center">
     <h3>➕ انضم لحلقة</h3>
-    <input type="text" id="hcode" maxlength="5" placeholder="كود الحلقة" style="text-align:center;font-size:1.4rem;letter-spacing:6px;direction:ltr">
+    <input type="text" id="hcode" maxlength="5" placeholder="كود الحلقة" value="${esc(PENDING_HAL||'')}" style="text-align:center;font-size:1.4rem;letter-spacing:6px;direction:ltr">
     <button class="btn" id="hgo">انضم</button>
   </div>
   <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   $('#hgo').onclick=async()=>{ Snd.click();
-    try{ const v=await joinHalaqa($('#hcode').value); Snd.win(); toast('🎉 انضممت لـ '+v.name); screenMyHalaqas(); }
-    catch(e){ Snd.wrong(); toast(e.message==='notfound'?'❌ مفيش حلقة بالكود ده':'⚠️ محتاج إنترنت'); } };
+    try{ const v=await joinHalaqa($('#hcode').value); if(PENDING_HAL===v_hid($('#hcode'))) clearPendingHal(); Snd.win(); toast('🎉 انضممت لـ '+v.name); screenMyHalaqas(); }
+    catch(e){ Snd.wrong(); console.error('halaqa join', e);
+      const m = e && e.message, c = String(e && e.code || '');
+      toast(m==='notfound' ? '❌ مفيش حلقة بالكود ده' : m==='bad' ? '✏️ اكتب كود الحلقة (٥ حروف)'
+        : m==='own' ? '👩‍🏫 دي حلقتك أنت — ابعت الكود لطلابك'
+        : c.indexOf('PERMISSION')>=0 ? '⛔ الحلقة رفضت الانضمام — بلّغ معلمك' : '⚠️ محتاج إنترنت'); } };
   app.querySelectorAll('.hwL').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); startListen(+b.dataset.s); });
   app.querySelectorAll('.hwP').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.click(); screenSurahOpts(+b.dataset.s); });
   app.querySelectorAll('.ci').forEach(b=>b.onclick=async()=>{ Snd.click();
@@ -3200,7 +3280,7 @@ async function screenHalaqa(hid){
       await halRef(hid).update({ days: dd.length?dd:null, tm: tm||null }).catch(()=>{});
       toast('📅 اتحفظت'); screenHalaqa(hid); }); };
   $('#cp').onclick=()=>{ navigator.clipboard?.writeText(halLink(hid)); Snd.correct(); toast('📋 اتنسخ!'); };
-  $('#wa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent('انضم لحلقة '+(v.name||'')+' في لعبة رحلة القرآن:\n'+halLink(hid)),'_blank'); };
+  $('#wa').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent('انضم لحلقة '+(v.name||'')+' في لعبة رحلة القرآن:\n'+halLink(hid)+'\n\nلو الرابط ما دخّلكش الحلقة: افتح اللعبة ← حلقتي ← اكتب الكود: '+hid),'_blank'); };
   let items = ((v.hw||{}).items||[]).slice();
   app.querySelectorAll('.hws').forEach(b=>b.onclick=()=>{ const sn=+b.dataset.sn;
     if(items.includes(sn)){ items=items.filter(x=>x!==sn); b.classList.remove('on'); }
@@ -5353,7 +5433,14 @@ async function checkMyHalaqas(){
   let changed = false;
   for(const x of ((P.halaqas || []).slice())){
     try{
-      const s = await memRef(x.hid).child(fbUser.uid).once('value');
+      let s = await memRef(x.hid).child(fbUser.uid).once('value');
+      if(!s.exists()){
+        /* هوية الجهاز ممكن تتغير (معلم سجّل دخول/خروج على نفس الجهاز) — قبل ما نقول
+           «اتشلت» ندوّر على سجل الطفل نفسه (pid). لو موجود تفضل الحلقة عنده */
+        const all = await memRef(x.hid).once('value'); let mine = false;
+        all.forEach(c => { if(((c.val()||{}).pid) === P.id) mine = true; });
+        if(mine) continue;      /* لسه عضو — سجله بس تحت هوية الجهاز القديمة */
+      }
       if(!s.exists()){
         P.halaqas = (P.halaqas||[]).filter(y => y.hid !== x.hid); saveP();
         toast('🏫 اتشلت من حلقة ' + (x.name||'')); changed = true;
@@ -8210,15 +8297,17 @@ async function doInstall(){
     return; }
   if(isIOS()) alert('للتثبيت على الآيفون: دوس زر المشاركة (المربع والسهم) تحت في سفاري، ثم اختار «إضافة إلى الشاشة الرئيسية»');
 }
-bootProfile();
 /* رابط الحلقة: ?h=CODE — الطالب يفتحه مرة واحدة وتتسجل عنده للأبد */
-let PENDING_HAL = (new URLSearchParams(location.search)).get('h');
-if(PENDING_HAL) history.replaceState({},'',location.pathname);
+readPendingHal();
+bootProfile();
 if(FIREBASE_CONFIG) fbInit().then(async ok=>{ if(!ok) return;
   watchAnnouncement(); watchOwners(); ensureCode();
-  await tryPendingHal();
+  peekPendingHal();
+  const joined = await tryPendingHal();
   watchHalaqas();
-  screenHome();   /* نعيد الرسم بعد التعرف على الحساب والحلقات */
+  /* نعيد الرسم بعد التعرف على الحساب والحلقات — إلا لو الطفل لسه في شاشة البداية
+     بيكتب اسمه: إعادة الرسم كانت بتمسح اللي كتبه */
+  if(P && !joined && !document.querySelector('.startScreen')) screenHome();
   setTimeout(function(){
     Promise.all([pullTeacherMemo(), checkImgRemoved(), checkCenter(),
                  checkMyHalaqas(), centerAlive(), applyInbox()]).then(function(r){
