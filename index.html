@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1a2b4a">
+<meta name="theme-color" content="#3fa7d6">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -92,8 +92,13 @@ body{
    مرح → الجنينة · ليل دافئ → جنينة بالليل · المعلم → ساحة المسجد · لحظة الفوز → احتفال */
 body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:center top/cover no-repeat}
 :root[data-theme="marah"] body::before{background-image:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,.38)),url(art/bg-home-m.webp)}
+/* بستان وشروق: نفس الجنينة بغلالة دافية أتقل شوية عشان ألوانهم الهادية تفضل هي الغالبة */
+:root:not([data-theme]) body::before,
+:root[data-theme="sunrise"] body::before{background-image:linear-gradient(rgba(253,248,242,.55),rgba(253,248,242,.55)),url(art/bg-home-m.webp)}
 @media (min-width:900px) and (min-aspect-ratio:11/10){
   :root[data-theme="marah"] body::before{background-image:linear-gradient(rgba(255,255,255,.38),rgba(255,255,255,.38)),url(art/garden.webp);background-position:center}
+  :root:not([data-theme]) body::before,
+  :root[data-theme="sunrise"] body::before{background-image:linear-gradient(rgba(253,248,242,.55),rgba(253,248,242,.55)),url(art/garden.webp);background-position:center}
 }
 :root[data-theme="warm"] body::before{background-image:linear-gradient(rgba(22,15,32,.5),rgba(22,15,32,.5)),url(art/bg-night-m.webp)}
 :root[data-role="teacher"]:not([data-theme="warm"]) body::before{background-image:linear-gradient(rgba(255,255,255,.5),rgba(255,255,255,.5)),url(art/bg-teacher-w.webp);background-position:center}
@@ -1558,7 +1563,7 @@ const CHARS = {
    idle = نتيجة مش قوية → «بيفكر». الإكسسوار بيبان شارة جنب الطفل لأن كل رسمة بوضعية مختلفة. */
 const KID_MOOD = { happy:'happy', sad:'sad', idle:'think', think:'think', wave:'wave' };
 /* المعلم بيشوف نفسه برسمة معلم. «بنت» من غير حجاب مالهاش رسمة معلمة لسه فبتفضل برسمة البنت. */
-const TEACHER_ART = { boy:'art/teacher-man.webp', hijab:'art/teacher-woman.webp' };
+const TEACHER_ART = { boy:'art/teacher-man.webp', girl:'art/teacher-woman.webp', hijab:'art/teacher-woman.webp' };
 const teacherArt = (k, role) => (role==='teacher' && TEACHER_ART[k]) || '';
 function charSVG(k, mood, size){
   const key = CHARS[k] ? k : 'boy', c = CHARS[key];
@@ -1866,9 +1871,9 @@ const BADGES = [
  {id:'streak3', em:'🔥', img:'bd-streak', t:'٣ أيام متواصلة',   f:p=>p.streak>=3},
  {id:'streak7', em:'🌋', t:'٧ أيام متواصلة',   f:p=>p.streak>=7},
  {id:'streak30',em:'🏆', img:'lv-5', t:'٣٠ يومًا متواصلًا', f:p=>p.streak>=30},
- {id:'stage3',  em:'⭐', t:'مرحلة بثلاث نجوم', f:p=>Object.values(p.stars).some(a=>(a||[]).some(s=>s===3))},
- {id:'juz1',    em:'📗', t:'أتممت جزءًا كاملًا', f:p=>Object.keys(p.jdone||{}).length>=1},
- {id:'juz5',    em:'📚', t:'أتممت ٥ أجزاء',     f:p=>Object.keys(p.jdone||{}).length>=5},
+ {id:'stage3',  em:'⭐', img:'lv-2', t:'مرحلة بثلاث نجوم', f:p=>Object.values(p.stars).some(a=>(a||[]).some(s=>s===3))},
+ {id:'juz1',    em:'📗', img:'lv-3', t:'أتممت جزءًا كاملًا', f:p=>Object.keys(p.jdone||{}).length>=1},
+ {id:'juz5',    em:'📚', img:'ic-pick', t:'أتممت ٥ أجزاء',     f:p=>Object.keys(p.jdone||{}).length>=5},
  {id:'sur10',   em:'📖', t:'١٠ سور منفردة',     f:p=>Object.values(p.sstars).reduce((a,o)=>a+Object.keys(o||{}).length,0)>=10},
  {id:'rev20',   em:'🔁', t:'٢٠ مراجعة ناجحة',   f:p=>(p.revs||0)>=20},
 ];
@@ -2612,7 +2617,7 @@ function screenProgress(){
             :`<p class="muted" style="margin:0">وصلت لأعلى مستوى 👑</p>`}
   </div>
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(100px,1fr))">
-    ${[['⭐',lv.t,'نجمة'],['📖',done.length,'سورة'],['🎴',cardsOwned()+'/'+ALBUM_SET.length,'بطاقة'],[flameIc(44),P.streak||0,'يوم متواصل'],['✔️',(P.stats||{}).c||0,'إجابة صح']]
+    ${[[artIc('lv-2',44),lv.t,'نجمة'],[artIc('ic-pick',44),done.length,'سورة'],['<img class="ic" src="art/s105.webp" alt="" style="height:44px;border-radius:9px">',cardsOwned()+'/'+ALBUM_SET.length,'بطاقة'],[flameIc(44),P.streak||0,'يوم متواصل'],['✔️',(P.stats||{}).c||0,'إجابة صح']]
       .map(x=>`<div class="stage" style="cursor:default"><span class="em">${x[0]}</span>
         <div style="font-weight:800;font-size:1.3rem">${x[1]}</div>
         <div class="muted" style="font-size:.75rem">${x[2]}</div></div>`).join('')}
@@ -3021,7 +3026,7 @@ async function screenMyHalaqas(){
   stopTimer();
   const list = P.halaqas||[];
   app.innerHTML = `
-  <div class="hdr"><h2>🏫 حلقتي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>${ic('halaqa',30)} حلقتي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
   <div id="halList">${list.length? list.map(x=>`
     <div class="card fade ${x.live?'live':''}">
       <div class="hdr" style="margin:0">
@@ -3046,7 +3051,7 @@ async function screenMyHalaqas(){
           <div class="bar" style="margin-top:8px"><i style="width:${Math.round((x.hw.items||[]).filter(i=>surStars(i)>0).length/Math.max(1,(x.hw.items||[]).length)*100)}%"></i></div>`:''}
       </div>`:''}
       <div class="row" style="justify-content:flex-start;margin-top:8px">
-        <button class="btn ghost sm lb" data-h="${esc(x.hid)}">🏆 ترتيب الأسبوع</button>
+        <button class="btn ghost sm lb" data-h="${esc(x.hid)}">${artIc('lv-5',20)} ترتيب الأسبوع</button>
         ${x.cid?`<button class="btn ghost sm ci" data-c="${esc(x.cid)}">🏢 المركز</button>`:''}
         <button class="btn ghost sm lv" data-h="${esc(x.hid)}">🚪 خروج من الحلقة</button>
       </div>
@@ -3099,7 +3104,7 @@ async function screenLeaderboard(hid){
     pts:(m.wk&&m.wk.k===k)?(m.wk.p||0):0, last:m.last||0})).sort((a,b)=>b.pts-a.pts);
   const mine = fbUser? rows.findIndex(r=>r.uid===fbUser.uid) : -1;
   app.innerHTML = `
-  <div class="hdr"><h2>🏆 ترتيب الأسبوع</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="hdr"><h2>${artIc('lv-5',30)} ترتيب الأسبوع</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade center"><b>${esc(hv.name||'')}</b>
     <p class="muted" style="font-size:.82rem;margin:2px 0">الترتيب بيتصفّر كل أسبوع — كل نقطة بتكسبها في اللعب بتتحسبلك</p></div>
   <div class="card fade">
@@ -3264,7 +3269,7 @@ function paintHalStuds(hid, v, mv){
     img:m.img||null, char:m.char||'boy', off:!!m.off})).sort((a,b)=>b.pts-a.pts);
   card.innerHTML = `
     <div class="hdr" style="margin:0"><h3 style="margin:0">👦 الطلاب (${studs.length})</h3>
-      <button class="btn ghost sm" id="lb">🏆 ترتيب الأسبوع</button></div>
+      <button class="btn ghost sm" id="lb">${artIc('lv-5',20)} ترتيب الأسبوع</button></div>
     ${studs.length?`<table><tr><th>الطالب</th><th>نقاط الأسبوع</th><th>المحفوظ</th><th>آخر نشاط</th><th></th></tr>
       ${studs.map(s=>`<tr><td><span class="row" style="gap:6px;justify-content:flex-start">${s.off?'<span class="flag">⏸️</span>':''}
           <button class="btn ghost sm imgEd" data-u="${esc(s.uid)}" data-n="${esc(s.name)}" data-has="${s.img?1:0}"
