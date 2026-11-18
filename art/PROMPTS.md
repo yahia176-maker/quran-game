@@ -22,51 +22,21 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ## الناقص دلوقتي
 
-- **١٣ بطاقة سورة** (قسم ١).
+- **٨ بطاقة سورة** (قسم ١).
 - **أيقونة التطبيق** — تجربة تانية ببرومبت أدق (قسم ٢).
 - **بطاقة سورة الناس** — إعادة بأطفال بس (قسم ٣).
 - **١٠ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ٤).
 - **اختياري:** أيقونة «ألبومي» والخلفية العريضة للكمبيوتر (قسم ٥).
 
-كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق، و١٦ بطاقة سورة (القمر، التكوير، الانفطار، الانشقاق، الغاشية، الفجر، البلد، الفيل، قريش، الكوثر، النصر، المسد، الإخلاص، الفلق، الناس، الشمس).
+كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق، و٢١ بطاقة سورة (القمر، التكوير، الانفطار، الانشقاق، الغاشية، الفجر، البلد، الفيل، قريش، الكوثر، النصر، المسد، الإخلاص، الفلق، الناس، الشمس، الليل، التين، الضحى، العلق، القدر).
 
 بعد ما تولّد أي صورة ابعتها في الشات واكتب اسم السورة لو مش واضحة من الرسمة.
 
 ---
 
-## ١) بطاقات السور الناقصة (١٣)
+## ١) بطاقات السور الناقصة (٨)
 
 كل بطاقة مربعة، والمنظر مالي المربع كله.
-
-**`s92 — الليل`**
-
-```
-A calm night, a crescent moon and many stars over a small sleeping village with warm lit windows. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
-**`s93 — الضحى`**
-
-```
-A bright cheerful mid-morning sky, warm sun, small birds flying over a flower meadow. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
-**`s95 — التين`**
-
-```
-Fresh figs and green olives on leafy branches in front, a mountain in the background. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
-**`s96 — العلق`**
-
-```
-A feather pen and a small inkwell beside an open notebook with completely blank pages. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
-**`s97 — القدر`**
-
-```
-A very peaceful night full of bright stars, soft golden light coming down from the sky onto a small mosque with a dome. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
 
 **`s99 — الزلزلة`**
 
