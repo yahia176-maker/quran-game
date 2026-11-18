@@ -22,7 +22,7 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ## الناقص دلوقتي
 
-- **١٠ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ١).
+- **٨ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ١).
 - **اختياري:** إعادة بطاقة التكاثر، أيقونة «ألبومي»، والخلفية العريضة للكمبيوتر (قسم ٢).
 
 كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق الجديدة، و**كل بطاقات السور الـ٢٩**.
@@ -31,15 +31,9 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ---
 
-## ١) أيقونات الأماكن اللي لسه رموز جاهزة (١٠)
+## ١) أيقونات الأماكن اللي لسه رموز جاهزة (٨)
 
 كل واحدة شكل واحد على خلفية بيضا سادة.
-
-**`ic-center — المركز (لوحة المعلم)`**
-
-```
-A neat sand-colored academy building with three arched windows, a wide arched wooden door and a small green flag on the flat roof. No dome and no minaret. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
 
 **`ic-juz — جزء — خريطة المصحف`**
 
@@ -63,12 +57,6 @@ A round fresh-green badge with one bold white check mark in the middle and a thi
 
 ```
 A single golden gear cog wheel with rounded teeth. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
-**`ic-home — الرئيسية`**
-
-```
-A tiny cozy house with a warm orange roof, a round wooden door and one small window. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
 ```
 
 **`ic-homework — الواجب`**

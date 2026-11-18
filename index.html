@@ -647,7 +647,7 @@ body:has(.annbar) #app{padding-top:52px}
 <body>
 <div id="stars"></div>
 <div id="app"></div>
-<button class="homeFab" id="homeFab" title="الرئيسية" aria-label="الرئيسية" hidden>🏠</button>
+<button class="homeFab" id="homeFab" title="الرئيسية" aria-label="الرئيسية" hidden><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
 
 <script>
 /* ==========================================================================
@@ -2445,7 +2445,7 @@ function screenPickFocus(){
     if(cov) withProg.push({ sn, pct: g ? g.pct : 100 });
   }
   app.innerHTML = `
-  <div class="hdr"><h2>🎯 بتحفظ إيه دلوقتي؟</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🎯 بتحفظ إيه دلوقتي؟</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade">
     <p class="muted" style="margin:0 0 8px;font-size:.86rem">الزرار الكبير في الرئيسية هيوديك للسورة دي على طول.
       والمراجعة هتفضل بتيجي لوحدها من كل اللي حفظته.</p>
@@ -2464,7 +2464,7 @@ function screenPickFocus(){
         <div class="muted" style="font-size:.66rem">${QURAN[sn].ay.length} آية</div></div>`).join('')}
     </div>
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('.fpick').forEach(d=>d.onclick=()=>{ Snd.star();
     P.focus = +d.dataset.s; saveP();
@@ -2577,7 +2577,7 @@ function screenStudentHome(){
 function screenPickHub(){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2>📚 اختر اللي تحبه</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>📚 اختر اللي تحبه</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="grid fade three">
     <div class="stage" id="pS"><span class="em">📖</span><b>سورة</b>
       <div class="muted" style="font-size:.74rem">١١٤ سورة — كاملة أو مدى</div></div>
@@ -2602,7 +2602,7 @@ function screenProgress(){
     .filter(x=>x.acc!=null && x.acc<70 && QURAN[x.sn]).sort((a,b)=>a.acc-b.acc).slice(0,6);
   const badges = (P.badges||[]).map(id=>BADGES.find(x=>x.id===id)).filter(Boolean);
   app.innerHTML = `
-  <div class="hdr"><h2>📊 تقدّمي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>📊 تقدّمي</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade center">
     <h3 style="margin:0 0 6px">🕌 رحلتك في المصحف</h3>
     ${mushafRing(104)}
@@ -2638,7 +2638,7 @@ function screenProgress(){
         <div class="st" style="font-size:.8rem">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div></div>`}).join('')}</div>`
       :'<p class="muted center">لسه ما بدأتش — اضغط «أكمِل حفظك» في الرئيسية 🚀</p>'}
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
 }
 
@@ -2646,7 +2646,7 @@ function screenProgress(){
 function screenSettings(){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2>⚙️ الإعدادات</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>⚙️ الإعدادات</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade center">
     <span class="muted" style="font-size:.85rem">🎨 شكل اللعبة</span>
     <div class="seg" style="margin-top:6px">
@@ -2711,7 +2711,7 @@ function screenSettings(){
       • أسئلة الحفظ (رتّب، أكمل، املأ الفراغ) مبنية على نص المصحف مباشرةً.
     </p>
   </div>
-  <div class="center"><button class="btn" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   $('#sndChk').onchange=e=>{ Snd.on=e.target.checked; if(Snd.on){Snd.init();Snd.click();} };
   app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ Snd.init(); Snd.star(); applyTheme(b.dataset.th); screenSettings(); });
@@ -2869,7 +2869,7 @@ function screenSmartEnd(){
   <div class="center row">
     <button class="btn" id="again">🧠 جلسة تانية</button>
     <button class="btn ghost" id="shr">📸 شارك إنجازي</button>
-    <button class="btn ghost" id="hm">🏠 الرئيسية</button>
+    <button class="btn ghost" id="hm"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button>
   </div>`;
   $('#again').onclick=()=>{ Snd.click(); startSmart(); };
   $('#shr').onclick=()=>{ Snd.click(); shareCard({ title:'جلسة سورة '+QURAN[sn||114].nm,
@@ -3026,7 +3026,7 @@ async function screenMyHalaqas(){
   stopTimer();
   const list = P.halaqas||[];
   app.innerHTML = `
-  <div class="hdr"><h2>${ic('halaqa',30)} حلقتي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>${ic('halaqa',30)} حلقتي</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div id="halList">${list.length? list.map(x=>`
     <div class="card fade ${x.live?'live':''}">
       <div class="hdr" style="margin:0">
@@ -3052,7 +3052,7 @@ async function screenMyHalaqas(){
       </div>`:''}
       <div class="row" style="justify-content:flex-start;margin-top:8px">
         <button class="btn ghost sm lb" data-h="${esc(x.hid)}">${artIc('lv-5',20)} ترتيب الأسبوع</button>
-        ${x.cid?`<button class="btn ghost sm ci" data-c="${esc(x.cid)}">🏢 المركز</button>`:''}
+        ${x.cid?`<button class="btn ghost sm ci" data-c="${esc(x.cid)}"><img class="ic" src="art/ic-center.webp" alt="" style="height:20px"> المركز</button>`:''}
         <button class="btn ghost sm lv" data-h="${esc(x.hid)}">🚪 خروج من الحلقة</button>
       </div>
     </div>`).join('')
@@ -3065,7 +3065,7 @@ async function screenMyHalaqas(){
     <input type="text" id="hcode" maxlength="5" placeholder="كود الحلقة" value="${esc(PENDING_HAL||'')}" style="text-align:center;font-size:1.4rem;letter-spacing:6px;direction:ltr">
     <button class="btn" id="hgo">انضم</button>
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   $('#hgo').onclick=async()=>{ Snd.click();
     try{ const v=await joinHalaqa($('#hcode').value); if(PENDING_HAL===v_hid($('#hcode'))) clearPendingHal(); Snd.win(); toast('🎉 انضممت لـ '+v.name); screenMyHalaqas(); }
@@ -3208,11 +3208,11 @@ async function screenTeacherHome(){
     <div class="stage" id="tPlay"><img class="tileIc" src="art/ic-pick.webp" alt=""><b>ألعب أنا</b>
       <div class="muted" style="font-size:.74rem">جرّب اللعبة كطالب</div></div>
     ${myCenter()?`<div class="stage" id="tCtr" style="border-color:var(--gold)">
-      <span class="em">🏢</span><b>مركزي</b>
+      <img class="tileIc" src="art/ic-center.webp" alt=""><b>مركزي</b>
       <div class="muted" style="font-size:.74rem">متابعة المعلمين</div></div>`:''}
   </div>
   <details class="card fade tCtrCard" ${(P&&P.cid)?'open':''}>
-    <summary>🏢 المركز <span class="muted">${(P&&P.cid)?'— إنت في مركز':'— بتشتغل في مركز أو أكاديمية؟'}</span></summary>
+    <summary><img class="ic" src="art/ic-center.webp" alt="" style="height:26px"> المركز <span class="muted">${(P&&P.cid)?'— إنت في مركز':'— بتشتغل في مركز أو أكاديمية؟'}</span></summary>
     ${(P&&P.cid)?`<p style="font-size:.88rem;margin:8px 0 0">مدير المركز بيشوف نشاطك وحلقاتك.
       <span class="muted" style="direction:ltr;display:inline-block">${esc(P.cid)}</span></p>
       <div class="center" style="margin-top:8px"><button class="btn ghost sm" id="ctrOut">🚪 اخرج من المركز</button></div>`
@@ -3221,7 +3221,7 @@ async function screenTeacherHome(){
         <input type="text" id="ctrCode" maxlength="5" placeholder="كود المركز"
           style="text-align:center;letter-spacing:5px;direction:ltr;margin:0;max-width:150px">
         <button class="btn sm" id="ctrGo">انضم</button>
-        ${(!myCenter()&&fbUser&&!fbUser.isAnonymous)?`<button class="btn ghost sm" id="ctrClaim">🏢 أنا مدير مركز</button>`:''}
+        ${(!myCenter()&&fbUser&&!fbUser.isAnonymous)?`<button class="btn ghost sm" id="ctrClaim"><img class="ic" src="art/ic-center.webp" alt="" style="height:20px"> أنا مدير مركز</button>`:''}
       </div>`}
   </details>
   </div>
@@ -3490,7 +3490,7 @@ async function screenOwner(sub){
   let D;
   try{ D = await ownerLoad(); }
   catch(e){ return app.innerHTML = `
-    <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+    <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
     <div class="card fade"><h3>⚠️ القواعد محتاجة تحديث</h3>
       <p>عشان اللوحة تقرا الحلقات وفهرس المستخدمين، الصق قواعد الأمان الجديدة في Firebase مرة واحدة —
         موجودة في <b>⚙️ ← الشرح الكامل</b>.</p>
@@ -3756,10 +3756,10 @@ async function screenOwner(sub){
   }
 
   app.innerHTML = `
-  <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🛡️ لوحة المالك</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="otabs">${TABS.map(t=>`<button class="otab ${OTAB===t[0]?'on':''}" data-t="${t[0]}">${t[1]}</button>`).join('')}</div>
   ${body}
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
 
   $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
   app.querySelectorAll('.otab').forEach(b => b.onclick = () => { Snd.click();
@@ -4217,7 +4217,7 @@ function screenDressUp(){
   stopTimer();
   const t = totalStars(), cur = gearOn();
   app.innerHTML = `
-  <div class="hdr"><h2>🎩 شكل شخصيتي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🎩 شكل شخصيتي</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade center">
     <div id="prev" style="color:var(--gold)">${avatarHTML(130,'happy')}</div>
     <p class="muted" style="margin:4px 0 0;font-size:.85rem">عندك <b style="color:var(--gold)">${t}</b> نجمة — كل ما تكسب نجوم تتفتحلك حاجات جديدة</p>
@@ -4250,7 +4250,7 @@ function screenDressUp(){
           <span>${k==='none'?g.em:gearImg(k,34)}${open||k==='none'?'':'<i class="gearLock">🔒</i>'}</span><small>${esc(g.nm)}${open?'':' · '+g.min+'★'}</small></div>`;}).join('')}
     </div>
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   const redraw = () => { $('#prev').innerHTML = avatarHTML(130,'happy'); };
   $('#avUp').onclick = () => { Snd.click(); pickImage(url => {
     setAvatarImg(url); Snd.win(); toast('📷 اتحفظت!'); screenDressUp(); }); };
@@ -4658,7 +4658,7 @@ function screenAccount(){
   const secured = !!(fbUser && !fbUser.isAnonymous);
   const many = allProfiles().length > 1;
   app.innerHTML = `
-  <div class="hdr"><h2>👤 حسابي</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>👤 حسابي</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade center">
     ${avatarHTML(96,'happy')}
     <h2 style="margin:8px 0 0">${esc(P.name)}</h2>
@@ -4705,7 +4705,7 @@ function screenAccount(){
       <button class="btn ghost sm" id="acDel" style="border-color:var(--bad);color:var(--bad)">🗑️ شيل ملفي من الجهاز</button>
     </div>
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
 
   $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
   $('#acSwitch').onclick = () => { Snd.click(); screenProfiles(); };
@@ -4739,7 +4739,7 @@ function screenAccount(){
 function screenAccountLogin(){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2>🔐 تسجيل الدخول</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🔐 تسجيل الدخول</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade">
     <p style="font-size:.9rem;margin:0 0 10px">دخلت قبل كده من جهاز تاني؟ اكتب إيميلك وكلمة السر
       وهنرجّعلك تقدّمك.</p>
@@ -4750,7 +4750,7 @@ function screenAccountLogin(){
       <button class="btn ghost sm" id="liRst">نسيت كلمة السر</button>
     </div>
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenAccount(); };
   $('#liGo').onclick = async () => { Snd.click();
     const em = ($('#liEmail').value||'').trim(), pw = $('#liPass').value||'';
@@ -4924,7 +4924,7 @@ async function centerLoad(cid){
 function screenClaimCenter(){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2>🏢 استلام مركز</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
+  <div class="hdr"><h2><img class="ic" src="art/ic-center.webp" alt="" style="height:30px"> استلام مركز</h2><button class="btn ghost sm" id="bk">رجوع</button></div>
   <div class="card fade">
     <p style="font-size:.9rem;margin:0 0 4px">لو صاحب اللعبة عملك مركز، هيبعتلك <b>كود من ٥ حروف</b>.</p>
     <p class="muted" style="font-size:.8rem;margin:0 0 10px">لازم تكون داخل بنفس الإيميل اللي اتحدد لك.</p>
@@ -5041,7 +5041,7 @@ function markVer(){ try{ localStorage.setItem(LS + '_ver', String(APP_VER)); }ca
 function screenWhatsNew(force){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2 style="display:flex;align-items:center;gap:8px">${nourImg('talk',46)} إيه الجديد</h2><button class="btn ghost sm" id="bk">🏠</button></div>
+  <div class="hdr"><h2 style="display:flex;align-items:center;gap:8px">${nourImg('talk',46)} إيه الجديد</h2><button class="btn ghost sm" id="bk"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   ${NEWS.map((g,i)=>`<div class="card fade">
     <h3>${i===0?'✨ ':''}${esc(g.t)}</h3>
     <ul style="margin:0;padding-right:18px">
@@ -5232,7 +5232,7 @@ function showCenterCard(c){
   const wa = c.wa ? 'https://wa.me/' + c.wa.replace(/[^\d]/g,'') : '';
   d.innerHTML = `<div class="card center" style="max-width:340px;width:100%;margin:0;animation:pop .3s ease">
     ${c.logo?`<img class="ava" src="${esc(c.logo)}" alt="" style="width:96px;height:96px;border-radius:20px;margin:0 auto">`
-      :'<div style="font-size:2.6rem">🏢</div>'}
+      :'<div><img class="ic" src="art/ic-center.webp" alt="" style="height:64px"></div>'}
     <h3 style="margin:8px 0 2px">${esc(c.name)}</h3>
     ${c.about?`<p class="muted" style="font-size:.84rem;margin:0 0 8px">${esc(c.about)}</p>`:''}
     ${c.addr?`<p class="muted" style="font-size:.8rem;margin:0 0 8px">📍 ${esc(c.addr)}</p>`:''}
@@ -5260,17 +5260,17 @@ async function screenCenter(){
   const C = await centerLoad(cid);
   C.code = await centerJoinCode(cid).catch(()=>cid);
   if(C.paused) return (app.innerHTML = `
-    <div class="hdr"><h2>🏢 ${esc(C.name)}</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+    <div class="hdr"><h2><img class="ic" src="art/ic-center.webp" alt="" style="height:30px"> ${esc(C.name)}</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
     <div class="card fade center"><div style="font-size:3rem">⏸️</div>
       <h3>المركز معلّق مؤقتًا</h3>
       <p class="muted" style="font-size:.88rem">كلّم صاحب اللعبة عشان يرجّعه.
         بيانات معلميك وطلابهم كلها محفوظة زي ما هي.</p></div>
-    <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`,
+    <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`,
     ($('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); }));
   const now = Date.now(), D = 864e5;
   const live = C.teachers.filter(t => now - t.seen < 14 * D).length;
   app.innerHTML = `
-  <div class="hdr"><h2>🏢 ${esc(C.name)}</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2><img class="ic" src="art/ic-center.webp" alt="" style="height:30px"> ${esc(C.name)}</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="okpi">
     <div class="k"><b>${C.teachers.length}</b><span>معلم</span>
       <div class="d ${live?'up':'muted'}">${live} نشط</div></div>
@@ -5327,7 +5327,7 @@ async function screenCenter(){
   </div>
   ${location.protocol.startsWith('http')?`<div class="center" style="margin-top:6px">
     <a class="btn ghost sm" href="guide-manager.html" target="_blank" style="text-decoration:none">📖 دليل مدير المركز (يُطبع)</a></div>`:''}
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick = $('#hm2').onclick = () => { Snd.click(); screenHome(); };
   $('#cCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(C.code);
     Snd.correct(); toast('📋 اتنسخ'); };
@@ -5745,7 +5745,7 @@ function screenAlbum(){
   stopTimer();
   const got = cardsOwned(), tot = ALBUM_SET.length;
   app.innerHTML = `
-  <div class="hdr"><h2>🎴 ألبوم البطاقات</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🎴 ألبوم البطاقات</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade center" style="padding:12px">
     <p class="muted" style="margin:0;font-size:.85rem">كل سورة تخلّصها بـ <b style="color:var(--gold)">★★★</b> تكسب بطاقتها — اجمعهم كلهم!</p>
     <h2 style="margin:8px 0 4px;color:var(--gold)">${got} / ${tot}</h2>
@@ -5760,7 +5760,7 @@ function screenAlbum(){
         <div class="gst">${on?'★★★':'☆'.repeat(3-st)+'★'.repeat(st)}</div>
       </div>`;}).join('')}
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('[data-s]').forEach(d=>d.onclick=()=>{ Snd.click(); screenSurahOpts(+d.dataset.s); });
 }
@@ -5827,7 +5827,7 @@ function screenRaceQ(){
         soloStage:{title:'سباق', emoji:'⚡', solo:true, story:[]} };
   app.innerHTML = `
   <div class="raceHud fade">
-    <button class="btn ghost sm" id="rcExit" title="خروج">🏠</button>
+    <button class="btn ghost sm" id="rcExit" title="خروج"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
     <span class="pill">⚡ <b id="rcTime">${RC.left}</b> ث</span>
     <div class="raceBar ${RC.left<=15?'low':''}"><i id="rcBar" style="width:${RC.left/RACE_SEC*100}%"></i></div>
     <span class="pill">✅ <b>${RC.ok}</b></span>
@@ -5862,7 +5862,7 @@ function screenRaceEnd(){
     <div class="row" style="justify-content:center;margin-top:12px">
       <button class="btn" id="rAgain">🔁 تاني</button>
       <button class="btn ghost" id="rShare">📸 شارك</button>
-      <button class="btn ghost" id="rHome">🏠</button>
+      <button class="btn ghost" id="rHome"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
     </div>
   </div>`;
   $('#rAgain').onclick=()=>{ Snd.click(); startRace(); };
@@ -5945,7 +5945,7 @@ function screenListen(){
   app.innerHTML = `
   <div class="hdr">
     <div class="row" style="gap:6px">
-      <button class="btn ghost sm" id="lHome">🏠</button>
+      <button class="btn ghost sm" id="lHome"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
       <button class="btn ghost sm" id="lPick">${ic('listen')} ${esc(Q.nm)} ✏️</button>
     </div>
     <span class="pill" id="lPos">${LSN.i} / ${b}</span>
@@ -6259,7 +6259,7 @@ function screenTasmeeEnd(){
     <div class="row" style="justify-content:center;margin-top:8px">
       <button class="btn" id="tAgain">🔁 سمّع تاني</button>
       <button class="btn ghost" id="tShare">📸 شارك</button>
-      <button class="btn ghost" id="tHome">🏠 الرئيسية</button>
+      <button class="btn ghost" id="tHome"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button>
     </div>
   </div>`;
   /* إعادة مباشرة لنفس التسميع بنفس المدى — مش شاشة الاختيارات */
@@ -6278,7 +6278,7 @@ function screenPath(){
   app.innerHTML = `
   <div class="hdr"><h2>🏝️ طريق الحفظ</h2>
     <div class="row" style="gap:6px"><span class="pill">${lvIc(lv.cur,20)} ${doneCount}/${PATH.length}</span>
-    <button class="btn ghost sm" id="hm">🏠</button></div></div>
+    <button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div></div>
   <div class="card fade center" style="padding:12px">
     <p class="muted" style="margin:0;font-size:.85rem">امشِ في الطريق سورة سورة من الناس للنبأ — أو انطّ لأي محطة تحبها</p>
     <div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(doneCount/PATH.length*100)}%"></i></div>
@@ -6296,7 +6296,7 @@ function screenPath(){
         </div>
       </div>`;}).join('')}
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('[data-s]').forEach(d=>d.onclick=()=>{ Snd.click(); screenSurahOpts(+d.dataset.s); });
   const cur = app.querySelector('.pnode.now'); if(cur) setTimeout(()=>cur.scrollIntoView({block:'center',behavior:'smooth'}), 150);
@@ -6314,7 +6314,7 @@ function screenSurahs(){
     <h2>📖 اختر سورة</h2>
     <div class="row" style="gap:6px">
       <span class="pill">✅ ${done} / 114</span>
-      <button class="btn ghost sm" id="hm">🏠</button>
+      <button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
     </div>
   </div>
   <div class="card fade" style="padding:12px">
@@ -6514,7 +6514,7 @@ function screenAtlas(){
     <h2>🗺️ خريطة المصحف</h2>
     <div class="row" style="gap:6px">
       <span class="pill">📗 ${doneCount} / 30</span>
-      <button class="btn ghost sm" id="hm">🏠</button>
+      <button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
     </div>
   </div>
   <div class="card fade" style="padding:12px">
@@ -6594,7 +6594,7 @@ function screenDailyEnd(){
     <div style="font-size:2rem;color:var(--gold)">${flameIc(40)} سلسلتك: ${P.streak} ${P.streak===1?'يوم':'أيام'}</div>
     <p class="muted">ارجع بكرة عشان تحافظ على السلسلة!</p>
   </div>
-  <div class="center"><button class="btn" id="hm">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn" id="hm"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
 }
 
@@ -6623,7 +6623,7 @@ function screenReviewEnd(){
   </div>
   <div class="center row">
     ${dueReviews().length?'<button class="btn" id="ag">🔁 كمّل مراجعة</button>':''}
-    <button class="btn ghost" id="hm">🏠 الرئيسية</button>
+    <button class="btn ghost" id="hm"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button>
   </div>`;
   if($('#ag')) $('#ag').onclick=()=>{ Snd.click(); startReview(); };
   $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
@@ -7275,7 +7275,7 @@ function screenPlay(){
   app.innerHTML = `
   <div class="hdr">
     <div class="row" style="gap:6px">
-      <button class="btn ghost sm" id="exitPlay" title="خروج">🏠</button>
+      <button class="btn ghost sm" id="exitPlay" title="خروج"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
       <span class="pill">${st.emoji} ${esc(st.title)}</span>
     </div>
     <div class="row" style="gap:6px">
@@ -7629,7 +7629,7 @@ function screenFinal(){
     <button class="btn" id="rp2">📊 التقييم والشهادة</button>
     <button class="btn ghost" id="ag">🔁 العب تاني</button>
     <button class="btn ghost" id="bd">🏆 سجل الأبطال</button>
-    <button class="btn ghost" id="hm">🏠 الرئيسية</button>
+    <button class="btn ghost" id="hm"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button>
   </div>`;
   $('#rp2').onclick=()=>{ Snd.click(); screenReport(G.surah); };
   $('#ag').onclick=()=>{ Snd.click(); newGame(G.surah, G.players.map(p=>p.name)); screenMap(); };
@@ -7894,7 +7894,7 @@ async function createHalaqa(t, nm){
 function screenOnline(){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2>🙋 ادخل مسابقة</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🙋 ادخل مسابقة</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   ${FIREBASE_CONFIG?`
   <div class="card fade center">
     <div style="font-size:3rem">🎟️</div>
@@ -7912,7 +7912,7 @@ function screenOnline(){
     <h3>المسابقات الجماعية لسه مش مفعّلة</h3>
     <p>الميزة دي محتاجة تفعيل خدمة مجانية (Firebase) مرة واحدة من صاحب اللعبة — الخطوات كاملة في شاشة <b>المساعدة</b>.</p>
   </div>`}
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); if(R) leaveRoom(); screenHome(); };
   if(!FIREBASE_CONFIG) return;
   $('#tk').onclick=()=>{ Snd.click(); screenTeacher(); };
@@ -7935,7 +7935,7 @@ async function screenTeacher(){
 }
 function screenTeacherSignup(){
   app.innerHTML = `
-  <div class="hdr"><h2>🧑‍🏫 تسجيل معلم</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🧑‍🏫 تسجيل معلم</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade">
     <div class="center"><img class="tchFade" src="${P&&P.char==='boy'?'art/teacher-man.webp':'art/teacher-woman.webp'}" alt="" style="height:130px;width:auto"></div>
     <p>سجّل مرة واحدة بس — وهيفضل جهازك ده فاكرك دايمًا.</p>
@@ -7984,7 +7984,7 @@ function screenTeacherSignup(){
 function screenTeacherPanel(t){
   const groups = t.groups||[];
   app.innerHTML = `
-  <div class="hdr"><h2>🧑‍🏫 ${esc(t.name)}</h2><button class="btn ghost sm" id="hm">🏠</button></div>
+  <div class="hdr"><h2>🧑‍🏫 ${esc(t.name)}</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade">
     <h3>حلقاتك</h3>
     <div class="row" style="justify-content:flex-start">
@@ -8020,7 +8020,7 @@ function screenTeacherPanel(t){
     <p class="muted" style="font-size:.82rem">💡 كل طالب متميّز بجهازه تلقائيًا — حتى لو اتنين اسمهم «محمد» مش هيختلطوا، ولو حد كتب اسم غيره مش هيدخل على حسابه. ومن شاشة المتابعة تقدر تعيد تسمية أي طالب بالقلم ✏️.</p>
     ${location.protocol.startsWith('http')?'<div class="center" style="margin-top:8px"><a class="btn ghost sm" href="guide.html" target="_blank" style="text-decoration:none">📖 دليل المعلم الكامل (يُطبع ويُشارك)</a></div>':''}
   </div>
-  <div class="center"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('.gv').forEach(b=>b.onclick=()=>{ Snd.click(); screenGroups(b.dataset.g); });
   $('#addg').onclick=async()=>{ const g=($('#ngrp').value||'').trim(); if(!g) return;
@@ -8226,7 +8226,7 @@ async function screenGroups(sel){
   <div class="hdr"><h2>📚 متابعة الحلقات</h2>
     <div class="row" style="gap:6px">
       <button class="btn ghost sm" id="bko">🧑‍🏫 لوحتي</button>
-      <button class="btn ghost sm" id="hm">🏠</button>
+      <button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
     </div></div>
   ${!hasAny? `<div class="card fade center">
       <div style="font-size:3rem">📭</div>
@@ -8263,7 +8263,7 @@ async function screenGroups(sel){
          <td><b>${p.score}</b></td><td>${p.c}</td><td>${p.w}</td></tr>`).join('')}
     </table>
   </div>`).join('')}`}
-  <div class="center" style="margin-top:6px"><button class="btn ghost" id="hm2">🏠 الرئيسية</button></div>`;
+  <div class="center" style="margin-top:6px"><button class="btn ghost" id="hm2"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button></div>`;
   $('#bko').onclick=()=>{ Snd.click(); screenHome(); };
   $('#hm').onclick=$('#hm2').onclick=()=>{ Snd.click(); screenHome(); };
   app.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{ Snd.click(); screenGroups(b.dataset.g); });
@@ -8379,7 +8379,7 @@ function renderOnlineEnd(){
   </div>
   <div class="center row">
     ${host?'<button class="btn" id="grps2">📚 سجلّ مجموعاتي</button>':''}
-    <button class="btn ${host?'ghost':''}" id="hm">🏠 الرئيسية</button>
+    <button class="btn ${host?'ghost':''}" id="hm"><img class="ic" src="art/ic-home.webp" alt="" style="height:22px"> الرئيسية</button>
   </div>`;
   if($('#grps2')) $('#grps2').onclick=()=>{ Snd.click(); leaveRoom(); screenGroups(); };
   $('#hm').onclick=()=>{ Snd.click(); leaveRoom(); screenHome(); };
