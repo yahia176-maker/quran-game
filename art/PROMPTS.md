@@ -22,46 +22,13 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ## الناقص دلوقتي
 
-- **٤ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ١).
-- **اختياري:** إعادة بطاقة التكاثر، والخلفية العريضة للكمبيوتر (قسم ٢).
+**مفيش حاجة أساسية ناقصة.** كل الرسوم اتركّبت في اللعبة: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، كل أيقونات الشاشات، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق، وكل بطاقات السور الـ٢٩.
 
-كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق الجديدة، و**كل بطاقات السور الـ٢٩**.
-
-بعد ما تولّد أي صورة ابعتها في الشات. ولو فتحت شات جديد في جيميناي، ابعت الصورة المرجعية ورسالة الافتتاح الأول عشان الرسم يطلع بنفس الروح ومن غير إطار ورق حواليه.
+اللي تحت **اختياري** بس. ولو فتحت شات جديد في جيميناي، ابعت الصورة المرجعية ورسالة الافتتاح الأول عشان الرسم يطلع بنفس الروح ومن غير إطار ورق حواليه.
 
 ---
 
-## ١) أيقونات الأماكن اللي لسه رموز جاهزة (٤)
-
-كل واحدة شكل واحد على خلفية بيضا سادة.
-
-**`ic-juz — جزء — خريطة المصحف`**
-
-```
-A rolled-out old paper map with a dotted winding path and one small golden star marker on it. No writing and no symbols on the map. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
-**`ic-path — طريق الحفظ`**
-
-```
-A winding path of round stepping stones crossing a small green island, with a tiny orange flag at the end of the path. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
-**`ic-settings — الإعدادات`**
-
-```
-A single golden gear cog wheel with rounded teeth. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
-**`bd-sur10 — وسام ١٠ سور`**
-
-```
-A small wooden shelf holding a neat row of colorful closed books, with one golden star shining above it. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
----
-
-## ٢) اختياري
+## اختياري
 
 **`s102 — التكاثر`** (إعادة اختيارية: البطاقة اتركّبت، بس مكعبات اللعب عليها حروف وأرقام)
 

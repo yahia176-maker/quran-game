@@ -1874,7 +1874,7 @@ const BADGES = [
  {id:'stage3',  em:'⭐', img:'lv-2', t:'مرحلة بثلاث نجوم', f:p=>Object.values(p.stars).some(a=>(a||[]).some(s=>s===3))},
  {id:'juz1',    em:'📗', img:'lv-3', t:'أتممت جزءًا كاملًا', f:p=>Object.keys(p.jdone||{}).length>=1},
  {id:'juz5',    em:'📚', img:'ic-pick', t:'أتممت ٥ أجزاء',     f:p=>Object.keys(p.jdone||{}).length>=5},
- {id:'sur10',   em:'📖', t:'١٠ سور منفردة',     f:p=>Object.values(p.sstars).reduce((a,o)=>a+Object.keys(o||{}).length,0)>=10},
+ {id:'sur10',   em:'📖', img:'bd-sur10', t:'١٠ سور منفردة',     f:p=>Object.values(p.sstars).reduce((a,o)=>a+Object.keys(o||{}).length,0)>=10},
  {id:'rev20',   em:'🔁', img:'bd-rev20', t:'٢٠ مراجعة ناجحة',   f:p=>(p.revs||0)>=20},
 ];
 function awardBadges(){
@@ -2489,7 +2489,7 @@ function screenStudentHome(){
       <b>${esc(P.name)}</b> · ${flameIc(20)} ${P.streak||0}${(P.shield||0)?' '+artIc('bd-shield',20)+P.shield:''}
       ${allProfiles().length>1?'<span style="opacity:.7;font-size:.8em">🔄</span>':''}
     </button>
-    <button class="btn ghost sm" id="cog">⚙️</button>
+    <button class="btn ghost sm" id="cog"><img class="ic" src="art/ic-settings.webp" alt="الإعدادات" style="height:24px"></button>
   </div>
   ${(P.halaqas||[]).filter(x=>isHalaqaDay(x.days)).slice(0,1).map(x=>`<div class="card fade"
     style="border-color:var(--ok);background:var(--okA)">
@@ -2579,11 +2579,11 @@ function screenPickHub(){
   app.innerHTML = `
   <div class="hdr"><h2>📚 اختر اللي تحبه</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="grid fade three">
-    <div class="stage" id="pS"><span class="em">📖</span><b>سورة</b>
+    <div class="stage" id="pS"><img class="tileIc" src="art/lv-3.webp" alt=""><b>سورة</b>
       <div class="muted" style="font-size:.74rem">١١٤ سورة — كاملة أو مدى</div></div>
-    <div class="stage" id="pJ"><span class="em">🗺️</span><b>جزء</b>
+    <div class="stage" id="pJ"><img class="tileIc" src="art/ic-juz.webp" alt=""><b>جزء</b>
       <div class="muted" style="font-size:.74rem">الـ ٣٠ جزءًا وأرباعها</div></div>
-    <div class="stage" id="pP"><span class="em">🏝️</span><b>طريق الحفظ</b>
+    <div class="stage" id="pP"><img class="tileIc" src="art/ic-path.webp" alt=""><b>طريق الحفظ</b>
       <div class="muted" style="font-size:.74rem">جزء عمّ سورة سورة</div></div>
   </div>`;
   $('#hm').onclick=()=>{ Snd.click(); screenHome(); };
@@ -2646,7 +2646,7 @@ function screenProgress(){
 function screenSettings(){
   stopTimer();
   app.innerHTML = `
-  <div class="hdr"><h2>⚙️ الإعدادات</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
+  <div class="hdr"><h2><img class="ic" src="art/ic-settings.webp" alt="" style="height:30px"> الإعدادات</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade center">
     <span class="muted" style="font-size:.85rem">🎨 شكل اللعبة</span>
     <div class="seg" style="margin-top:6px">
@@ -3151,7 +3151,7 @@ async function screenTeacherHome(){
       <b>${esc(t.name)}</b>
       ${allProfiles().length>1?'<span style="opacity:.7;font-size:.8em">🔄</span>':''}
     </button>
-    <button class="btn ghost sm" id="cog">⚙️</button>
+    <button class="btn ghost sm" id="cog"><img class="ic" src="art/ic-settings.webp" alt="الإعدادات" style="height:24px"></button>
   </div>
   <div class="tStats fade">
     ${[['ic-halaqa',hids.length,'حلقة'],['boy-wave',totalStu,'طالب'],['lv-5',qz,'مسابقة']].map(x=>
@@ -6276,7 +6276,7 @@ function screenPath(){
   const doneCount = PATH.filter(sn=>surStars(sn)>0).length;
   const lv = myLevel();
   app.innerHTML = `
-  <div class="hdr"><h2>🏝️ طريق الحفظ</h2>
+  <div class="hdr"><h2><img class="ic" src="art/ic-path.webp" alt="" style="height:30px"> طريق الحفظ</h2>
     <div class="row" style="gap:6px"><span class="pill">${lvIc(lv.cur,20)} ${doneCount}/${PATH.length}</span>
     <button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div></div>
   <div class="card fade center" style="padding:12px">
@@ -6511,7 +6511,7 @@ function screenAtlas(){
   const doneCount = P&&P.jdone ? Object.keys(P.jdone).length : 0;
   app.innerHTML = `
   <div class="hdr">
-    <h2>🗺️ خريطة المصحف</h2>
+    <h2><img class="ic" src="art/ic-juz.webp" alt="" style="height:30px"> خريطة المصحف</h2>
     <div class="row" style="gap:6px">
       <span class="pill">📗 ${doneCount} / 30</span>
       <button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button>
@@ -7092,7 +7092,7 @@ function screenPlayers(){
   stopTimer();
   const draw = () => {
     app.innerHTML = `
-    <div class="hdr"><h2>👥 اللاعبون</h2><button class="btn ghost sm" id="bk">🗺️ الخريطة</button></div>
+    <div class="hdr"><h2>👥 اللاعبون</h2><button class="btn ghost sm" id="bk"><img class="ic" src="art/ic-juz.webp" alt="" style="height:20px"> الخريطة</button></div>
     <div class="card fade">
       <p class="muted" style="margin-top:0">غيّر أي اسم، أو ضيف لاعب جديد، أو احذف واحد. النقاط المحسوبة بتفضل زي ما هي.</p>
       ${G.players.map((p,i)=>`
@@ -7128,7 +7128,7 @@ function screenPicker(){
     <h2>📖 اختر سورة</h2>
     <div class="row" style="gap:6px">
       <span class="pill">✅ ${done} / ${nums.length}</span>
-      <button class="btn ghost sm" id="bk">🗺️ الخريطة</button>
+      <button class="btn ghost sm" id="bk"><img class="ic" src="art/ic-juz.webp" alt="" style="height:20px"> الخريطة</button>
     </div>
   </div>
   <div class="card fade"><p style="margin:0">اضغط على أي سورة تلعبها لوحدها: تقرأها كاملة الأول، وبعدين تحديات مخصوصة ليها. النجوم بتتحفظ لكل سورة على حدة.</p></div>
@@ -7586,7 +7586,7 @@ function screenStageEnd(){
   <div class="row">
     <button class="btn" id="nx"></button>
     <button class="btn ghost" id="rp">🔄 ${solo?'أعِد السورة':'أعِد المرحلة'}</button>
-    <button class="btn ghost" id="mp">🗺️ الخريطة</button>
+    <button class="btn ghost" id="mp"><img class="ic" src="art/ic-juz.webp" alt="" style="height:20px"> الخريطة</button>
   </div>`;
   const hasNext = !solo && G.stage+1 < G.surah.stages.length;
   const allDone = !solo && G.stars.length>0 && G.stars.every(x=>x>0);
