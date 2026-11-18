@@ -22,22 +22,6 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ## الناقص دلوقتي
 
-**مفيش حاجة أساسية ناقصة.** كل الرسوم اتركّبت في اللعبة: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، كل أيقونات الشاشات، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق، وكل بطاقات السور الـ٢٩.
+**مفيش حاجة ناقصة.** كل الرسوم اتركّبت في اللعبة: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، كل أيقونات الشاشات، الإكسسوارات، المستويات والأوسمة، الخلفيات الخمسة (منهم العريضة للكمبيوتر)، أيقونة التطبيق، وكل بطاقات السور الـ٢٩.
 
-اللي تحت **اختياري** بس. ولو فتحت شات جديد في جيميناي، ابعت الصورة المرجعية ورسالة الافتتاح الأول عشان الرسم يطلع بنفس الروح ومن غير إطار ورق حواليه.
-
----
-
-## اختياري
-
-**`s102 — التكاثر`** (إعادة اختيارية: البطاقة اتركّبت، بس مكعبات اللعب عليها حروف وأرقام)
-
-```
-Big piles of gold coins, two open treasure chests and heaps of toys stacked high: a teddy bear, a toy car, a spinning top, a ball, a kite and plain colored wooden blocks. The blocks are plain solid colors with NO letters, NO numbers and NO symbols on them. Square 1:1 image filling the whole square edge to edge, no paper border and no frame, the subject centered and large, simple soft background, same storybook style as the reference, no text, no people.
-```
-
-**`bg-home-w — خلفية الجنينة العريضة للكمبيوتر`** (دلوقتي بنستخدم جنينة شاشة البداية. المرة اللي فاتت الصورة طلعت اتنين فوق بعض — لازم تطلع **صورة واحدة** عريضة)
-
-```
-The same sunny garden from the reference, completely empty: no children, no lantern. ONE single wide horizontal 16:9 landscape image (not two images, not a collage, not stacked panels). Trees on both far edges, calm open grass in the middle, rainbow in the sky. Same storybook style as the reference. No characters, no text.
-```
+لو احتجنا رسمة جديدة بعدين، برومبتها هيتكتب هنا. ولو فتحت شات جديد في جيميناي، ابعت الصورة المرجعية ورسالة الافتتاح الأول عشان الرسم يطلع بنفس الروح ومن غير إطار ورق حواليه.
