@@ -22,51 +22,21 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ## الناقص دلوقتي
 
-- **٦ بطاقة سورة** (قسم ١).
+- **بطاقة سورة واحدة** — النبأ (قسم ١).
 - **أيقونة التطبيق** — تجربة تانية ببرومبت أدق (قسم ٢).
-- **بطاقة سورة الناس** — إعادة بأطفال بس (قسم ٣).
+- **بطاقة سورة الناس** — إعادة بأطفال بس، و**التكاثر** إعادة اختيارية (قسم ٣).
 - **١٠ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ٤).
 - **اختياري:** أيقونة «ألبومي» والخلفية العريضة للكمبيوتر (قسم ٥).
 
-كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق، و٢٣ بطاقة سورة (القمر، التكوير، الانفطار، الانشقاق، الغاشية، الفجر، البلد، الفيل، قريش، الكوثر، النصر، المسد، الإخلاص، الفلق، الناس، الشمس، الليل، التين، الضحى، العلق، القدر، الزلزلة، العاديات).
+كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق، و٢٨ بطاقة سورة (القمر، التكوير، الانفطار، الانشقاق، الغاشية، الفجر، البلد، الفيل، قريش، الكوثر، النصر، المسد، الإخلاص، الفلق، الناس، الشمس، الليل، التين، الضحى، العلق، القدر، الزلزلة، العاديات، القارعة، التكاثر، العصر، الماعون، الكافرون).
 
 بعد ما تولّد أي صورة ابعتها في الشات واكتب اسم السورة لو مش واضحة من الرسمة.
 
 ---
 
-## ١) بطاقات السور الناقصة (٦)
+## ١) بطاقات السور الناقصة (١)
 
 كل بطاقة مربعة، والمنظر مالي المربع كله.
-
-**`s101 — القارعة`**
-
-```
-Many colorful moths scattered in the air, and soft mountains that look like fluffy tufts of colored wool. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
-**`s102 — التكاثر`**
-
-```
-Big piles of gold coins, treasure chests and heaps of toys stacked high. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
-**`s103 — العصر`**
-
-```
-A large hourglass with golden sand running down, late afternoon orange sun behind it. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
-**`s107 — الماعون`**
-
-```
-Two hands only: one hand kindly giving a bowl of food and bread to another small hand. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text.
-```
-
-**`s109 — الكافرون`**
-
-```
-A garden path that splits into two separate roads going in different directions, with a blank wooden signpost. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
 
 **`s78 — النبأ`**
 
@@ -88,7 +58,7 @@ App icon for a children's Quran learning game. Draw the SAME lantern character f
 
 ---
 
-## ٣) بطاقة سورة الناس — إعادة
+## ٣) بطاقات تتعاد
 
 البطاقة الحالية فيها شخص كبير بعمامة وسط الأطفال. المطلوب **أطفال بس**.
 
@@ -96,6 +66,12 @@ App icon for a children's Quran learning game. Draw the SAME lantern character f
 
 ```
 Six happy children, all about eight years old and all the same height, standing close together in a row holding hands and smiling: three boys and three girls, one of the girls wearing a hijab, with different skin tones and simple colorful everyday clothes. ONLY children in the picture: no adults, no elderly people, no beards, no turbans, no long robes. A soft green garden behind them. Square 1:1 image, the group centered and large, simple soft background filling the whole square, same storybook style as the reference, no text.
+```
+
+**`s102 — التكاثر`** (إعادة اختيارية: البطاقة اتركّبت، بس مكعبات اللعب عليها حروف وأرقام)
+
+```
+Big piles of gold coins, two open treasure chests and heaps of toys stacked high: a teddy bear, a toy car, a spinning top, a ball, a kite and plain colored wooden blocks. The blocks are plain solid colors with NO letters, NO numbers and NO symbols on them. Square 1:1 image filling the whole square edge to edge, no paper border and no frame, the subject centered and large, simple soft background, same storybook style as the reference, no text, no people.
 ```
 
 ---
