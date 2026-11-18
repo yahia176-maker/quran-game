@@ -22,61 +22,16 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ## الناقص دلوقتي
 
-- **بطاقة سورة واحدة** — النبأ (قسم ١).
-- **أيقونة التطبيق** — تجربة تانية ببرومبت أدق (قسم ٢).
-- **بطاقة سورة الناس** — إعادة بأطفال بس، و**التكاثر** إعادة اختيارية (قسم ٣).
-- **١٠ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ٤).
-- **اختياري:** أيقونة «ألبومي» والخلفية العريضة للكمبيوتر (قسم ٥).
+- **١٠ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ١).
+- **اختياري:** إعادة بطاقة التكاثر، أيقونة «ألبومي»، والخلفية العريضة للكمبيوتر (قسم ٢).
 
-كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق، و٢٨ بطاقة سورة (القمر، التكوير، الانفطار، الانشقاق، الغاشية، الفجر، البلد، الفيل، قريش، الكوثر، النصر، المسد، الإخلاص، الفلق، الناس، الشمس، الليل، التين، الضحى، العلق، القدر، الزلزلة، العاديات، القارعة، التكاثر، العصر، الماعون، الكافرون).
+كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق الجديدة، و**كل بطاقات السور الـ٢٩**.
 
-بعد ما تولّد أي صورة ابعتها في الشات واكتب اسم السورة لو مش واضحة من الرسمة.
+بعد ما تولّد أي صورة ابعتها في الشات. ولو فتحت شات جديد في جيميناي، ابعت الصورة المرجعية ورسالة الافتتاح الأول عشان الرسم يطلع بنفس الروح ومن غير إطار ورق حواليه.
 
 ---
 
-## ١) بطاقات السور الناقصة (١)
-
-كل بطاقة مربعة، والمنظر مالي المربع كله.
-
-**`s78 — النبأ`**
-
-```
-Tall mountains standing firm like tent pegs, a rain cloud watering a green garden with fruit trees. Square 1:1 image, the subject centered and large, simple soft background filling the whole square, same storybook style as the reference, no text, no people.
-```
-
----
-
-## ٢) أيقونة التطبيق — تجربة تانية
-
-ارفع مع البرومبت ده **صورة «نور» السعيد** (نفس الفانوس اللي في اللعبة) عشان يطلع هو نفسه.
-
-**`app-icon`**
-
-```
-App icon for a children's Quran learning game. Draw the SAME lantern character from the attached image: same shape, same golden brass body, same friendly face. He is smiling warmly and glowing, seen from the front, the whole lantern visible from the top ring to the base. Put him exactly in the center, filling about 60% of the image height, with clear empty space around him on every side, because the corners will be cropped into a circle. Background: a smooth gradient that fills the whole square edge to edge, bright sky blue at the top blending into fresh green at the bottom, with a soft golden glow behind the lantern and three or four tiny simple stars. Square 1:1. No white background, no border, no frame, no rounded-corner app mockup, no phone, no ground shadow, no text, no letters. Bold simple shapes with thick clean dark outlines so it stays clear when very small. Same storybook style as the reference.
-```
-
----
-
-## ٣) بطاقات تتعاد
-
-البطاقة الحالية فيها شخص كبير بعمامة وسط الأطفال. المطلوب **أطفال بس**.
-
-**`s114 — الناس`**
-
-```
-Six happy children, all about eight years old and all the same height, standing close together in a row holding hands and smiling: three boys and three girls, one of the girls wearing a hijab, with different skin tones and simple colorful everyday clothes. ONLY children in the picture: no adults, no elderly people, no beards, no turbans, no long robes. A soft green garden behind them. Square 1:1 image, the group centered and large, simple soft background filling the whole square, same storybook style as the reference, no text.
-```
-
-**`s102 — التكاثر`** (إعادة اختيارية: البطاقة اتركّبت، بس مكعبات اللعب عليها حروف وأرقام)
-
-```
-Big piles of gold coins, two open treasure chests and heaps of toys stacked high: a teddy bear, a toy car, a spinning top, a ball, a kite and plain colored wooden blocks. The blocks are plain solid colors with NO letters, NO numbers and NO symbols on them. Square 1:1 image filling the whole square edge to edge, no paper border and no frame, the subject centered and large, simple soft background, same storybook style as the reference, no text, no people.
-```
-
----
-
-## ٤) أيقونات الأماكن اللي لسه رموز جاهزة (١٠)
+## ١) أيقونات الأماكن اللي لسه رموز جاهزة (١٠)
 
 كل واحدة شكل واحد على خلفية بيضا سادة.
 
@@ -142,7 +97,13 @@ Two curved fresh-green arrows forming a circle, with a small golden star in the 
 
 ---
 
-## ٥) اختياري
+## ٢) اختياري
+
+**`s102 — التكاثر`** (إعادة اختيارية: البطاقة اتركّبت، بس مكعبات اللعب عليها حروف وأرقام)
+
+```
+Big piles of gold coins, two open treasure chests and heaps of toys stacked high: a teddy bear, a toy car, a spinning top, a ball, a kite and plain colored wooden blocks. The blocks are plain solid colors with NO letters, NO numbers and NO symbols on them. Square 1:1 image filling the whole square edge to edge, no paper border and no frame, the subject centered and large, simple soft background, same storybook style as the reference, no text, no people.
+```
 
 **`ic-album — أيقونة «ألبومي»`** (مكانها دلوقتي بطاقة سورة الفيل — شغالة كويس)
 
