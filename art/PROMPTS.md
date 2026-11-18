@@ -22,8 +22,8 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ## الناقص دلوقتي
 
-- **٨ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ١).
-- **اختياري:** إعادة بطاقة التكاثر، أيقونة «ألبومي»، والخلفية العريضة للكمبيوتر (قسم ٢).
+- **٤ أيقونات** للأماكن اللي لسه رموز جاهزة (قسم ١).
+- **اختياري:** إعادة بطاقة التكاثر، والخلفية العريضة للكمبيوتر (قسم ٢).
 
 كل اللي غير كده **خلص واتركّب في اللعبة**: الأطفال التلاتة بحالاتهم، «نور»، المعلمين، أيقونات الرئيسية، الإكسسوارات، المستويات والأوسمة، الخلفيات الأربعة، أيقونة التطبيق الجديدة، و**كل بطاقات السور الـ٢٩**.
 
@@ -31,7 +31,7 @@ The attached image is the style reference for a children's Quran learning game. 
 
 ---
 
-## ١) أيقونات الأماكن اللي لسه رموز جاهزة (٨)
+## ١) أيقونات الأماكن اللي لسه رموز جاهزة (٤)
 
 كل واحدة شكل واحد على خلفية بيضا سادة.
 
@@ -47,40 +47,16 @@ A rolled-out old paper map with a dotted winding path and one small golden star 
 A winding path of round stepping stones crossing a small green island, with a tiny orange flag at the end of the path. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
 ```
 
-**`st-check — إجابة صح (شاشة تقدّمي)`**
-
-```
-A round fresh-green badge with one bold white check mark in the middle and a thick dark outline. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
 **`ic-settings — الإعدادات`**
 
 ```
 A single golden gear cog wheel with rounded teeth. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
 ```
 
-**`ic-homework — الواجب`**
-
-```
-A wooden clipboard holding a blank cream sheet with three small check boxes in a column, two of them ticked with green check marks. No writing at all. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
-**`bd-streak7 — وسام ٧ أيام متواصلة`**
-
-```
-A big bright friendly cartoon flame with a happy face, wearing a tiny golden crown, with small sparks around it. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
 **`bd-sur10 — وسام ١٠ سور`**
 
 ```
 A small wooden shelf holding a neat row of colorful closed books, with one golden star shining above it. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
-```
-
-**`bd-rev20 — وسام ٢٠ مراجعة`**
-
-```
-Two curved fresh-green arrows forming a circle, with a small golden star in the middle. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
 ```
 
 ---
@@ -91,12 +67,6 @@ Two curved fresh-green arrows forming a circle, with a small golden star in the 
 
 ```
 Big piles of gold coins, two open treasure chests and heaps of toys stacked high: a teddy bear, a toy car, a spinning top, a ball, a kite and plain colored wooden blocks. The blocks are plain solid colors with NO letters, NO numbers and NO symbols on them. Square 1:1 image filling the whole square edge to edge, no paper border and no frame, the subject centered and large, simple soft background, same storybook style as the reference, no text, no people.
-```
-
-**`ic-album — أيقونة «ألبومي»`** (مكانها دلوقتي بطاقة سورة الفيل — شغالة كويس)
-
-```
-A small fan of three colorful collectible cards with a star on the front one. Single object icon, square 1:1, centered, plain solid white background, no shadow, same storybook style as the reference, no text.
 ```
 
 **`bg-home-w — خلفية الجنينة العريضة للكمبيوتر`** (دلوقتي بنستخدم جنينة شاشة البداية. المرة اللي فاتت الصورة طلعت اتنين فوق بعض — لازم تطلع **صورة واحدة** عريضة)

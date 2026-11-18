@@ -1869,13 +1869,13 @@ const BADGES = [
  {id:'c200',    em:'🥈', img:'bd-silver', t:'٢٠٠ إجابة صحيحة',  f:p=>p.stats.c>=200},
  {id:'c1000',   em:'🥇', img:'bd-gold', t:'١٠٠٠ إجابة صحيحة', f:p=>p.stats.c>=1000},
  {id:'streak3', em:'🔥', img:'bd-streak', t:'٣ أيام متواصلة',   f:p=>p.streak>=3},
- {id:'streak7', em:'🌋', t:'٧ أيام متواصلة',   f:p=>p.streak>=7},
+ {id:'streak7', em:'🌋', img:'bd-streak7', t:'٧ أيام متواصلة',   f:p=>p.streak>=7},
  {id:'streak30',em:'🏆', img:'lv-5', t:'٣٠ يومًا متواصلًا', f:p=>p.streak>=30},
  {id:'stage3',  em:'⭐', img:'lv-2', t:'مرحلة بثلاث نجوم', f:p=>Object.values(p.stars).some(a=>(a||[]).some(s=>s===3))},
  {id:'juz1',    em:'📗', img:'lv-3', t:'أتممت جزءًا كاملًا', f:p=>Object.keys(p.jdone||{}).length>=1},
  {id:'juz5',    em:'📚', img:'ic-pick', t:'أتممت ٥ أجزاء',     f:p=>Object.keys(p.jdone||{}).length>=5},
  {id:'sur10',   em:'📖', t:'١٠ سور منفردة',     f:p=>Object.values(p.sstars).reduce((a,o)=>a+Object.keys(o||{}).length,0)>=10},
- {id:'rev20',   em:'🔁', t:'٢٠ مراجعة ناجحة',   f:p=>(p.revs||0)>=20},
+ {id:'rev20',   em:'🔁', img:'bd-rev20', t:'٢٠ مراجعة ناجحة',   f:p=>(p.revs||0)>=20},
 ];
 function awardBadges(){
   if(!P) return;
@@ -2540,7 +2540,7 @@ function screenStudentHome(){
   <div class="grid fade three" style="margin-top:10px">
     <div class="stage" id="mRace"><img class="tileIc" src="art/ic-race.webp" alt=""><b>سباق الدقيقة</b>
       <div class="muted" style="font-size:.74rem">${P.raceBest?'رقمك: '+P.raceBest:'٦٠ ثانية تحدي'}</div></div>
-    <div class="stage" id="mAlb"><img class="tileIc tileCard" src="art/s105.webp" alt=""><b>ألبومي</b>
+    <div class="stage" id="mAlb"><img class="tileIc" src="art/ic-album.webp" alt=""><b>ألبومي</b>
       <div class="muted" style="font-size:.74rem">${cardsOwned()} / ${ALBUM_SET.length} بطاقة</div></div>
     <div class="stage" id="mDress"><img class="tileIc" src="art/ic-dress.webp" alt=""><b>شكلي</b>
       <div class="muted" style="font-size:.74rem">غيّر شخصيتك</div></div>
@@ -2617,7 +2617,7 @@ function screenProgress(){
             :`<p class="muted" style="margin:0">وصلت لأعلى مستوى 👑</p>`}
   </div>
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(100px,1fr))">
-    ${[[artIc('lv-2',44),lv.t,'نجمة'],[artIc('ic-pick',44),done.length,'سورة'],['<img class="ic" src="art/s105.webp" alt="" style="height:44px;border-radius:9px">',cardsOwned()+'/'+ALBUM_SET.length,'بطاقة'],[flameIc(44),P.streak||0,'يوم متواصل'],['✔️',(P.stats||{}).c||0,'إجابة صح']]
+    ${[[artIc('lv-2',44),lv.t,'نجمة'],[artIc('ic-pick',44),done.length,'سورة'],[artIc('ic-album',44),cardsOwned()+'/'+ALBUM_SET.length,'بطاقة'],[flameIc(44),P.streak||0,'يوم متواصل'],[artIc('st-check',44),(P.stats||{}).c||0,'إجابة صح']]
       .map(x=>`<div class="stage" style="cursor:default"><span class="em">${x[0]}</span>
         <div style="font-weight:800;font-size:1.3rem">${x[1]}</div>
         <div class="muted" style="font-size:.75rem">${x[2]}</div></div>`).join('')}
@@ -3039,7 +3039,7 @@ async function screenMyHalaqas(){
         </div>
         ${x.live?`<button class="btn sm jl" data-c="${esc(x.live)}">⚡ ادخل المسابقة</button>`:''}
       </div>
-      ${x.hw&&x.hw.t?`<div class="hw"><b>📋 واجب: ${esc(x.hw.t)}</b>
+      ${x.hw&&x.hw.t?`<div class="hw"><b><img class="ic" src="art/ic-homework.webp" alt="" style="height:24px"> واجب: ${esc(x.hw.t)}</b>
         ${(x.hw.items||[]).length?`
           <p class="muted" style="font-size:.76rem;margin:6px 0 4px">اسمعها الأول 🎧 وبعدين العب ▶️</p>
           ${(x.hw.items||[]).map(it=>{ const st=surStars(it); const Qn=(QURAN[it]||{}).nm||it;
@@ -3319,7 +3319,7 @@ async function screenHalaqa(hid){
       واللعبة هتفكّرهم يوم الحلقة.</p>
   </div>
   <div class="card fade">
-    <h3>📋 واجب الأسبوع</h3>
+    <h3><img class="ic" src="art/ic-homework.webp" alt="" style="height:26px"> واجب الأسبوع</h3>
     <input type="text" id="hwT" maxlength="40" placeholder="مثال: حفظ سورتي الفيل وقريش" value="${esc((v.hw||{}).t||'')}">
     <p class="muted" style="font-size:.82rem;margin:8px 0 4px">اختر السور المطلوبة (اضغط عليها):</p>
     <div class="grid surahs" id="hwPick" style="max-height:200px;overflow-y:auto">
@@ -5745,7 +5745,7 @@ function screenAlbum(){
   stopTimer();
   const got = cardsOwned(), tot = ALBUM_SET.length;
   app.innerHTML = `
-  <div class="hdr"><h2>🎴 ألبوم البطاقات</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
+  <div class="hdr"><h2><img class="ic" src="art/ic-album.webp" alt="" style="height:30px"> ألبوم البطاقات</h2><button class="btn ghost sm" id="hm"><img class="ic" src="art/ic-home.webp" alt="الرئيسية" style="height:24px"></button></div>
   <div class="card fade center" style="padding:12px">
     <p class="muted" style="margin:0;font-size:.85rem">كل سورة تخلّصها بـ <b style="color:var(--gold)">★★★</b> تكسب بطاقتها — اجمعهم كلهم!</p>
     <h2 style="margin:8px 0 4px;color:var(--gold)">${got} / ${tot}</h2>
